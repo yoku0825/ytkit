@@ -1,0 +1,13 @@
+# at 277
+#170720 15:19:16 server id 1057  end_log_pos 319        Table_map: `d1`.`t1` mapped to number 108
+# at 319
+#170720 15:19:16 server id 1057  end_log_pos 364        Write_rows: table id 108 flags: STMT_END_F
+
+BINLOG '
+ZEtwWRMhBAAAKgAAAD8BAAAAAGwAAAAAAAEAAmQxAAJ0MQACCA8CgAAC
+ZEtwWR4hBAAALQAAAGwBAAAAAGwAAAAAAAEAAgAC//wEAAAAAAAAAARmb3Vy
+'/*!*/;
+### INSERT INTO `d1`.`t1`
+### SET
+###   @1=4 /* LONGINT meta=0 nullable=0 is_null=0 */
+###   @2='four' /* VARSTRING(128) meta=128 nullable=1 is_null=0 */

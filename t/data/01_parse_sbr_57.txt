@@ -1,0 +1,16 @@
+# at 536162
+#170724 15:47:10 server id 1057  end_log_pos 536223     GTID    last_committed=1294     sequence_number=1295    rbr_only=no
+SET @@SESSION.GTID_NEXT= '1d87f577-6b80-11e7-8865-0201a32caf75:1946'/*!*/;
+# at 536223
+#170724 15:47:10 server id 1057  end_log_pos 536308     Query   thread_id=14    exec_time=0     error_code=0
+SET TIMESTAMP=1500878830/*!*/;
+BEGIN
+/*!*/;
+# at 536308
+#170724 15:47:10 server id 1057  end_log_pos 536551     Query   thread_id=14    exec_time=0     error_code=0
+SET TIMESTAMP=1500878830/*!*/;
+INSERT INTO t1 VALUES (866596855,'naQuzhMt1IrZIJMkbLAKBNNKKK2sCknzI5uHeGAgQuDd5SLgpN0smODyc7qorTo1QaI5qLl97qmCIzl0Mds81x7TxpIoJyqlY0iEDRNKA1PS0AKEn5NhuMAr3KgEIM')
+/*!*/;
+# at 536551
+#170724 15:47:10 server id 1057  end_log_pos 536578     Xid = 3357
+COMMIT/*!*/;

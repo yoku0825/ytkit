@@ -1,0 +1,137 @@
+#!/usr/bin/perl
+
+########################################################################
+# Copyright (C) 2014, 2017  yoku0825
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+########################################################################
+
+use strict;
+use warnings;
+use utf8;
+
+use Smart::Options::Declare;
+use Pod::Usage;
+
+use FindBin qw/$Bin/;
+use lib "$Bin/../lib";
+use Ytkit::BinlogGroupby;
+
+opts
+my $cell =>
+{
+  default => "10m",
+  comment => qq{Unit of aggregation.
+  Currentry supported are, "s", "second", "1s",
+    "10s",
+    "m", "minute", "1m",
+    "10m",
+    "h", "hour", "1h",
+    "d", "day", "1d"}
+},
+my $group_by =>
+{
+  default => "time",
+  comment => qq{Part of aggregation.
+  "time", "table", "statement",
+  "time,table", "time,statement", "table,statement",
+  "all", "time,table,statement" (same as "all")}
+},
+my $output =>
+{
+  default => "tsv",
+  comment => qq{"tsv" or "csv"}
+};
+
+my $prog= Ytkit::BinlogGroupby->new({ cell     => $cell,
+                                      output   => $output,
+                                      group_by => $group_by,
+                                    });
+if (!($prog))
+{
+  ### Error.
+  pod2usage({ -message => "--cell=$cell is invalid.",
+              -verbose => 1 });
+}
+
+### read from stdin.
+while (<STDIN>)
+{
+  $prog->parse($_);
+}
+
+foreach (@{$prog->output})
+{
+  print $_;
+}
+
+exit 0;
+
+
+__END__
+
+=encoding utf8
+
+=head1 SCRIPT NAME
+
+yt-binlog-groupby - MySQL binlog aggregator cli
+
+=head1 SYNOPSIS
+
+  $ mysqlbinlog -vv /path/to/binlog | yt-binlog-groupby [options]
+
+=head1 DESCRIPTION
+
+yt-binlog-groupby aggregates stdout of B<mysqlbinlog>
+
+=head1 OPTIONS
+
+=head2 --cell=string
+
+Unit of aggregation. Currentry supported are,
+
+=over 8
+
+=item "s", "second", "1s"
+
+=item "10s"
+
+=item "m", "minute", "1m"
+
+=item "10m" [default]
+
+=item "h", "hour", "1h"
+
+=back
+
+=head2  --group-by=string
+
+Part of aggregation. 
+
+=over 8
+
+=item "time" [default], "table", "statement"
+
+=item "time,table", "time,statement", "table,statement"
+
+=item "all", "time,table,statement" (same as "all")
+
+=back
+
+=head2  --output=string
+
+Output type.  "tsv" [default], "csv"
+
+=cut

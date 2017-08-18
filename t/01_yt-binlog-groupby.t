@@ -35,7 +35,7 @@ my $opt=
   output   => "tsv",
 };
 
-foreach my $filename_txt (glob("data/01_*.txt"))
+foreach my $filename_txt (glob("$Bin/data/01_*.txt"))
 {
   my $prog= Ytkit::BinlogGroupby->new($opt);
   my $filename_r= $filename_txt;

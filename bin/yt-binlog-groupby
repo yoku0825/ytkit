@@ -22,38 +22,23 @@ use strict;
 use warnings;
 use utf8;
 
-use Smart::Options::Declare;
+use Getopt::Long qw{:config posix_default no_ignore_case gnu_compat bundling};
 use Pod::Usage;
 
 use FindBin qw/$Bin/;
 use lib "$Bin/../lib";
 use Ytkit::BinlogGroupby;
 
-opts
-my $cell =>
-{
-  default => "10m",
-  comment => qq{Unit of aggregation.
-  Currentry supported are, "s", "second", "1s",
-    "10s",
-    "m", "minute", "1m",
-    "10m",
-    "h", "hour", "1h",
-    "d", "day", "1d"}
-},
-my $group_by =>
-{
-  default => "time",
-  comment => qq{Part of aggregation.
-  "time", "table", "statement",
-  "time,table", "time,statement", "table,statement",
-  "all", "time,table,statement" (same as "all")}
-},
-my $output =>
-{
-  default => "tsv",
-  comment => qq{"tsv" or "csv"}
-};
+### aggrigation unit. "h|hour" => per hour, "m|minute" => per minute, "s|second" => per second.
+my $cell    = "10m";
+my $group_by= "time";
+my $output  = "tsv";
+GetOptions("cell=s"       => \$cell,
+           "group-by=s"   => \$group_by,
+           "output=s"     => \$output,
+           "help|usage|h" => \my $usage,
+          ) or die;
+pod2usage(1) if $usage;
 
 my $prog= Ytkit::BinlogGroupby->new({ cell     => $cell,
                                       output   => $output,

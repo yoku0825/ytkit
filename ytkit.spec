@@ -1,17 +1,21 @@
 Name:		ytkit
 Version:	0.0.1
-Release:	1%{?dist}
+Release:	2
 Summary:	ytkit is Yoku-san no Tool KIT scripts.
 
 #Group:		
 License:	GPLv2
-URL:		https://github.com/yoku0825/ytkit
+URL:		https://github.com/yoku0825/ytkit/releases/tag/%{version}/
 Source0:	ytkit-%{version}.tar.gz
 
 Requires:	perl
 AutoReq:        no
 BuildArch:      noarch
-#BuildRequires:	App::FatPacker::Simple App::cpanminus
+BuildRequires:  make perl
+#BuildRequires:	perl(App::FatPacker::Simple)
+#BuildRequires: perl(App::cpanminus)
+
+%define _rpmfilename %{name}-%{version}.noarch.rpm
 
 %description
 ytkit is Yoku-san no Tool KIT for MySQL.
@@ -20,15 +24,17 @@ ytkit is Yoku-san no Tool KIT for MySQL.
 %setup -q
 
 %build
-prove
 %{__make} clean
 %{__make} all
 
 %install
 %define BINDIR %{buildroot}/usr/local/bin
-rm -rf %{buildroot}
-mkdir -p %{BINDIR}
-cp fatpack/* %{BINDIR}
+%{__rm} -rf %{buildroot}
+%{__mkdir_p} %{BINDIR}
+%{__cp} fatpack/* %{BINDIR}
+
+%check
+%{__make} test
 
 %files
 %defattr(-, root, root, -)

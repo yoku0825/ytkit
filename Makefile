@@ -1,6 +1,9 @@
 INSTALL = /usr/local
 
-all: setup fatpack
+all: 
+	@echo "make all is not supported."
+	@echo "make fatpack && make fatinstall for fatpacked scripts and"
+	@echo "just make install for raw bin/ and lib/ scripts."
 
 .PHONY: clean
 clean:
@@ -21,12 +24,10 @@ install:
 test:
 	prove
 
-fatpack: yt-binlog-groupby
+fatpack: setup yt-binlog-groupby 
 
 fatinstall:
 	cp fatpack/* $(INSTALL)/bin
 
 yt-binlog-groupby: bin/yt-binlog-groupby lib/Ytkit/BinlogGroupby.pm
 	fatpack-simple bin/$@ -o fatpack/$@
-
-

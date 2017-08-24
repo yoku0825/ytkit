@@ -11,7 +11,7 @@ Source0:	ytkit-%{version}.tar.gz
 Requires:	perl
 AutoReq:        no
 BuildArch:      noarch
-BuildRequires:  make perl
+BuildRequires:  make perl perl-Test-Harness
 #BuildRequires:	perl(App::FatPacker::Simple)
 #BuildRequires: perl(App::cpanminus)
 

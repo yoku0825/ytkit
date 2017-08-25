@@ -28,26 +28,30 @@ use Pod::Usage;
 use FindBin qw/$Bin/;
 use lib "$Bin/../lib";
 use Ytkit::BinlogGroupby;
+use Ytkit::Config;
 
 ### aggrigation unit. "h|hour" => per hour, "m|minute" => per minute, "s|second" => per second.
-my $cell    = "10m";
-my $group_by= "time";
-my $output  = "tsv";
-GetOptions("cell=s"       => \$cell,
-           "group-by=s"   => \$group_by,
-           "output=s"     => \$output,
-           "help|usage|h" => \my $usage,
-          ) or die;
-pod2usage(1) if $usage;
+my $opt_struct=
+{
+  cell     => ["cell"],
+  group_by => ["group-by"],
+  output   => ["output", "o"],
+  help     => ["help", "usage", "h"],
+};
 
-my $prog= Ytkit::BinlogGroupby->new({ cell     => $cell,
-                                      output   => $output,
-                                      group_by => $group_by,
-                                    });
+my ($opt, @argv)= options($opt_struct, @ARGV);
+pod2usage(1) if $opt->{help};
+
+$opt->{cell}     ||= "10m";
+$opt->{group_by} ||= "time";
+$opt->{output}   ||= "tsv";
+
+my $prog= Ytkit::BinlogGroupby->new($opt);
+
 if (!($prog))
 {
   ### Error.
-  pod2usage({ -message => "--cell=$cell is invalid.",
+  pod2usage({ -message => "--cell=$opt->{cell} is invalid.",
               -verbose => 1 });
 }
 
@@ -118,5 +122,9 @@ Part of aggregation.
 =head2  --output=string
 
 Output type.  "tsv" [default], "csv"
+
+=head2 --help, --usage, -h
+
+Show this text.
 
 =cut

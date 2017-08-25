@@ -53,6 +53,7 @@ my @test_argv= qw{
                     -Q="QUOTED_SHORT_WITH_EQUAL"
                     -R "QUOTED_SHORT_WITHOUT_EQUAL"
                     this_should_be_left_in_argv
+                    this_should_be_left_in_argv_too
                  };
 
 my $expected_opt= 
@@ -69,7 +70,7 @@ my $expected_opt=
   quoted_short_without_equal => "QUOTED_SHORT_WITHOUT_EQUAL",
 };
 
-my @expected_argv= qw{ this_should_be_left_in_argv };
+my @expected_argv= qw{ this_should_be_left_in_argv this_should_be_left_in_argv_too };
 my ($got_opt, @got_argv)= options($option_struct, @test_argv);
 is_deeply($got_opt, $expected_opt, "Options by Ytkit::Config::options");
 is_deeply(\@got_argv, \@expected_argv, "ARGV by Ytkit::Config::options");

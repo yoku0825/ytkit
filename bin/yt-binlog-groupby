@@ -33,8 +33,8 @@ use Ytkit::Config;
 ### aggrigation unit. "h|hour" => per hour, "m|minute" => per minute, "s|second" => per second.
 my $opt_struct=
 {
-  cell     => ["cell"],
-  group_by => ["group-by"],
+  cell     => ["cell", "c"],
+  group_by => ["group-by", "g"],
   output   => ["output", "o"],
   help     => ["help", "usage", "h"],
 };
@@ -87,7 +87,7 @@ yt-binlog-groupby aggregates stdout of B<mysqlbinlog>
 
 =head1 OPTIONS
 
-=head2 --cell=string
+=head2 --cell=string, -c string
 
 Unit of aggregation. Currentry supported are,
 
@@ -105,7 +105,7 @@ Unit of aggregation. Currentry supported are,
 
 =back
 
-=head2  --group-by=string
+=head2  --group-by=string, -g string
 
 Part of aggregation. 
 
@@ -119,7 +119,7 @@ Part of aggregation.
 
 =back
 
-=head2  --output=string
+=head2  --output=string, -o string
 
 Output type.  "tsv" [default], "csv"
 

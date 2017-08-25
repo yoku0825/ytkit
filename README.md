@@ -19,6 +19,14 @@ binlog entries between 170720 15:10 and 170817 17:40
 170814 18:20    d1.t1   1
 ```
 
+## yt-healthcheck
+
+- Healthcheck script for Nagios compatibility interface.
+
+```
+$ yt-healthcheck -h 172.17.0.1 -u user_name -p password -P 3306
+```
+
 # Installation
 
 - Clone this repository and setup modules from cpanfile.

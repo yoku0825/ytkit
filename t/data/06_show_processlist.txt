@@ -1,0 +1,46 @@
+package Ytkit::Test::SHOW_PROCESSLIST;
+
+$VAR1 = [
+          {
+            'Time' => '2464',
+            'Id' => '1',
+            'db' => undef,
+            'User' => 'system user',
+            'State' => 'Waiting for master to send event',
+            'Command' => 'Connect',
+            'Info' => undef,
+            'Host' => ''
+          },
+          {
+            'Time' => '2464',
+            'Id' => '2',
+            'db' => undef,
+            'User' => 'system user',
+            'State' => 'Slave has read all relay log; waiting for the slave I/O thread to update it',
+            'Command' => 'Connect',
+            'Info' => undef,
+            'Host' => ''
+          },
+          {
+            'Time' => '125',
+            'Id' => '9',
+            'db' => undef,
+            'User' => 'msandbox',
+            'State' => 'User sleep',
+            'Command' => 'Query',
+            'Info' => 'SELECT SLEEP(10000)',
+            'Host' => 'localhost'
+          },
+          {
+            'Time' => '0',
+            'Id' => '10',
+            'db' => undef,
+            'User' => 'msandbox',
+            'State' => 'init',
+            'Command' => 'Query',
+            'Info' => 'SHOW PROCESSLIST',
+            'Host' => 'localhost'
+          }
+        ];
+
+return 1;

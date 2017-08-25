@@ -24,10 +24,15 @@ install:
 test:
 	prove
 
-fatpack: setup yt-binlog-groupby 
+fatpack: setup yt-binlog-groupby yt-healthcheck
 
 fatinstall:
 	cp fatpack/* $(INSTALL)/bin
 
 yt-binlog-groupby: bin/yt-binlog-groupby lib/Ytkit/BinlogGroupby.pm
 	fatpack-simple bin/$@ -o fatpack/$@
+
+yt-healthcheck: bin/yt-healthcheck lib/Ytkit/HealthCheck.pm
+	fatpack-simple bin/$@ -o fatpack/$@
+
+

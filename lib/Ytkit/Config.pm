@@ -35,6 +35,9 @@ sub options
   ###  to { parent-child => { option_hash } style.
   foreach my $parent (keys(%$option_struct))
   {
+    ### if { parent => [alias1, alias2] } style, next.
+    next unless ref($option_struct->{$parent}) eq "HASH";
+
     foreach my $child (keys(%{$option_struct->{$parent}}))
     {
       if (ref($option_struct->{$parent}->{$child}) eq "HASH")
@@ -55,6 +58,12 @@ sub options
   foreach my $opt (keys(%$option_struct))
   {
     ### use option-name as variable-name if alias is not set.
+    if (ref($option_struct->{$opt}) eq "ARRAY")
+    {
+      my $save= $option_struct->{$opt};
+      delete($option_struct->{$opt});
+      $option_struct->{$opt}->{alias}= $save;
+    }
     $option_struct->{$opt}->{alias} ||= [$opt];
     foreach (@{$option_struct->{$opt}->{alias}})
     {
@@ -70,6 +79,7 @@ sub options
   ### Evaluate arguments
   while(@argv)
   {
+    last unless defined($argv[0]);
     my ($key, $value);
     my $arg= shift(@argv);
     given($arg)

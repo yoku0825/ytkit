@@ -1,0 +1,158 @@
+#!/usr/bin/perl
+
+########################################################################
+# Copyright (C) 2017  yoku0825
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+########################################################################
+
+use strict;
+use warnings;
+use utf8;
+use Pod::Usage;
+
+use FindBin qw/$Bin/;
+use lib "$Bin/../lib";
+use Ytkit::HealthCheck;
+use Ytkit::Config;
+
+my $opt_struct=
+{
+  role       => { alias => ["role"], isa => ["auto", "master", "slave", "backup"], },
+  user       => ["u", "user"],
+  host       => ["h", "host"],
+  port       => ["P", "port"],
+  socket     => ["S", "socket"],
+  password   => ["p", "password"],
+  help       => ["help", "usage", "h"],
+  long_query       => { warning       => { default => 5, },
+                        critical      => { default => 100, },
+                        exclude_host  => [],
+                        exclude_query => [], },
+  connection_count => { warning  => { default => 70, },
+                        critical => { default => 95, }, },
+  autoinc_usage    => { warning  => { default => 50, },
+                        critical => { default => 90, }, },
+  slave_status     => { warning  => { default => 5, },
+                        critical => { default => 30, }, },
+  config_file      => { alias => ["c", "config-file"] },
+  config_group     => { alias => ["config-group"], default => "yt-healthcheck" },
+};
+
+my ($opt, @argv)= options($opt_struct, @ARGV);
+$opt= load_config($opt, $opt->{config_file}, $opt->{config_group}) if $opt->{config_file};
+pod2usage(1) if $opt->{help};
+
+### Implicit default values.
+$opt->{role} ||= "auto";
+
+my $prog= Ytkit::HealthCheck->new($opt);
+$prog->result;
+
+
+__END__
+
+=encoding utf8
+
+=head1 SCRIPT NAME
+
+yt-health-check - MySQL healthcheck script
+
+=head1 SYNOPSIS
+
+  $ yt-healthcheck --host=your_mysql_host --port=your_mysql_port --user=your_mysql_account --password=your_password
+
+=head1 DESCRIPTION
+
+yt-health-check checks MySQL status.
+
+  Able to connect.
+  Running replication threads.
+  Replication delay.
+  Too long query in processlist.
+  Connection count.
+  AUTO_INCREMENT column usage.
+  read_only variable is set or not.
+
+=head1 OPTIONS
+
+=head2 --role={master,slave,backup,auto}
+
+=over 8
+
+=item "master"
+
+Check too long query, connection count, AUTO_INCREMENT usage, read_only should be OFF.
+
+=item "slave"
+
+Check too long query, replication threads, replication delay, connection count, read_only should be ON.
+
+=item "backup"
+
+Check only replication threads, read_only should be ON.
+
+=item "auto"
+
+Script determines MySQL is "master" or "slave" automatically by using SHOW SLAVE STATUS
+
+=head2 --host=string, -h string
+
+MySQL host.
+
+=head2 --port=integer, -P integer
+
+MySQL port number.
+
+=head2 --socket=string, -S string
+
+Path to mysql.sock (this parameter is used when --host=localhost)
+
+=head2 --user=string, -u string
+
+MySQL account using for connection and checking
+(need REPLICATION CLIENT and PROCESSLIST and server-wide SELECT priv)
+
+=head2 --password=string, -p string
+
+Password for the user specified by --user
+
+=head2 --long-query-warning=integer, --long-query-critical=integer
+
+Threshold for `SHOW PROCESSLIST`'s `Time`.
+
+=head2 --long-query-exclude-host=string[,string,..]
+
+Comma seperated values for `SHOW PROCESSLIST`'s `Host`.
+When first-match them, doesn't raise WARNING or CRITICAL(always OK)
+
+=head2 --long-query-exclude-query=string[,string,..]
+
+Comma seperated values for `SHOW PROCESSLIST`'s `Info`(SQL statement)
+When first-match them, doesn't raise WARNING or CRITICAL(always OK)
+
+=head2 --connection-count-warning=integer, --connection-count-critical=integer
+
+Threshold for `Threads_connected / max_connections`. Unit is %.
+
+=head2 --autoinc-usage-warning=integer, --autoinc-usage-critical=integer
+
+Threshold for `auto_increment / datatype_max`. Unit is %.
+
+=head2 --slave-status-warning=integer, --slave-status-critical=integer
+
+Threshold for `SHOW SLAVE STATUS`'s `Seconds_Behind_Master`.
+
+=cut

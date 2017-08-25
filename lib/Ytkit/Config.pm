@@ -24,7 +24,7 @@ use utf8;
 use 5.010;
 
 use Exporter qw{import};
-our @EXPORT= qw{options};
+our @EXPORT= qw{options load_config};
 
 sub options
 {
@@ -142,5 +142,58 @@ sub options
   return $ret, @left_argv;
 }
 
+sub load_config
+{
+  my ($opt, $config_file, $config_section)= @_;
+
+  return 0 unless -r $config_file;
+  open(my $fh, "<", $config_file);
+
+  my $current_section= "";
+  while (my $line= <$fh>)
+  {
+    chomp($line);
+
+    given($line)
+    {
+      ### Skip blank line
+      when(/^\s*$/)
+      {
+        next;
+      };
+
+      ### [section_name]
+      when(/^\[([^\[\]]+)\]$/)
+      {
+        $current_section= $1;
+        next;
+      };
+
+      next if $current_section ne $config_section;
+
+      ### key=value
+      when(/^([^\s=]+)\s*=\s*(.*)$/)
+      {
+        my ($key, $value)= ($1, $2);
+
+        ### Remove quote
+        $value =~ s/^"([^"]*)"$/$1/;
+        $value =~ s/^'([^']*)'$/$1/;
+        
+        ### Add $original_opt(options from command-line) only that doesn't exist.
+        $opt->{$key} ||= $value;
+      };
+
+      ### bool
+      default
+      {
+        ### Add $original_opt(options from command-line) only that doesn't exist.
+        $opt->{$line} ||= 1;
+      };
+    };
+  }
+
+  return $opt;
+}
 
 return 1;

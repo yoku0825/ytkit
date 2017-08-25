@@ -1,0 +1,6 @@
+[ytkit_test]
+long_with_equal=LONG_WITH_EQUAL
+long_bool
+
+quoted_long_with_equal="QUOTED_LONG_WITH_EQUAL"
+duplicate_option="from config file"

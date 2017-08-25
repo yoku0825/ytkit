@@ -21,8 +21,6 @@
 use strict;
 use warnings;
 use utf8;
-
-use Getopt::Long qw{:config posix_default no_ignore_case gnu_compat bundling};
 use Pod::Usage;
 
 use FindBin qw/$Bin/;
@@ -42,6 +40,7 @@ my $opt_struct=
 my ($opt, @argv)= options($opt_struct, @ARGV);
 pod2usage(1) if $opt->{help};
 
+### Implicit default values.
 $opt->{cell}     ||= "10m";
 $opt->{group_by} ||= "time";
 $opt->{output}   ||= "tsv";

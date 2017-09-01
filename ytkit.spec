@@ -5,8 +5,8 @@ Summary:	ytkit is Yoku-san no Tool KIT scripts.
 
 #Group:		
 License:	GPLv2
-URL:		https://github.com/yoku0825/ytkit/releases/tag/%{version}/
-Source0:	ytkit-%{version}.tar.gz
+URL:		https://github.com/yoku0825/ytkit/archive/%{version}.tar.gz#/%{name}-%{version}.tar.gz
+Source0:	%{name}-%{version}.tar.gz
 
 Requires:	perl
 AutoReq:        no

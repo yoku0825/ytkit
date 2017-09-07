@@ -27,29 +27,32 @@ use FindBin qw{$Bin};
 use lib "$Bin/../lib";
 use Ytkit::Config;
 
-
-my $org_opt=
+my $option_struct=
 {
-  should_not_erace => 1,
-  duplicate_option => "from command-line option",
+  doublequoted_space_with_equal    => {},
+  doublequoted_space_without_equal => {},
+  singlequoted_space_with_equal    => {},
+  singlequoted_space_without_equal => {},
 };
+
+my @test_argv= (qq{--doublequoted_space_with_equal="s p a c e 1"},
+                qq{--doublequoted_space_without_equal}, qq{"s p a c e 2"},
+                qq{--singlequoted_space_with_equal="s p a c e 3"},
+                qq{--singlequoted_space_without_equal}, qq{"s p a c e 4"},
+                "this_should_be_left_in_argv",);
 
 my $expected_opt= 
 {
-  long_with_equal         => "LONG_WITH_EQUAL",
-  long_bool               => 1,
-  quoted_long_with_equal  => "QUOTED_LONG_WITH_EQUAL",
-  should_not_erace        => 1,
-  duplicate_option        => "from command-line option",
-  singlequoted_with_space => "single quoted with space",
-  doublequoted_with_space => "double quoted with space",
+  doublequoted_space_with_equal    => "s p a c e 1",
+  doublequoted_space_without_equal => "s p a c e 2",
+  singlequoted_space_with_equal    => "s p a c e 3",
+  singlequoted_space_without_equal => "s p a c e 4",
 };
 
-my $config_file   = "$Bin/data/03_config.txt";
-my $config_section= "ytkit_test";
-my $got_opt= load_config($org_opt, $config_file, $config_section);
-
-is_deeply($got_opt, $expected_opt, "Options by Ytkit::Config::load_config");
+my @expected_argv= qw{ this_should_be_left_in_argv };
+my ($got_opt, @got_argv)= options($option_struct, @test_argv);
+is_deeply($got_opt, $expected_opt, "Options by Ytkit::Config::options");
+is_deeply(\@got_argv, \@expected_argv, "ARGV by Ytkit::Config::options");
 
 done_testing;
 

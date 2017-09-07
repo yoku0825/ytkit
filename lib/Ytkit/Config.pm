@@ -29,20 +29,25 @@ our @EXPORT= qw{options load_config};
 sub options
 {
   my ($option_struct, @argv)= @_;
+  my ($ret, @left_argv);
 
   ### Change struct from { variable => [expression1 expression2] }
   ###   to { expression1 => variable, expression2 => variable, }
   my $evaluate_struct;
   foreach my $opt (keys(%$option_struct))
   {
-    foreach (@{$option_struct->{$opt}})
+    ### use option-name as variable-name if alias is not set.
+    $option_struct->{$opt}->{alias} ||= [$opt];
+    foreach (@{$option_struct->{$opt}->{alias}})
     {
       $evaluate_struct->{$_}= $opt;
+
+      ### Set default value.
+      $ret->{$opt}= $option_struct->{$opt}->{default} if $option_struct->{$opt}->{default};
     }
   }
 
   ### Evaluate arguments
-  my ($ret, @left_argv);
   while(@argv)
   {
     my ($key, $value);
@@ -125,19 +130,60 @@ sub options
     ### Is known option?
     if ($key && $evaluate_struct->{$key})
     {
-      ### Remove quote
-      $value =~ s/^"([^"]*)"$/$1/;
-      $value =~ s/^'([^']*)'$/$1/;
+      if ($value =~ /^"([^"]*)/)
+      {
+        ### Start with doublequote should be ended with doublequote.
+        while (!($value =~ /"$/))
+        {
+          $value .= " " . shift(@argv);
+        }
+        ### Trim doublequote.
+        $value =~ s/^"([^"]*)"$/$1/;
+      }
+      elsif ($value =~ /^'([^']*)/)
+      {
+        ### Start with singlequote should be ended with singlequote.
+        while (!($value =~ /'$/))
+        {
+          $value .= " " . shift(@argv);
+        }
+        ### Trim singlequote
+        $value =~ s/^'([^']*)'$/$1/;
+      }
 
-      $ret->{$evaluate_struct->{$key}}= $value;
+      ### isa is set?
+      if (my $isa= $option_struct->{$evaluate_struct->{$key}}->{isa})
+      {
+        ### Validation.
+        if (ref($isa) eq "ARRAY")
+        {
+          ### Array-style isa, grep
+          $ret->{$evaluate_struct->{$key}}= ((grep {$value eq $_} @$isa) ? $value : undef);
+        }
+        elsif (ref($isa) eq "Regexp")
+        {
+          ### Evaluate regexp
+          $ret->{$evaluate_struct->{$key}}= (($value =~ $isa) ? $value : undef);
+        }
+        else
+        {
+          ### isa is non-supported type.
+          $ret->{$evaluate_struct->{$key}}= undef;
+        }
+      }
+      else
+      {
+        ### Don't need to validate.
+        $ret->{$evaluate_struct->{$key}}= $value;
+      }
     }
     else
     {
-      ### Unknown option.
+      ### Unknown option, left in argv.
       push(@left_argv, $arg);
     }
     ($key, $value)= ();
-  } ### End while.
+  } ### End while parsing argument.
 
   return $ret, @left_argv;
 }
@@ -146,7 +192,10 @@ sub load_config
 {
   my ($opt, $config_file, $config_section)= @_;
 
-  return 0 unless -r $config_file;
+  ### return as is.
+  return $opt unless -r $config_file;
+
+
   open(my $fh, "<", $config_file);
 
   my $current_section= "";
@@ -192,6 +241,7 @@ sub load_config
       };
     };
   }
+  close($fh);
 
   return $opt;
 }

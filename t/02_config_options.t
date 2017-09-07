@@ -29,16 +29,16 @@ use Ytkit::Config;
 
 my $option_struct=
 {
-  long_with_equal            => ["long-with-equal"],
-  long_without_equal         => ["long-without-equal"],
-  long_bool                  => ["long-bool"],
-  short_with_equal           => ["E"],
-  short_without_equal        => ["N"],
-  short_bool                 => ["A"],
-  quoted_long_with_equal     => ["quoted-long-with-equal"],
-  quoted_long_without_equal  => ["quoted-long-without-equal"],
-  quoted_short_with_equal    => ["Q"],
-  quoted_short_without_equal => ["R"],
+  long_with_equal            => { alias => ["long-with-equal"] },
+  long_without_equal         => { alias => ["long-without-equal"] },
+  long_bool                  => { alias => ["long-bool"] },
+  short_with_equal           => { alias => ["E"] },
+  short_without_equal        => { alias => ["N"] },
+  short_bool                 => { alias => ["A"] },
+  quoted_long_with_equal     => { alias => ["quoted-long-with-equal"] },
+  quoted_long_without_equal  => { alias => ["quoted-long-without-equal"] },
+  quoted_short_with_equal    => { alias => ["Q"] },
+  quoted_short_without_equal => { alias => ["R"] },
 };
 
 my @test_argv= qw{

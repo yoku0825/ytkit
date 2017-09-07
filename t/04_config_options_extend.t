@@ -35,6 +35,8 @@ my $option_struct=
   test_array_isa_success  => { isa => [qw{test}] },
   test_regexp_isa_fail    => { isa => qr{test} },
   test_regexp_isa_success => { isa => qr{test} },
+  normalize_hyphen_option => { alias => ["normalize-hyphen-option"] },
+  normalize_underscore    => { alias => ["normalize_underscore"] },
 };
 
 my @test_argv= qw{
@@ -43,6 +45,8 @@ my @test_argv= qw{
                     --test_array_isa_success="test"
                     --test_regexp_isa_fail="THIS_IS_FAIL_TEST"
                     --test_regexp_isa_success="this_is_success_test"
+                    --normalize_hyphen_option="ALIAS_USES_HYPHEN_BUT_OPTION_SPECIFIED_UNDERSCORE"
+                    --normalize-underscore="ALIAS_USES_UNDERSCORE_BUT_OPTION_SPECIFIED_HYPHEN"
                     this_should_be_left_in_argv
                  };
 
@@ -54,6 +58,8 @@ my $expected_opt=
   test_array_isa_success  => "test",
   test_regexp_isa_fail    => undef,
   test_regexp_isa_success => "this_is_success_test",
+  normalize_hyphen_option => "ALIAS_USES_HYPHEN_BUT_OPTION_SPECIFIED_UNDERSCORE",
+  normalize_underscore    => "ALIAS_USES_UNDERSCORE_BUT_OPTION_SPECIFIED_HYPHEN",
 };
 
 my @expected_argv= qw{ this_should_be_left_in_argv };

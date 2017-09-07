@@ -31,7 +31,7 @@ sub options
   my ($option_struct, @argv)= @_;
   my ($ret, @left_argv);
 
-  ### Change struct from { variable => [expression1 expression2] }
+  ### Change struct from { variable => [expression1, expression2] }
   ###   to { expression1 => variable, expression2 => variable, }
   my $evaluate_struct;
   foreach my $opt (keys(%$option_struct))
@@ -40,6 +40,8 @@ sub options
     $option_struct->{$opt}->{alias} ||= [$opt];
     foreach (@{$option_struct->{$opt}->{alias}})
     {
+      ### Normalize "-" to "_" in key.
+      s/-/_/g;
       $evaluate_struct->{$_}= $opt;
 
       ### Set default value.
@@ -126,6 +128,9 @@ sub options
 
       ### if any $key and $value is set, treated as argument and push into left_argv later.
     };
+
+    ### Normalize "-" to "_" in $key.
+    $key =~ s/-/_/g if $key;
 
     ### Is known option?
     if ($key && $evaluate_struct->{$key})

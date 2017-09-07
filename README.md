@@ -27,6 +27,8 @@ binlog entries between 170720 15:10 and 170817 17:40
 $ git clone https://github.com/yoku0825/ytkit.git
 $ cd ytkit
 $ cpanm --installdeps .
+$ make fatpack
+$ sudo make fatinstall
 ```
 
 # License

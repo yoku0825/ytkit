@@ -31,6 +31,24 @@ sub options
   my ($option_struct, @argv)= @_;
   my ($ret, @left_argv);
 
+  ### Normalize { parent => { child => { option_hash } } } style
+  ###  to { parent-child => { option_hash } style.
+  foreach my $parent (keys(%$option_struct))
+  {
+    foreach my $child (keys(%{$option_struct->{$parent}}))
+    {
+      if (ref($option_struct->{$parent}->{$child}) eq "HASH")
+      {
+        my $new_option= sprintf("%s_%s", $parent, $child);
+        $option_struct->{$new_option}= $option_struct->{$parent}->{$child};
+        delete($option_struct->{$parent}->{$child});
+
+        ### Delete parent if all children are normalized.
+        delete($option_struct->{$parent}) unless %{$option_struct->{$parent}};
+      }
+    }
+  }
+
   ### Change struct from { variable => [expression1, expression2] }
   ###   to { expression1 => variable, expression2 => variable, }
   my $evaluate_struct;

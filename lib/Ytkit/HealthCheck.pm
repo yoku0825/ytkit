@@ -30,6 +30,29 @@ use constant NAGIOS_WARNING  => { exit_code => 1, str => "WARNING" };
 use constant NAGIOS_CRITICAL => { exit_code => 2, str => "CRITICAL" };
 use constant NAGIOS_UNKNOWN  => { exit_code => 3, str => "UNKNOWN" };
 
+use constant DEFAULT_OPTION =>
+{
+  role       => { alias => ["role"], isa => ["auto", "master", "slave", "backup"], },
+  user       => ["u", "user"],
+  host       => ["h", "host"],
+  port       => ["P", "port"],
+  socket     => ["S", "socket"],
+  password   => ["p", "password"],
+  help       => ["help", "usage", "h"],
+  long_query       => { warning       => { default => 5, },
+                        critical      => { default => 100, },
+                        exclude_host  => [],
+                        exclude_query => [], },
+  connection_count => { warning  => { default => 70, },
+                        critical => { default => 95, }, },
+  autoinc_usage    => { warning  => { default => 50, },
+                        critical => { default => 90, }, },
+  slave_status     => { warning  => { default => 5, },
+                        critical => { default => 30, }, },
+  config_file      => { alias => ["c", "config-file"] },
+  config_group     => { alias => ["config-group"], default => "yt-healthcheck" },
+};
+
 sub new
 {
   my ($class, $opt)= @_;

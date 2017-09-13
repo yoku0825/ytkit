@@ -23,6 +23,14 @@ use warnings;
 use utf8;
 use 5.010;
 
+use constant DEFAULT_OPTION =>
+{
+  cell     => { alias => ["cell", "c"],  isa => [qw{s second 1s 10s m minute 1m 10m h hour 1h}], default => "10m" },
+  group_by => { alias => ["group-by", "g"], default => "time" },
+  output   => { alias => ["output", "o"], default => "tsv" },
+  help     => { alias => ["help", "usage", "h"] },
+};
+
 sub new
 {
   my ($class, $opt)= @_;

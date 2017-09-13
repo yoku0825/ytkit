@@ -28,16 +28,7 @@ use lib "$Bin/../lib";
 use Ytkit::BinlogGroupby;
 use Ytkit::Config;
 
-### aggrigation unit. "h|hour" => per hour, "m|minute" => per minute, "s|second" => per second.
-my $opt_struct=
-{
-  cell     => { alias => ["cell", "c"],  isa => [qw{s second 1s 10s m minute 1m 10m h hour 1h}], default => "10m" },
-  group_by => { alias => ["group-by", "g"], default => "time" },
-  output   => { alias => ["output", "o"], default => "tsv" },
-  help     => { alias => ["help", "usage", "h"] },
-};
-
-my ($opt, @argv)= options($opt_struct, @ARGV);
+my ($opt, @argv)= options(Ytkit::BinlogGroupby::DEFAULT_OPTION, @ARGV);
 pod2usage(1) if $opt->{help};
 
 ### Implicit default values.

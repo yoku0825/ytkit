@@ -15,7 +15,7 @@ BuildRequires:  make perl perl-Test-Harness
 #BuildRequires:	perl(App::FatPacker::Simple)
 #BuildRequires: perl(App::cpanminus)
 
-%define _rpmfilename %{name}-%{version}.noarch.rpm
+%define _rpmfilename %{name}-%{version}-%{release}.noarch.rpm
 
 %description
 ytkit is Yoku-san no Tool KIT for MySQL.

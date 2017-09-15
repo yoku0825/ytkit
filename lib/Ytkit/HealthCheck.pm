@@ -38,7 +38,7 @@ use constant DEFAULT_OPTION =>
   port       => ["P", "port"],
   socket     => ["S", "socket"],
   password   => ["p", "password"],
-  help       => ["help", "usage", "h"],
+  help       => ["help", "usage"],
   long_query       => { warning       => { default => 5, },
                         critical      => { default => 100, },
                         exclude_host  => [],

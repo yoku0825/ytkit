@@ -244,6 +244,12 @@ sub load_config
         next;
       };
 
+      ### Comment when started by "#"
+      when(/^\s*#/)
+      {
+        next;
+      };
+
       ### [section_name]
       when(/^\[([^\[\]]+)\]$/)
       {

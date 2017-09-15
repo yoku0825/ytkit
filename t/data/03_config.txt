@@ -7,3 +7,5 @@ duplicate_option="from config file"
 
 singlequoted_with_space = 'single quoted with space'
 doublequoted_with_space = "double quoted with space"
+
+#this_line_is_ignored = 100

@@ -173,7 +173,7 @@ sub result
 {
   my ($self)= @_;
 
-  printf("%s on %s: %s", $self->{status}->{str}, $self->{role}, $self->{output});
+  printf("%s on %s: %s\n", $self->{status}->{str}, $self->{role}, $self->{output});
   exit $self->{status}->{exit_code};
 }
 

@@ -38,6 +38,7 @@ use constant DEFAULT_OPTION =>
   port       => ["P", "port"],
   socket     => ["S", "socket"],
   password   => ["p", "password"],
+  timeout    => { default => 1 },
   help       => ["help", "usage"],
   long_query       => { warning       => { default => 5, },
                         critical      => { default => 100, },
@@ -140,7 +141,9 @@ sub connect
   eval
   {
     $conn= DBI->connect($dsn, $user, $password,
-                        {mysql_enable_utf8 => 1, RaiseError => 1, PrintError => 0});
+                        {mysql_enable_utf8   => $self->{timeout}, mysql_connect_timeout => $self->{timeout},
+                         mysql_write_timeout => $self->{timeout}, mysql_read_timeout => $self->{timeout},
+                         RaiseError => 1, PrintError => 0});
   };
 
   if ($@)

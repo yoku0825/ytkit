@@ -136,7 +136,7 @@ Turn off connection count check.
 
 Threshold for `Threads_connected / max_connections`. Unit is %.
 
-=head2 --autoinc-usage-count-enable=0
+=head2 --autoinc-usage-enable=0
 
 Turn off autoinc usage calculation.
 

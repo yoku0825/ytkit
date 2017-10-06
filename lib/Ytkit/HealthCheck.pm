@@ -67,6 +67,7 @@ sub new
   {
     status           => NAGIOS_OK,  ### default.
     output           => "",
+    timeout          => $opt->{timeout},
     long_query       =>
     {
       warning       => $opt->{long_query_warning},

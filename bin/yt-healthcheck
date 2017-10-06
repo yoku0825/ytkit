@@ -110,8 +110,6 @@ Password for the user specified by --user
 
 Seconds before timeout(read_timeout, write_timeout, connect_timeout)
 
-Password for the user specified by --user
-
 =head2 --long-query-warning=integer, --long-query-critical=integer
 
 Threshold for `SHOW PROCESSLIST`'s `Time`.

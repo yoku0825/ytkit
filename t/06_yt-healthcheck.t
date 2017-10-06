@@ -22,6 +22,7 @@ use strict;
 use warnings;
 use utf8;
 use Test::More;
+use Test::More::Color qw{foreground};
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
@@ -61,6 +62,7 @@ subtest "check_long_query" => sub
 
   $prog->{long_query}->{warning}= 10000;
   $prog->{long_query}->{critical}= 10000;
+  $prog->{long_query}->{enable}= 1;
   $prog->check_long_query;
   is($prog->{status}->{str}, "OK", "check_long_query < warning");
   &clear_status;
@@ -68,6 +70,7 @@ subtest "check_long_query" => sub
 
   $prog->{long_query}->{warning}= 100;
   $prog->{long_query}->{critical}= 10000;
+  $prog->{long_query}->{enable}= 1;
   $prog->check_long_query;
   is($prog->{status}->{str}, "WARNING", "check_long_query between warning and critical");
   &clear_status;
@@ -75,6 +78,7 @@ subtest "check_long_query" => sub
 
   $prog->{long_query}->{warning}= 100;
   $prog->{long_query}->{critical}= 100;
+  $prog->{long_query}->{enable}= 1;
   $prog->check_long_query;
   is($prog->{status}->{str}, "CRITICAL", "check_long_query > critical");
   &clear_status;
@@ -83,6 +87,7 @@ subtest "check_long_query" => sub
   ### Excluded by host.
   $prog->{long_query}->{warning}= 100;
   $prog->{long_query}->{critical}= 100;
+  $prog->{long_query}->{enable}= 1;
   $prog->{long_query}->{exclude_host}= ["localhost"];
   $prog->check_long_query;
   is($prog->{status}->{str}, "OK", "Time was exceeded but excluded by host");
@@ -92,9 +97,19 @@ subtest "check_long_query" => sub
   ### Excluded by SQL
   $prog->{long_query}->{warning}= 100;
   $prog->{long_query}->{critical}= 100;
+  $prog->{long_query}->{enable}= 1;
   $prog->{long_query}->{exclude_query}= ["SELECT SLEEP"];
   $prog->check_long_query;
   is($prog->{status}->{str}, "OK", "Time was exceeded but excluded by query");
+  &clear_status;
+  delete($prog->{long_query});
+
+  ### disabled by option
+  $prog->{long_query}->{warning}= 100;
+  $prog->{long_query}->{critical}= 100;
+  $prog->{long_query}->{enable}= 0;
+  $prog->check_long_query;
+  is($prog->{status}->{str}, "OK", "Disabled by --long-query-enable=0");
   &clear_status;
   delete($prog->{long_query});
 
@@ -112,6 +127,7 @@ subtest "connection_count" => sub
 
   $prog->{connection_count}->{warning}= 80;
   $prog->{connection_count}->{critical}= 100;
+  $prog->{connection_count}->{enable}= 1;
   $prog->check_connection_count;
   is($prog->{status}->{str}, "OK", "connections < warning");
   &clear_status;
@@ -119,6 +135,7 @@ subtest "connection_count" => sub
 
   $prog->{connection_count}->{warning}= 60;
   $prog->{connection_count}->{critical}= 100;
+  $prog->{connection_count}->{enable}= 1;
   $prog->check_connection_count;
   is($prog->{status}->{str}, "WARNING", "connections between warning and critical");
   &clear_status;
@@ -126,8 +143,17 @@ subtest "connection_count" => sub
 
   $prog->{connection_count}->{warning}= 60;
   $prog->{connection_count}->{critical}= 60;
+  $prog->{connection_count}->{enable}= 1;
   $prog->check_connection_count;
   is($prog->{status}->{str}, "CRITICAL", "connections > critical");
+  &clear_status;
+  delete($prog->{connection_count});
+
+  $prog->{connection_count}->{warning}= 60;
+  $prog->{connection_count}->{critical}= 60;
+  $prog->{connection_count}->{enable}= 0;
+  $prog->check_connection_count;
+  is($prog->{status}->{str}, "OK", "Disabled by --connection-count-enable=0");
   &clear_status;
   delete($prog->{connection_count});
 
@@ -144,6 +170,7 @@ subtest "autoinc_usage" => sub
   
   $prog->{autoinc_usage}->{warning}= 50;
   $prog->{autoinc_usage}->{critical}= 90;
+  $prog->{autoinc_usage}->{enable}= 1;
   $prog->check_autoinc_usage;
   is($prog->{status}->{str}, "OK", "autoinc_usage < warning");
   &clear_status;
@@ -151,6 +178,7 @@ subtest "autoinc_usage" => sub
 
   $prog->{autoinc_usage}->{warning}= 10;
   $prog->{autoinc_usage}->{critical}= 90;
+  $prog->{autoinc_usage}->{enable}= 1;
   $prog->check_autoinc_usage;
   is($prog->{status}->{str}, "WARNING", "autoinc_usage between warning and critical");
   &clear_status;
@@ -158,10 +186,20 @@ subtest "autoinc_usage" => sub
 
   $prog->{autoinc_usage}->{warning}= 10;
   $prog->{autoinc_usage}->{critical}= 15;
+  $prog->{autoinc_usage}->{enable}= 1;
   $prog->check_autoinc_usage;
   is($prog->{status}->{str}, "CRITICAL", "autoinc_usage > critical");
   &clear_status;
   delete($prog->{autoinc_usage});
+
+  $prog->{autoinc_usage}->{warning}= 10;
+  $prog->{autoinc_usage}->{critical}= 15;
+  $prog->{autoinc_usage}->{enable}= 0;
+  $prog->check_autoinc_usage;
+  is($prog->{status}->{str}, "OK", "Disabled by --autoinc-usage-enable=0");
+  &clear_status;
+  delete($prog->{autoinc_usage});
+
 
   delete($prog->{_select_autoinc_usage});
 
@@ -172,6 +210,7 @@ subtest "autoinc_usage" => sub
   
   $prog->{autoinc_usage}->{warning}= 30;
   $prog->{autoinc_usage}->{critical}= 90;
+  $prog->{autoinc_usage}->{enable}= 1;
   $prog->check_autoinc_usage;
   is($prog->{status}->{str}, "WARNING", "Signed smallint is handled correctly.");
   &clear_status;
@@ -228,6 +267,7 @@ subtest "slave_status" => sub
  
   $prog->{slave_status}->{warning}= 100;
   $prog->{slave_status}->{critical}= 1000;
+  $prog->{slave_status}->{enable}= 1;
   $prog->check_slave_status;
   is($prog->{status}->{str}, "OK", "slave_status < warning");
   &clear_status;
@@ -235,6 +275,7 @@ subtest "slave_status" => sub
 
   $prog->{slave_status}->{warning}= 10;
   $prog->{slave_status}->{critical}= 1000;
+  $prog->{slave_status}->{enable}= 1;
   $prog->check_slave_status;
   is($prog->{status}->{str}, "WARNING", "slave_status between warning and critical");
   &clear_status;
@@ -242,6 +283,7 @@ subtest "slave_status" => sub
 
   $prog->{slave_status}->{warning}= 10;
   $prog->{slave_status}->{critical}= 15;
+  $prog->{slave_status}->{enable}= 1;
   $prog->check_slave_status;
   is($prog->{status}->{str}, "CRITICAL", "slave_status > critical");
   &clear_status;
@@ -256,10 +298,21 @@ subtest "slave_status" => sub
  
   $prog->{slave_status}->{warning}= 100;
   $prog->{slave_status}->{critical}= 1000;
+  $prog->{slave_status}->{enable}= 1;
   $prog->check_slave_status;
   is($prog->{status}->{str}, "CRITICAL", "SQL Thread is not running");
   &clear_status;
   delete($prog->{slave_status});
+
+  $prog->{slave_status}->{warning}= 100;
+  $prog->{slave_status}->{critical}= 1000;
+  $prog->{slave_status}->{enable}= 0;
+  $prog->check_slave_status;
+  is($prog->{status}->{str}, "OK", "Disabled by --slave-status-enable=0");
+  &clear_status;
+  delete($prog->{slave_status});
+
+
 
   delete($prog->{_show_slave_status});
 };

@@ -110,6 +110,10 @@ Password for the user specified by --user
 
 Seconds before timeout(read_timeout, write_timeout, connect_timeout)
 
+=head2 --long-query-enable=0
+
+Turn off SHOW PROCESSLIST's check.
+
 =head2 --long-query-warning=integer, --long-query-critical=integer
 
 Threshold for `SHOW PROCESSLIST`'s `Time`.
@@ -124,16 +128,27 @@ When first-match them, doesn't raise WARNING or CRITICAL(always OK)
 Comma seperated values for `SHOW PROCESSLIST`'s `Info`(SQL statement)
 When first-match them, doesn't raise WARNING or CRITICAL(always OK)
 
+=head2 --connection-count-enable=0
+
+Turn off connection count check.
+
 =head2 --connection-count-warning=integer, --connection-count-critical=integer
 
 Threshold for `Threads_connected / max_connections`. Unit is %.
+
+=head2 --autoinc-usage-count-enable=0
+
+Turn off autoinc usage calculation.
 
 =head2 --autoinc-usage-warning=integer, --autoinc-usage-critical=integer
 
 Threshold for `auto_increment / datatype_max`. Unit is %.
 
+=head2 --slave-status-enable=0
+
+Turn off `SHOW SLAVE STATUS`
+
 =head2 --slave-status-warning=integer, --slave-status-critical=integer
 
 Threshold for `SHOW SLAVE STATUS`'s `Seconds_Behind_Master`.
-
 =cut

@@ -40,15 +40,19 @@ use constant DEFAULT_OPTION =>
   password   => ["p", "password"],
   timeout    => { default => 1 },
   help       => ["help", "usage"],
-  long_query       => { warning       => { default => 5, },
+  long_query       => { enable        => { default => 1, },
+                        warning       => { default => 5, },
                         critical      => { default => 100, },
                         exclude_host  => [],
                         exclude_query => [], },
-  connection_count => { warning  => { default => 70, },
+  connection_count => { enable   => { default => 1, },
+                        warning  => { default => 70, },
                         critical => { default => 95, }, },
-  autoinc_usage    => { warning  => { default => 50, },
+  autoinc_usage    => { enable   => { default => 1, },
+                        warning  => { default => 50, },
                         critical => { default => 90, }, },
-  slave_status     => { warning  => { default => 5, },
+  slave_status     => { enable   => { default => 1, },
+                        warning  => { default => 5, },
                         critical => { default => 30, }, },
   config_file      => { alias => ["c", "config-file"] },
   config_group     => { alias => ["config-group"], default => "yt-healthcheck" },
@@ -70,17 +74,21 @@ sub new
     timeout          => $opt->{timeout},
     long_query       =>
     {
+      enable        => $opt->{long_query_enable},
       warning       => $opt->{long_query_warning},
       critical      => $opt->{long_query_critical},
       exclude_host  => $opt->{long_query_exclude_host} ? [split(/,/, $opt->{long_query_exclude_host})] : [],
       exclude_query => $opt->{long_query_exclude_query} ? [split(/,/, $opt->{long_query_exclude_query})] : [],
     },
-    connection_count => { warning       => $opt->{connection_count_warning},
+    connection_count => { enable        => $opt->{connection_count_enable},
+                          warning       => $opt->{connection_count_warning},
                           critical      => $opt->{connection_count_critical}, },
-    autoinc_usage    => { warning       => $opt->{autoinc_usage_warning},
+    autoinc_usage    => { enable        => $opt->{autoinc_usage_enable},
+                          warning       => $opt->{autoinc_usage_warning},
                           critical      => $opt->{autoinc_usage_critical}, },
     read_only        => { should_be     => undef },
-    slave_status     => { warning       => $opt->{slave_status_warning},
+    slave_status     => { enable        => $opt->{slave_status_enable},
+                          warning       => $opt->{slave_status_warning},
                           critical      => $opt->{slave_status_critical}, },
   };
   bless $self => $class;
@@ -184,6 +192,7 @@ sub result
 sub check_long_query
 {
   my ($self)= @_;
+  return 0 unless $self->{long_query}->{enable};
 
   ### Evaluate each thread.
   foreach my $row (@{$self->show_processlist})
@@ -236,6 +245,7 @@ sub check_long_query
 sub check_connection_count
 {
   my ($self)= @_;
+  return 0 unless $self->{connection_count}->{enable};
 
   my $status;
 
@@ -262,6 +272,7 @@ sub check_connection_count
 sub check_autoinc_usage
 {
   my ($self)= @_;
+  return 0 unless $self->{autoinc_usage}->{enable};
 
   foreach my $row (@{$self->select_autoinc_usage})
   {
@@ -342,6 +353,7 @@ sub check_read_only
 sub check_slave_status
 {
   my ($self)= @_;
+  return 0 unless $self->{slave_status}->{enable};
 
   my $status;
   my $output= "";

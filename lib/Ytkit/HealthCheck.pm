@@ -226,6 +226,7 @@ sub check_long_query
     my $status;
     given($row->{Time})
     {
+      $_ ||= 0;
       when($_ > $self->{long_query}->{critical})
       {
         $status= NAGIOS_CRITICAL;

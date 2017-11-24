@@ -3,7 +3,7 @@ INSTALL = /usr/local
 all: 
 	@echo "make all is not supported."
 	@echo "make fatpack && make fatinstall for fatpacked scripts and"
-	@echo "just make install for raw bin/ and lib/ scripts."
+	@echo "make install for raw bin/ and lib/ scripts."
 
 .PHONY: clean
 clean:
@@ -34,5 +34,4 @@ yt-binlog-groupby: bin/yt-binlog-groupby lib/Ytkit/BinlogGroupby.pm
 
 yt-healthcheck: bin/yt-healthcheck lib/Ytkit/HealthCheck.pm
 	fatpack-simple bin/$@ -o fatpack/$@
-
 

@@ -1,6 +1,6 @@
 Name:		ytkit
 Version:	0.0.4
-Release:	1
+Release:	2
 Summary:	ytkit is Yoku-san no Tool KIT scripts.
 
 #Group:		
@@ -24,13 +24,15 @@ ytkit is Yoku-san no Tool KIT for MySQL.
 %setup -q
 
 %build
-%{__make} fatpack
 
 %install
 %define BINDIR %{buildroot}/usr/local/bin
+%define LIBDIR %{buildroot}/%{perl_sitelib}
 %{__rm} -rf %{buildroot}
 %{__mkdir_p} %{BINDIR}
-%{__cp} fatpack/* %{BINDIR}
+%{__cp} bin/* %{BINDIR}
+%{__mkdir_p} %{LIBDIR}
+%{__cp} -r lib/* %{LIBDIR}
 
 %check
 %{__make} test
@@ -38,6 +40,7 @@ ytkit is Yoku-san no Tool KIT for MySQL.
 %files
 %defattr(-, root, root, -)
 /usr/local/bin
+%{perl_sitelib}
 
 %changelog
 

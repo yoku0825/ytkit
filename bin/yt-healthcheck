@@ -30,7 +30,7 @@ use Ytkit::Config;
 
 my ($opt, @argv)= options(Ytkit::HealthCheck::DEFAULT_OPTION, @ARGV);
 $opt= load_config($opt, $opt->{config_file}, $opt->{config_group}) if $opt->{config_file};
-pod2usage(1) if $opt->{help};
+pod2usage(-verbose => 2) if $opt->{help};
 
 ### Implicit default values.
 $opt->{role} ||= "auto";
@@ -53,7 +53,7 @@ yt-health-check - MySQL healthcheck script
 
 =head1 DESCRIPTION
 
-yt-health-check checks MySQL status.
+yt-health-check checks following MySQL status,
 
   Able to connect.
   Running replication threads.
@@ -63,27 +63,66 @@ yt-health-check checks MySQL status.
   AUTO_INCREMENT column usage.
   read_only variable is set or not.
 
+and returns Nagios compatible result code,
+
+  0 OK
+  1 WARNING
+  2 CRITICAL
+  3 UNKNOWN
+
 =head1 OPTIONS
 
 =head2 --role={master,slave,backup,auto}
+
+Switching check-item as below,
 
 =over 8
 
 =item "master"
 
-Check too long query, connection count, AUTO_INCREMENT usage, read_only should be OFF.
+=over 1
+
+=item - Long query
+
+=item - Connection count
+
+=item - AUTO_INCREMENT usage
+
+=item - read_only should be OFF
+
+=back
 
 =item "slave"
 
-Check too long query, replication threads, replication delay, connection count, read_only should be ON.
+=over 1
+
+=item - Long query
+
+=item - Replication threads
+
+=item - Replication delay
+
+=item - Connection count
+
+=item - read_only should be ON
+
+=back
 
 =item "backup"
 
-Check only replication threads, read_only should be ON.
+=over 1
+
+=item - Replication threads
+
+=item - read_only should be ON
+
+=back
 
 =item "auto"
 
-Script determines MySQL is "master" or "slave" automatically by using SHOW SLAVE STATUS
+Script determines MySQL is "master" or "slave" automatically by using SHOW SLAVE STATUS(Result is empty or not)
+
+=back
 
 =head2 --host=string, -h string
 
@@ -100,7 +139,7 @@ Path to mysql.sock (this parameter is used when --host=localhost)
 =head2 --user=string, -u string
 
 MySQL account using for connection and checking
-(need REPLICATION CLIENT and PROCESSLIST and server-wide SELECT priv)
+(need REPLICATION CLIENT and PROCESSLIST and global SELECT priv)
 
 =head2 --password=string, -p string
 

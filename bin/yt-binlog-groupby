@@ -29,7 +29,7 @@ use Ytkit::BinlogGroupby;
 use Ytkit::Config;
 
 my ($opt, @argv)= options(Ytkit::BinlogGroupby::DEFAULT_OPTION, @ARGV);
-pod2usage(1) if $opt->{help};
+pod2usage(-verbose => 2) if $opt->{help};
 
 ### Implicit default values.
 $opt->{cell}     ||= "10m";

@@ -1,13 +1,52 @@
-# at 277
-#170720 15:19:16 server id 1057  end_log_pos 319        Table_map: `d1`.`t1` mapped to number 108
-# at 319
-#170720 15:19:16 server id 1057  end_log_pos 364        Write_rows: table id 108 flags: STMT_END_F
+/*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE=1*/;
+/*!50003 SET @OLD_COMPLETION_TYPE=@@COMPLETION_TYPE,COMPLETION_TYPE=0*/;
+DELIMITER /*!*/;
+# at 4
+#171124 17:02:37 server id 1057  end_log_pos 123 	Start: binlog v 4, server v 5.7.20-log created 171124 17:02:37
+# Warning: this binlog is either in use or was not closed properly.
+BINLOG '
+HdIXWg8hBAAAdwAAAHsAAAABAAQANS43LjIwLWxvZwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAEzgNAAgAEgAEBAQEEgAAXwAEGggAAAAICAgCAAAACgoKKioAEjQA
+ADVovao=
+'/*!*/;
+# at 123
+#171124 17:02:37 server id 1057  end_log_pos 190 	Previous-GTIDs
+# d3d8ee79-b2f4-11e7-8b72-0201a32caf75:1-17373
+# at 190
+#171124 17:02:44 server id 1057  end_log_pos 251 	GTID	last_committed=0	sequence_number=1	rbr_only=yes
+/*!50718 SET TRANSACTION ISOLATION LEVEL READ COMMITTED*//*!*/;
+SET @@SESSION.GTID_NEXT= 'd3d8ee79-b2f4-11e7-8b72-0201a32caf75:17374'/*!*/;
+# at 251
+#171124 17:02:44 server id 1057  end_log_pos 317 	Query	thread_id=6	exec_time=0	error_code=0
+SET TIMESTAMP=1511510564/*!*/;
+SET @@session.pseudo_thread_id=6/*!*/;
+SET @@session.foreign_key_checks=1, @@session.sql_auto_is_null=0, @@session.unique_checks=1, @@session.autocommit=1/*!*/;
+SET @@session.sql_mode=1436549152/*!*/;
+SET @@session.auto_increment_increment=1, @@session.auto_increment_offset=1/*!*/;
+/*!\C utf8mb4 *//*!*/;
+SET @@session.character_set_client=45,@@session.collation_connection=45,@@session.collation_server=45/*!*/;
+SET @@session.lc_time_names=0/*!*/;
+SET @@session.collation_database=DEFAULT/*!*/;
+BEGIN
+/*!*/;
+# at 317
+#171124 17:02:44 server id 1057  end_log_pos 359 	Table_map: `d1`.`t1` mapped to number 372
+# at 359
+#171124 17:02:44 server id 1057  end_log_pos 403 	Write_rows: table id 372 flags: STMT_END_F
 
 BINLOG '
-ZEtwWRMhBAAAKgAAAD8BAAAAAGwAAAAAAAEAAmQxAAJ0MQACCA8CgAAC
-ZEtwWR4hBAAALQAAAGwBAAAAAGwAAAAAAAEAAgAC//wEAAAAAAAAAARmb3Vy
+JNIXWhMhBAAAKgAAAGcBAAAAAHQBAAAAAAEAAmQxAAJ0MQACCA8CgAAC
+JNIXWh4hBAAALAAAAJMBAAAAAHQBAAAAAAEAAgAC//wBAAAAAAAAAANvbmU=
 '/*!*/;
 ### INSERT INTO `d1`.`t1`
 ### SET
-###   @1=4 /* LONGINT meta=0 nullable=0 is_null=0 */
-###   @2='four' /* VARSTRING(128) meta=128 nullable=1 is_null=0 */
+###   @1=1 /* LONGINT meta=0 nullable=0 is_null=0 */
+###   @2='one' /* VARSTRING(128) meta=128 nullable=1 is_null=0 */
+# at 403
+#171124 17:02:44 server id 1057  end_log_pos 430 	Xid = 33
+COMMIT/*!*/;
+SET @@SESSION.GTID_NEXT= 'AUTOMATIC' /* added by mysqlbinlog */ /*!*/;
+DELIMITER ;
+# End of log file
+/*!50003 SET COMPLETION_TYPE=@OLD_COMPLETION_TYPE*/;
+/*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE=0*/;

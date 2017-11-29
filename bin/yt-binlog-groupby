@@ -36,6 +36,9 @@ $opt->{cell}     ||= "10m";
 $opt->{group_by} ||= "time";
 $opt->{output}   ||= "tsv";
 
+### For command-line header
+$opt->{print_header}= 1;
+
 my $prog= Ytkit::BinlogGroupby->new($opt);
 
 if (!($prog))
@@ -106,6 +109,8 @@ Part of aggregation.
 =item "time,table", "time,statement", "table,statement"
 
 =item "all", "time,table,statement" (same as "all")
+
+=item "all,exec", "exec,time,table,statement" (same as "all,exec")
 
 =back
 

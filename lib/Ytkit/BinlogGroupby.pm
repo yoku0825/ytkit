@@ -29,6 +29,7 @@ use constant DEFAULT_OPTION =>
   group_by => { alias => ["group-by", "g"], default => "time" },
   output   => { alias => ["output", "o"], default => "tsv" },
   help     => { alias => ["help", "usage", "h"] },
+  verbose  => { alias => ["verbose", "v"], default => 0 },
 };
 
 sub new
@@ -42,6 +43,7 @@ sub new
   {
     cell            => $opt->{cell},
     output          => $opt->{output},
+    print_header    => $opt->{print_header},
     group_by        => sort_csv($opt->{group_by}),
     print_format    => $print_format,
     time_string     => undef,
@@ -51,6 +53,7 @@ sub new
     header_parser   => $header_parser,
     count_hash      => undef,
     exec_time_hash  => undef,
+    verbose         => $opt->{verbose},
     sbr_regex       => qr/^(insert|update|delete|replace)\s+(?:ignore\s+)?(?:(?:into|from)?\s+)?(\S+?)\s+/i,
     rbr_regex       => qr/^\#\#\#\s+(INSERT|UPDATE|DELETE)\s+(?:(?:INTO|FROM)?\s+)?(\S+)/,
   };
@@ -86,41 +89,41 @@ sub parse
     {
       given($self->{group_by})
       {
-        when(["exec,statement,table,time"])
+        when([sort_csv("exec,statement,table,time"), sort_csv("all,exec")])
         {
           $self->{count_hash}->{$self->{time_string}}->{$table}->{$dml}->{$self->{exec_time}}++;
         };
-        when(["all", "statement,table,time"])
+        when([sort_csv("all"), sort_csv("statement,table,time")])
         {
           $self->{count_hash}->{$self->{time_string}}->{$table}->{$dml}++;
           push(@{$self->{exec_time_hash}->{$self->{time_string}}->{$table}->{$dml}}, $self->{exec_time});
         };
-        when(["table,time"])
+        when([sort_csv("table,time")])
         {
           $self->{count_hash}->{$self->{time_string}}->{$table}++;
           push(@{$self->{exec_time_hash}->{$self->{time_string}}->{$table}}, $self->{exec_time});
         };
-        when(["time"])
+        when([sort_csv("time")])
         {
           $self->{count_hash}->{$self->{time_string}}++;
           push(@{$self->{exec_time_hash}->{$self->{time_string}}}, $self->{exec_time});
         };
-        when(["table"])
+        when([sort_csv("table")])
         {
           $self->{count_hash}->{$table}++;
           push(@{$self->{exec_time_hash}->{$table}}, $self->{exec_time});
         };
-        when(["statement"])
+        when([sort_csv("statement")])
         {
           $self->{count_hash}->{$dml}++;
           push(@{$self->{exec_time_hash}->{$dml}}, $self->{exec_time});
         };
-        when(["statement,time"])
+        when([sort_csv("statement,time")])
         {
           $self->{count_hash}->{$self->{time_string}}->{$dml}++;
           push(@{$self->{exec_time_hash}->{$self->{time_string}}->{$dml}}, $self->{exec_time});
         };
-        when(["statement,table"])
+        when([sort_csv("statement,table")])
         {
           $self->{count_hash}->{$table}->{$dml}++;
           push(@{$self->{exec_time_hash}->{$table}->{$dml}}, $self->{exec_time});
@@ -139,7 +142,7 @@ sub output
 
   printf("binlog entries between %s and %s\n",
          sprintf($self->{print_format}, $self->{first_seen}),
-         sprintf($self->{print_format}, $self->{last_seen}));
+         sprintf($self->{print_format}, $self->{last_seen})) if $self->{print_header};
 
   my $count_hash    = $self->{count_hash};
   my $exec_time_hash= $self->{exec_time_hash};
@@ -150,8 +153,8 @@ sub output
       ### Only have 1 element.
       foreach my $element (sort(keys(%$count_hash)))
       {
-        my $fixed_hash= fix_array(@{$exec_time_hash->{$element}});
-        push(@ret, $self->build_line($element, $count_hash->{$element}, $fixed_hash->{mid}, $fixed_hash->{max}));
+        push(@ret, $self->build_line($element, $count_hash->{$element},
+                                     $exec_time_hash->{$element}));
       }
     };
     when(["statement,table"])
@@ -161,8 +164,8 @@ sub output
       {
         foreach my $dml (sort(keys(%{$count_hash->{$table}})))
         {
-          my $fixed_hash= fix_array(@{$exec_time_hash->{$table}->{$dml}});
-          push(@ret, $self->build_line($table, $dml, $count_hash->{$table}->{$dml}, $fixed_hash->{mid}, $fixed_hash->{max}));
+          push(@ret, $self->build_line($table, $dml, $count_hash->{$table}->{$dml},
+                                       $exec_time_hash->{$table}->{$dml}));
         }
       }
     };
@@ -175,27 +178,44 @@ sub output
   
       given($self->{group_by})
       {
-        when(["time"])
+        when([sort_csv("time")])
         {
-          my $fixed_hash= fix_array(@{$exec_time_hash->{$time}});
-          push(@ret, $self->build_line($time_printable, $count_hash->{$time}, $fixed_hash->{mid}, $fixed_hash->{max}));
+          push(@ret, $self->build_line($time_printable, $count_hash->{$time},
+                                       $exec_time_hash->{$time}));
         };
-        when(["table,time", "statement,time"])
+        when([sort_csv("table,time"), sort_csv("statement,time")])
         {
           foreach my $element (sort(keys(%{$count_hash->{$time}})))
           {
-            my $fixed_hash= fix_array(@{$exec_time_hash->{$time}->{$element}});
-            push(@ret, $self->build_line($time_printable, $element, $count_hash->{$time}->{$element}, $fixed_hash->{mid}, $fixed_hash->{max}));
+            push(@ret, $self->build_line($time_printable, $element,
+                                         $count_hash->{$time}->{$element},
+                                         $exec_time_hash->{$time}->{$element}));
           }
         };
-        when(["all", "statement,table,time"])
+        when([sort_csv("all"), sort_csv("statement,table,time")])
         {
           foreach my $table (sort(keys(%{$count_hash->{$time}})))
           {
             foreach my $dml (sort(keys(%{$count_hash->{$time}->{$table}})))
             {
-              my $fixed_hash= fix_array(@{$exec_time_hash->{$time}->{$table}->{$dml}});
-              push(@ret, $self->build_line($time_printable, $table, $dml, $count_hash->{$time}->{$table}->{$dml}, $fixed_hash->{mid}, $fixed_hash->{max}));
+              push(@ret, $self->build_line($time_printable, $table, $dml,
+                                           $count_hash->{$time}->{$table}->{$dml},
+                                           $exec_time_hash->{$time}->{$table}->{$dml}));
+            }
+          }
+        };
+        when([sort_csv("all,exec"), sort_csv("exec,statement,table,time")])
+        {
+          foreach my $table (sort(keys(%{$count_hash->{$time}})))
+          {
+            foreach my $dml (sort(keys(%{$count_hash->{$time}->{$table}})))
+            {
+              foreach my $exec (sort(keys(%{$count_hash->{$time}->{$table}->{$dml}})))
+              {
+                push(@ret, $self->build_line($time_printable, $table, $dml,
+                                             "exec_time:" . $exec,
+                                             $count_hash->{$time}->{$table}->{$dml}->{$exec}, {}));
+              }
             }
           }
         };
@@ -217,6 +237,15 @@ sub build_line
   my ($self, @args)= @_;
   my $seperator= $self->{output} eq "tsv" ? "\t" : $self->{output} eq "csv" ? "," : "\n";
 
+  ### last element of @args is exec_time_hash_element
+  my $exec_time_hash_element= pop(@args);
+
+  if ($exec_time_hash_element && $self->{verbose})
+  {
+    my @sorted= sort { $a <=> $b } @$exec_time_hash_element;
+    push(@args, sprintf("mid:%d", $sorted[int($#sorted / 2)]));
+    push(@args, sprintf("max:%d", $sorted[$#sorted]));
+  }
   return sprintf("%s\n", join($seperator, @args));
 }
 
@@ -268,13 +297,5 @@ sub set_parser
   return ($parse, $format);
 }
 
-sub fix_array
-{
-  my @sorted= sort { $a <=> $b } @_;
-  return {min => sprintf("min:%d", $sorted[0]),
-          max => sprintf("max:%d", $sorted[$#sorted]),
-          mid => sprintf("mid:%d", $sorted[int($#sorted / 2)])};
-
-}
 
 return 1;

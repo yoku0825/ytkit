@@ -27,35 +27,39 @@ use FindBin qw{$Bin};
 use lib "$Bin/../lib";
 use Ytkit::BinlogGroupby;
 
-
-my $opt=
+subtest "--group-by=all" => sub
 {
-  group_by => "all",
-  cell     => "1m",
-  output   => "tsv",
+  run_test({group_by => "all", cell => "1m", output => "tsv"}, "01_parse_sbr_57.txt", "01_parse_sbr_57.r");
+  run_test({group_by => "all", cell => "1m", output => "tsv"}, "01_parse_rbr_57.txt", "01_parse_rbr_57.r");
 };
 
-foreach my $filename_txt (glob("$Bin/data/01_*.txt"))
+subtest "--group-by=all,exec" => sub
 {
-  my $prog= Ytkit::BinlogGroupby->new($opt);
-  my $filename_r= $filename_txt;
-  $filename_r =~ s/\.txt\z/.r/;
-  open(my $in, "<", $filename_txt) or die;
-  print $filename_r;
-  open(my $expect, "<", $filename_r) or die;
-
-  while (<$in>)
-  {
-    $prog->parse($_);
-  }
-  my @expect= <$expect>;
-  close($in);
-  close($expect);
-
-  is_deeply(@{$prog->output}, @expect);
-}
+  run_test({group_by => "all,exec", cell => "1m", output => "tsv"}, "01_parse_sbr_57.txt", "01_parse_sbr_57_all_exec.r");
+};
 
 done_testing;
 
 
 exit 0;
+
+
+sub run_test
+{
+  my ($opt, $infile, $resultfile)= @_;
+
+  my $prog= Ytkit::BinlogGroupby->new($opt);
+  open(my $in, "<", sprintf("%s/data/%s", $Bin, $infile)) or die;
+  open(my $expect, "<", sprintf("%s/data/%s", $Bin, $resultfile)) or die;
+  
+  while (<$in>)
+  {
+    $prog->parse($_);
+  }
+
+  my @expect= <$expect>;
+  close($in);
+  close($expect);
+
+  is_deeply($prog->output, \@expect, $resultfile);
+}

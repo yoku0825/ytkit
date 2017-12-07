@@ -150,7 +150,7 @@ sub connect
   eval
   {
     $conn= DBI->connect($dsn, $user, $password,
-                        {mysql_enable_utf8   => $self->{timeout}, mysql_connect_timeout => $self->{timeout},
+                        {mysql_enable_utf8   => 1, mysql_connect_timeout => $self->{timeout},
                          mysql_write_timeout => $self->{timeout}, mysql_read_timeout => $self->{timeout},
                          RaiseError => 1, PrintError => 0});
   };

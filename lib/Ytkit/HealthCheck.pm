@@ -185,7 +185,8 @@ sub result
 {
   my ($self)= @_;
 
-  printf("%s on %s: %s\n", $self->{status}->{str}, $self->{role}, $self->{output});
+  printf("%s on %s: %s (%s)\n",
+         $self->{status}->{str}, $self->show_variables->{hostname}->{Value}, $self->{output}, $self->{role});
   exit $self->{status}->{exit_code};
 }
 
@@ -482,6 +483,5 @@ sub select_autoinc_usage
   }
   return $self->{_select_autoinc_usage};
 }
-
 
 return 1;

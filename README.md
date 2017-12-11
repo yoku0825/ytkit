@@ -24,10 +24,21 @@ binlog entries between 170720 15:10 and 170817 17:40
 - Healthcheck script for Nagios compatibility interface.
 
 ```
-$ yt-healthcheck -h 172.17.0.1 -u user_name -p password -P 3306
+$ yt-healthcheck -h 172.17.0.1 -u user_name -p'password' -P 3306
 ```
 
 # Installation
+
+## Install by rpm
+
+- Download from [Releases](https://github.com/yoku0825/ytkit/releases) page.
+  - rpm will be provided only when tag is updated.
+
+```
+$ sudo yum install -y https://github.com/yoku0825/ytkit/releases/download/0.0.5/ytkit-0.0.5-1.noarch.rpm
+```
+
+## Install as is
 
 - Clone this repository and setup modules from cpanfile.
 
@@ -35,6 +46,26 @@ $ yt-healthcheck -h 172.17.0.1 -u user_name -p password -P 3306
 $ git clone https://github.com/yoku0825/ytkit.git
 $ cd ytkit
 $ cpanm --installdeps .
+$ sudo make install
+```
+
+## Using without installation
+
+- Clone this repository and setup modules from cpanfile, run script under bin directory.
+
+```
+$ git clone https://github.com/yoku0825/ytkit.git
+$ cd ytkit
+$ cpanm --installdeps .
+```
+
+## Install as fatpacked script
+
+- Clone this repository and use `make fatinstall`
+
+```
+$ git clone https://github.com/yoku0825/ytkit.git
+$ cd ytkit
 $ make fatpack
 $ sudo make fatinstall
 ```

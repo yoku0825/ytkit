@@ -38,6 +38,7 @@ my $opt=
 ### Connection failed.
 my $prog=Ytkit::HealthCheck->new($opt);
 is($prog->{status}->{str}, "CRITICAL", "Connection Failed");
+is($prog->{hostname}, "Can't fetch hostname", "Default hostname when connection has failed.");
 
 ### Imitate "connection is alive"
 $prog->{conn}= "dummy";

@@ -71,6 +71,7 @@ sub new
   {
     status           => NAGIOS_OK,  ### default.
     output           => "",
+    hostname         => "Can't fetch hostname",
     timeout          => $opt->{timeout},
     long_query       =>
     {
@@ -185,9 +186,16 @@ sub result
 {
   my ($self)= @_;
 
-  printf("%s on %s: %s (%s)\n",
-         $self->{status}->{str}, $self->show_variables->{hostname}->{Value}, $self->{output}, $self->{role});
+  $self->print_status;
   exit $self->{status}->{exit_code};
+}
+
+sub print_status
+{
+  my ($self)= @_;
+  printf("%s on %s: %s (%s)\n",
+         $self->{status}->{str}, $self->{hostname},
+         $self->{output}, $self->{role});
 }
 
 sub check_long_query
@@ -465,6 +473,7 @@ sub show_variables
   if (!(defined($self->{_show_variables})))
   {
     $self->{_show_variables}= $self->{conn}->selectall_hashref("SHOW GLOBAL VARIABLES", ["Variable_name"]);
+    $self->{hostname}= $self->{_show_variables}->{hostname}->{Value};
   }
   return $self->{_show_variables};
 }

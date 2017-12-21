@@ -32,7 +32,7 @@ use constant NAGIOS_UNKNOWN  => { exit_code => 3, str => "UNKNOWN" };
 
 use constant DEFAULT_OPTION =>
 {
-  role       => { alias => ["role"], isa => ["auto", "master", "slave", "backup"], },
+  role       => { alias => ["role"], isa => ["auto", "master", "slave", "backup", "none"], },
   user       => ["u", "user"],
   host       => ["h", "host"],
   port       => ["P", "port"],
@@ -130,6 +130,11 @@ sub new
       $self->check_slave_status;
       $self->{read_only}->{should_be}= 1;
       $self->check_read_only;
+    };
+    when("none")
+    {
+      ### Nothing to check (automatically).
+      ### Use this role when call Ytkit::HealthCheck as library.
     };
 
     default

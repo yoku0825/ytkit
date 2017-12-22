@@ -29,10 +29,7 @@ our @EXPORT= qw{elapsed_time};
 
 use constant YTKIT_HEALTHCHECK_OPTION =>
 {
-  role                  => "slave",
-  long_query_enable     => 0,
-  autoinc_usage_enable  => 0, 
-  slave_status_enable   => 1,
+  role                  => "none",
   slave_status_warning  => 0,
   slave_status_critical => 4294967295, ### Report CRITICAL only when I/O and/or SQL threads have stopped.
 };
@@ -126,6 +123,8 @@ sub wait_slave
     while ()
     {
       my $healthcheck= Ytkit::HealthCheck->new($one_opt);
+      $healthcheck->check_long_query;
+      $healthcheck->check_slave_status;
 
       if ($healthcheck->{status}->{exit_code} eq Ytkit::HealthCheck::NAGIOS_OK->{exit_code})
       {

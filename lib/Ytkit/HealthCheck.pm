@@ -1,7 +1,7 @@
 package Ytkit::HealthCheck;
 
 ########################################################################
-# Copyright (C) 2017  yoku0825
+# Copyright (C) 2017, 2018  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -20,9 +20,12 @@ package Ytkit::HealthCheck;
 
 use strict;
 use warnings;
-use utf8;
-use 5.010;
+use v5.10;
 use DBI;
+
+use FindBin qw{$Bin};
+use lib "$Bin/../lib";
+use Ytkit::MySQLServer;
 
 ### return code for Nagios-compats.
 use constant NAGIOS_OK       => { exit_code => 0, str => "OK" };
@@ -62,16 +65,10 @@ sub new
 {
   my ($class, $opt)= @_;
 
-  my $dsn= "dbi:mysql:";
-  $dsn  .= sprintf(";host=%s", $opt->{host}) if $opt->{host};
-  $dsn  .= sprintf(";port=%d", $opt->{port}) if $opt->{port};
-  $dsn  .= sprintf(";mysql_socket=%s", $opt->{socket}) if $opt->{socket};
-
   my $self=
   {
     status           => NAGIOS_OK,  ### default.
     output           => "",
-    hostname         => "Can't fetch hostname",
     timeout          => $opt->{timeout},
     long_query       =>
     {
@@ -91,12 +88,15 @@ sub new
     slave_status     => { enable        => $opt->{slave_status_enable},
                           warning       => $opt->{slave_status_warning},
                           critical      => $opt->{slave_status_critical}, },
+    instance => Ytkit::MySQLServer->new($opt),
   };
   bless $self => $class;
 
-  if (!($self->connect($dsn, $opt->{user}, $opt->{password})))
+  if (!($self->{instance}->{conn}))
   {
     ### Early return if can't connect to MySQL.
+    $self->{status}= NAGIOS_CRITICAL;
+    $self->{output}= "Can't connect to MySQL Server.";
     $self->{role}= $opt->{role} eq "auto" ? "unknown" : $opt->{role};
     return $self;
   }
@@ -148,34 +148,6 @@ sub new
   return $self;
 }
 
-sub connect
-{
-  my ($self, $dsn, $user, $password)= @_;
-
-  my $conn;
-  eval
-  {
-    $conn= DBI->connect($dsn, $user, $password,
-                        {mysql_enable_utf8   => 1, mysql_connect_timeout => $self->{timeout},
-                         mysql_write_timeout => $self->{timeout}, mysql_read_timeout => $self->{timeout},
-                         RaiseError => 1, PrintError => 0});
-  };
-
-  if ($@)
-  {
-    ### Error on connect.
-    $self->{status}= NAGIOS_CRITICAL;
-    $self->{output}= $@;
-
-    return 0;
-  }
-  else
-  {
-    $self->{conn}= $conn;
-    return 1;
-  }
-}
-
 sub decide_role
 {
   my ($self)= @_;
@@ -195,11 +167,17 @@ sub result
   exit $self->{status}->{exit_code};
 }
 
+sub hostname
+{
+  my ($self)= @_;
+  return $self->{instance}->hostname;
+}
+
 sub print_status
 {
   my ($self)= @_;
   printf("%s on %s: %s (%s)\n",
-         $self->{status}->{str}, $self->{hostname},
+         $self->{status}->{str}, $self->hostname,
          $self->{output}, $self->{role});
 }
 
@@ -438,11 +416,7 @@ sub show_slave_status
 {
   my ($self)= @_;
 
-  ### if use "||=", can't decide result is blank or never execute the query.
-  if (!(defined($self->{_show_slave_status})))
-  {
-    $self->{_show_slave_status}= $self->{conn}->selectall_arrayref("SHOW SLAVE STATUS", {Slice => {}});
-  }
+  $self->{_show_slave_status}= $self->{instance}->show_slave_status if !(defined($self->{_show_slave_status}));
   return $self->{_show_slave_status};
 }
 
@@ -450,11 +424,7 @@ sub show_processlist
 {
   my ($self)= @_;
 
-  ### if use "||=", can't decide result is blank or never execute the query.
-  if (!(defined($self->{_show_processlist})))
-  {
-    $self->{_show_processlist}= $self->{conn}->selectall_arrayref("SHOW FULL PROCESSLIST", {Slice => {}});
-  }
+  $self->{_show_processlist}= $self->{instance}->show_processlist if !(defined($self->{_show_processlist}));
   return $self->{_show_processlist};
 }
 
@@ -462,11 +432,7 @@ sub show_status
 {
   my ($self)= @_;
 
-  ### if use "||=", can't decide result is blank or never execute the query.
-  if (!(defined($self->{_show_status})))
-  {
-    $self->{_show_status}= $self->{conn}->selectall_hashref("SHOW GLOBAL STATUS", ["Variable_name"]);
-  }
+  $self->{_show_status}= $self->{instance}->show_status if !(defined($self->{_show_status}));
   return $self->{_show_status};
 }
 
@@ -474,27 +440,14 @@ sub show_variables
 {
   my ($self)= @_;
 
-  ### if use "||=", can't decide result is blank or never execute the query.
-  if (!(defined($self->{_show_variables})))
-  {
-    $self->{_show_variables}= $self->{conn}->selectall_hashref("SHOW GLOBAL VARIABLES", ["Variable_name"]);
-    $self->{hostname}= $self->{_show_variables}->{hostname}->{Value};
-  }
+  $self->{_show_variables}= $self->{instance}->show_variables if !(defined($self->{_show_variables}));
   return $self->{_show_variables};
 }
 
 sub select_autoinc_usage
 {
   my ($self)= @_;
-
-  ### if use "||=", can't decide result is blank or never execute the query.
-  if (!(defined($self->{_select_autoinc_usage})))
-  {
-    my $sql= "SELECT table_schema, table_name, column_name, auto_increment, column_type " .
-             "FROM information_schema.tables JOIN information_schema.columns USING(table_schema, table_name) " .
-             "WHERE auto_increment IS NOT NULL AND extra = 'auto_increment'";
-    $self->{_select_autoinc_usage}= $self->{conn}->selectall_arrayref($sql, {Slice => {}});
-  }
+  $self->{_select_autoinc_usage}= $self->{instance}->select_autoinc_usage if !(defined($self->{_select_autoinc_usage}));
   return $self->{_select_autoinc_usage};
 }
 

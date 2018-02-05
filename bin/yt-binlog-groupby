@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 ########################################################################
-# Copyright (C) 2014, 2017  yoku0825
+# Copyright (C) 2014, 2018  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -26,25 +26,23 @@ use Pod::Usage;
 use FindBin qw/$Bin/;
 use lib "$Bin/../lib";
 use Ytkit::BinlogGroupby;
-use Ytkit::Config;
 
-my ($opt, @argv)= options(Ytkit::BinlogGroupby::DEFAULT_OPTION, @ARGV);
-pod2usage(-verbose => 2) if $opt->{help};
+my $prog= Ytkit::BinlogGroupby->new(@ARGV, "--print_header");
 
-### Implicit default values.
-$opt->{cell}     ||= "10m";
-$opt->{group_by} ||= "time";
-$opt->{output}   ||= "tsv";
-
-### For command-line header
-$opt->{print_header}= 1;
-
-my $prog= Ytkit::BinlogGroupby->new($opt);
-
-if (!($prog))
+if ($prog == -255)
+{
+  pod2usage({ -verbose => 2});
+  exit 0;
+}
+elsif ($prog == -254)
+{
+  printf("%s - %s\n", $0, Ytkit::Config::version());
+  exit 0;
+}
+elsif ($prog == 0)
 {
   ### Error.
-  pod2usage({ -message => "--cell=$opt->{cell} is invalid.",
+  pod2usage({ -message => "--cell value is invalid.",
               -verbose => 1 });
 }
 

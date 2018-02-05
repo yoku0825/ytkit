@@ -23,8 +23,7 @@ use warnings;
 use v5.10;
 use DBI;
 
-use FindBin qw{$Bin};
-use lib "$Bin/../lib";
+use Ytkit::Config;
 use Ytkit::MySQLServer;
 
 ### return code for Nagios-compats.
@@ -35,6 +34,7 @@ use constant NAGIOS_UNKNOWN  => { exit_code => 3, str => "UNKNOWN" };
 
 use constant DEFAULT_OPTION =>
 {
+  version    => { alias => ["version", "V"], default => 0 },
   role       => { alias => ["role"], isa => ["auto", "master", "slave", "backup", "none"], },
   user       => ["u", "user"],
   host       => ["h", "host"],
@@ -63,7 +63,11 @@ use constant DEFAULT_OPTION =>
 
 sub new
 {
-  my ($class, $opt)= @_;
+  my ($class, @orig_argv)= @_;
+  my ($opt, @argv)= options(DEFAULT_OPTION, @orig_argv);
+  return -255 if $opt->{help};
+  return -254 if $opt->{version};
+  load_config($opt, $opt->{config_file}, $opt->{config_group}) if $opt->{config_file};
 
   my $self=
   {

@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2017  yoku0825
+# Copyright (C) 2017, 2018  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -30,13 +30,10 @@ use Ytkit::HealthCheck;
 
 no warnings "once";
 
-my $opt=
-{
-  role       => "auto",
-};
+my @argv= qw{--role=auto};
 
 ### Connection failed.
-my $prog=Ytkit::HealthCheck->new($opt);
+my $prog=Ytkit::HealthCheck->new(@argv);
 is($prog->{status}->{str}, "CRITICAL", "Connection Failed");
 is($prog->hostname, "Can't fetch hostname", "Default hostname when connection has failed.");
 

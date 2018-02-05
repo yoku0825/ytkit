@@ -1,7 +1,7 @@
 package Ytkit::BinlogGroupby;
 
 ########################################################################
-# Copyright (C) 2014, 2017  yoku0825
+# Copyright (C) 2014, 2018  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,7 +21,9 @@ package Ytkit::BinlogGroupby;
 use strict;
 use warnings;
 use utf8;
-use 5.010;
+use v5.10;
+
+use Ytkit::Config;
 
 use constant DEFAULT_OPTION =>
 {
@@ -30,11 +32,15 @@ use constant DEFAULT_OPTION =>
   output   => { alias => ["output", "o"], default => "tsv" },
   help     => { alias => ["help", "usage", "h"] },
   verbose  => { alias => ["verbose", "v"], default => 0 },
+  version  => { alias => ["version", "V"], default => 0 },
 };
 
 sub new
 {
-  my ($class, $opt)= @_;
+  my ($class, @orig_argv)= @_;
+  my ($opt, @argv)= options(DEFAULT_OPTION, @orig_argv);
+  return -255 if $opt->{help};
+  return -254 if $opt->{version};
 
   my ($header_parser, $print_format)= set_parser($opt->{cell});
   return 0 unless $header_parser;
@@ -296,6 +302,5 @@ sub set_parser
 
   return ($parse, $format);
 }
-
 
 return 1;

@@ -2,4 +2,4 @@ requires "Pod::Usage";
 requires "Exporter";
 requires "Time::HiRes";
 requires "DBI";
-requires "DBD::mysql";
+requires "DBD::mysql", ">=", 4.030;

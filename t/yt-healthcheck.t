@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2017  yoku0825
+# Copyright (C) 2017, 2018  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -30,13 +30,10 @@ use Ytkit::HealthCheck;
 
 no warnings "once";
 
-my $opt=
-{
-  role       => "auto",
-};
+my @argv= qw{--role=auto};
 
 ### Connection failed.
-my $prog=Ytkit::HealthCheck->new($opt);
+my $prog=Ytkit::HealthCheck->new(@argv);
 is($prog->{status}->{str}, "CRITICAL", "Connection Failed");
 is($prog->hostname, "Can't fetch hostname", "Default hostname when connection has failed.");
 
@@ -312,9 +309,23 @@ subtest "slave_status" => sub
   &clear_status;
   delete($prog->{slave_status});
 
-
-
   delete($prog->{_show_slave_status});
+};
+
+subtest "--role=fabric" => sub
+{
+  require "$Bin/data/lookup_groups.txt";
+  $prog->{_query_fabric}= $Ytkit::TEST::Lookup_Groups::VAR1;
+  is($prog->query_fabric("lookup_groups", "")->[0]->{group_id}, "myfabric", "Parse group.lookup_groups");
+
+  require "$Bin/data/group_health.txt";
+  $prog->{_query_fabric}= $Ytkit::TEST::Group_Health::VAR1;
+
+  foreach my $row (@{$prog->query_fabric("group_health", "myfabric")})
+  {
+    my $uuid= grep {$row->{uuid} eq $_} qw{bb48b5d4-f1d9-11e7-b79f-40a8f0226cd8 0604c90e-4b59-11e7-b7fb-525400101084 f9536993-4b55-11e7-8791-525400101085};
+    is($uuid, 1, "Getting fabric-uuid ");
+  }
 };
 
 done_testing;

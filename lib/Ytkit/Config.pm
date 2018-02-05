@@ -1,7 +1,7 @@
 package Ytkit::Config;
 
 ########################################################################
-# Copyright (C) 2017  yoku0825
+# Copyright (C) 2017, 2018  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,10 +21,11 @@ package Ytkit::Config;
 use strict;
 use warnings;
 use utf8;
-use 5.010;
+use v5.10;
 
 use Exporter qw{import};
-our @EXPORT= qw{options load_config};
+our @EXPORT= qw{options load_config version};
+our $VERSION= "0.0.7";
 
 sub options
 {
@@ -283,6 +284,11 @@ sub load_config
   close($fh);
 
   return $opt;
+}
+
+sub version
+{
+  return $VERSION;
 }
 
 return 1;

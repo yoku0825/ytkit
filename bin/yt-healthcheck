@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 ########################################################################
-# Copyright (C) 2017  yoku0825
+# Copyright (C) 2017, 2018  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -26,16 +26,20 @@ use Pod::Usage;
 use FindBin qw/$Bin/;
 use lib "$Bin/../lib";
 use Ytkit::HealthCheck;
-use Ytkit::Config;
 
-my ($opt, @argv)= options(Ytkit::HealthCheck::DEFAULT_OPTION, @ARGV);
-$opt= load_config($opt, $opt->{config_file}, $opt->{config_group}) if $opt->{config_file};
-pod2usage(-verbose => 2) if $opt->{help};
+my $prog= Ytkit::HealthCheck->new(@ARGV);
 
-### Implicit default values.
-$opt->{role} ||= "auto";
+if ($prog == -255)
+{
+  pod2usage({ -verbose => 2 });
+  exit 0;
+}
+elsif ($prog == -254)
+{
+  printf("%s - %s\n", $0, Ytkit::Config::version());
+  exit 0;
+}
 
-my $prog= Ytkit::HealthCheck->new($opt);
 $prog->result;
 
 
@@ -72,7 +76,7 @@ and returns Nagios compatible result code,
 
 =head1 OPTIONS
 
-=head2 --role={master,slave,backup,auto,none}
+=head2 --role={master,slave,backup,auto,fabric,none}
 
 Switching check-item as below,
 
@@ -127,6 +131,10 @@ Script determines MySQL is "master" or "slave" automatically by using SHOW SLAVE
 =item "none"
 
 Check only connectivity. For calling as library.
+
+=item "fabric"
+
+Checking for mikasafabric for MySQL.
 
 =head2 --host=string, -h string
 

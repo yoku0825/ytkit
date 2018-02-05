@@ -23,8 +23,7 @@ use warnings;
 use v5.10;
 use DBI;
 
-use FindBin qw{$Bin};
-use lib "$Bin/../lib";
+use Ytkit::Config;
 use Ytkit::MySQLServer;
 
 ### return code for Nagios-compats.
@@ -35,7 +34,9 @@ use constant NAGIOS_UNKNOWN  => { exit_code => 3, str => "UNKNOWN" };
 
 use constant DEFAULT_OPTION =>
 {
-  role       => { alias => ["role"], isa => ["auto", "master", "slave", "backup", "none"], },
+  version    => { alias => ["version", "V"], default => 0 },
+  role       => { alias => ["role"],
+                  isa => ["auto", "master", "slave", "backup", "fabric", "none"], },
   user       => ["u", "user"],
   host       => ["h", "host"],
   port       => ["P", "port"],
@@ -57,13 +58,20 @@ use constant DEFAULT_OPTION =>
   slave_status     => { enable   => { default => 1, },
                         warning  => { default => 5, },
                         critical => { default => 30, }, },
+  fabric_fd        => { enable   => { default => 1, },
+                        warning  => { default => 50, },
+                        critical => { default => 70, }, },
   config_file      => { alias => ["c", "config-file"] },
   config_group     => { alias => ["config-group"], default => "yt-healthcheck" },
 };
 
 sub new
 {
-  my ($class, $opt)= @_;
+  my ($class, @orig_argv)= @_;
+  my ($opt, @argv)= options(DEFAULT_OPTION, @orig_argv);
+  return -255 if $opt->{help};
+  return -254 if $opt->{version};
+  load_config($opt, $opt->{config_file}, $opt->{config_group}) if $opt->{config_file};
 
   my $self=
   {
@@ -88,6 +96,9 @@ sub new
     slave_status     => { enable        => $opt->{slave_status_enable},
                           warning       => $opt->{slave_status_warning},
                           critical      => $opt->{slave_status_critical}, },
+    fabric_fd        => { enable        => $opt->{fabric_fd_enable},
+                          warning       => $opt->{fabric_fd_warning},
+                          critical      => $opt->{fabric_fd_critical}, },
     instance => Ytkit::MySQLServer->new($opt),
   };
   bless $self => $class;
@@ -135,6 +146,13 @@ sub new
     {
       ### Nothing to check (automatically).
       ### Use this role when call Ytkit::HealthCheck as library.
+    };
+    when("fabric")
+    {
+      ### mikasafabric couldn't return its hostname.
+      $self->{instance}->{_hostname}= $opt->{host};
+      ### mikasafabric for MySQL specific checks.
+      $self->check_fabric;
     };
 
     default
@@ -389,6 +407,71 @@ sub check_slave_status
   return;
 }
 
+sub check_fabric
+{
+  my ($self)= @_;
+
+  my $status;
+  my $output= "";
+
+  ### Healthcheck for each group.
+  foreach my $group (@{$self->query_fabric("group.lookup_groups", "")})
+  {
+    my $group_id= $group->{group_id};
+    my $primary_server= "";
+    my $secondary     = 0;
+
+    foreach my $server (@{$self->query_fabric("group.health", $group_id)})
+    {
+      $primary_server= $server->{uuid} if $server->{status} eq "PRIMARY";
+      $secondary += 1 if $server->{status} eq "SECONDARY";
+    }
+
+    if (!($primary_server))
+    {
+      $status= NAGIOS_CRITICAL;
+      $output= sprintf("group %s does not have Master Server", $group_id);
+      $self->update_status($status, $output) if $status;
+    }
+
+    if (!($secondary))
+    {
+      $status= NAGIOS_CRITICAL;
+      $output= sprintf("group %s does not have Candidate-Slave Server", $group_id);
+      $self->update_status($status, $output) if $status;
+    }
+  }
+
+  ### File-Descriptor count.
+  my $openfds= $self->query_fabric("manage.openfds", "");
+
+  my $current_fd= $openfds->[0]->{current};
+  my $max_fd    = $openfds->[0]->{max};
+  my $pct_fd    = ($current_fd / $max_fd) * 100;
+
+  given($pct_fd)
+  {
+    when($_ > $self->{fabric_fd}->{critical})
+    {
+      $status= NAGIOS_CRITICAL;
+      $output= sprintf("File-descriptor count %d/%d is over %d%%", $current_fd, $max_fd, $self->{fabric_fd}->{critical});
+    };
+    when($_ > $self->{fabric_fd}->{warning})
+    {
+      $status= NAGIOS_WARNING;
+      $output= sprintf("File-descriptor count %d/%d is over %d%%", $current_fd, $max_fd, $self->{fabric_fd}->{critical});
+    };
+    default
+    {
+      $status= NAGIOS_OK;
+      $output= sprintf("File-descriptor count %d/%d", $current_fd, $max_fd);
+    }
+  };
+  $self->update_status($status, $output) if $status;
+
+  return;
+}
+
 sub update_status
 {
   my ($self, $new_status, $new_output)= @_;
@@ -449,6 +532,31 @@ sub select_autoinc_usage
   my ($self)= @_;
   $self->{_select_autoinc_usage}= $self->{instance}->select_autoinc_usage if !(defined($self->{_select_autoinc_usage}));
   return $self->{_select_autoinc_usage};
+}
+
+sub query_fabric
+{
+  my ($self, $function, $arg)= @_;
+
+  ### Query for mikasafabric doesn't cache but this for unit-test.
+  if (!(defined($self->{_query_fabric})))
+  {
+    my $sql = sprintf("CALL %s(%s)", $function, $arg ? "'" . $arg . "'" : "");
+    my $stmt= $self->{instance}->{conn}->prepare($sql, {Slice => {}});
+    $stmt->execute;
+
+    ### Skip, 1st Result set is metadata.
+    $stmt->fetchall_arrayref();
+    $stmt->more_results;        ### Go ahead to next Result set.
+
+    $self->{_query_fabric}= $stmt->fetchall_arrayref({});
+  }
+
+  my $ret= $self->{_query_fabric};
+
+  ### Clear buffer each time.
+  delete($self->{_query_fabric});
+  return $ret;
 }
 
 return 1;

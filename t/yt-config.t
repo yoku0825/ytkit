@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2017  yoku0825
+# Copyright (C) 2017, 2018  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -26,6 +26,11 @@ use Test::More;
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
 use Ytkit::Config;
+
+open(my $spec, "<", "$Bin/../ytkit.spec");
+my ($spec_version)= join("\n", <$spec>) =~ /Version:\s+([\d\.]+)/;
+is($spec_version, version(), "Version number is collect");
+close($spec);
 
 subtest "options from command-line" => sub
 {

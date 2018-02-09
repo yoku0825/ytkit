@@ -202,4 +202,13 @@ Turn off `SHOW SLAVE STATUS`
 =head2 --slave-status-warning=integer, --slave-status-critical=integer
 
 Threshold for `SHOW SLAVE STATUS`'s `Seconds_Behind_Master`.
+
+=head2 --fabric-fd-enable=0
+
+Turn off mikasafabric's `CALL manage.openfds()`
+
+=head2 --fabric-fd-warning=integer, --fabric-fd-critical=integer
+
+Threshold for mikasafabric's `current_fd / max_fd`. Unit is %.
+
 =cut

@@ -1,0 +1,100 @@
+#!/usr/bin/perl
+
+########################################################################
+# Copyright (C) 2018  yoku0825
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+########################################################################
+
+use strict;
+use warnings;
+use utf8;
+use Pod::Usage;
+
+use FindBin qw/$Bin/;
+use lib "$Bin/../lib";
+use Ytkit::WaitReplication;
+
+my $prog= Ytkit::WaitReplication->new(@ARGV);
+
+if ($prog == -255)
+{
+  pod2usage({ -verbose => 2 });
+  exit 0;
+}
+elsif ($prog == -254)
+{
+  printf("%s - %s\n", $0, Ytkit::Config::version());
+  exit 0;
+}
+
+exit $prog->wait_slave;
+
+
+__END__
+
+=encoding utf8
+
+=head1 SCRIPT NAME
+
+yt-wait-replication - Script that waiting for Seconds_Behind_Master is less than specified value
+
+=head1 SYNOPSIS
+
+  $ yt-wait-replication --host=your_mysql_host --port=your_mysql_port --user=your_mysql_account --password=your_password --seconds-behind-master=5 --sleep=3 --timeout=180
+
+=head1 DESCRIPTION
+
+yt-wait-replication only waits for Seconds_Behind_Master is less than --seconds-behind-master
+
+  yt-wait-replication returns 0 if Seconds_Behind_Master < --seconds-behind-master
+  yt-wait-replication dies when mysqld dies or replication thread(s) not running.
+
+=head1 OPTIONS
+
+=head2 --host=string, -h string
+
+MySQL host.
+
+=head2 --port=integer, -P integer
+
+MySQL port number.
+
+=head2 --socket=string, -S string
+
+Path to mysql.sock (this parameter is used when --host=localhost)
+
+=head2 --user=string, -u string
+
+MySQL account using for connection and checking
+(need REPLICATION CLIENT and PROCESSLIST and global SELECT priv)
+
+=head2 --password=string, -p string
+
+Password for the user specified by --user
+
+=head2 --timeout=int
+
+Seconds for scripts running(timeout when --timeout < retry_count * sleep_interval)
+
+=head2 --silent (default: 1)
+
+Print nothing during retry-loop.
+
+=head2 --sleep=int (default: 3)
+
+Interval seconds in each retry-loop iteration.
+
+=cut

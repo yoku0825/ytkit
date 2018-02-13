@@ -81,7 +81,7 @@ sub hostname
 {
   my ($self)= @_;
   return "Can't fetch hostname" if !($self->{conn});
-  $self->{_hostname} ||= $self->{_show_variables}->{hostname}->{Value};
+  $self->{_hostname} ||= $self->show_variables->{hostname}->{Value};
   return $self->{_hostname};
 }
 

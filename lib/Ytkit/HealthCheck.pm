@@ -227,11 +227,17 @@ sub check_long_query
     };
 
     ### Exclude by host.
-    my ($host_without_port)= split(/:/, $row->{Host});
-    next if grep { $host_without_port eq $_ } @{$self->{long_query}->{exclude_host}};
+    if ($self->{long_query}->{exclude_host}->[0])
+    {
+      my ($host_without_port)= split(/:/, $row->{Host});
+      next if grep { $host_without_port eq $_ } @{$self->{long_query}->{exclude_host}};
+    }
 
     ### Exclude by statement regexp.
-    next if grep { $row->{Info} =~ /$_/ } @{$self->{long_query}->{exclude_query}};
+    if ($self->{long_query}->{exclude_query}->[0])
+    {
+      next if grep { $row->{Info} =~ /$_/ } @{$self->{long_query}->{exclude_query}};
+    }
 
     ### Evaluate by time.
     my $status;

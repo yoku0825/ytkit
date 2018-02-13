@@ -22,7 +22,7 @@ $VAR1 = [
             'Host' => ''
           },
           {
-            'Time' => '125',
+            'Time' => '1',
             'Id' => '9',
             'db' => undef,
             'User' => 'msandbox',
@@ -40,6 +40,16 @@ $VAR1 = [
             'Command' => 'Query',
             'Info' => 'SHOW PROCESSLIST',
             'Host' => 'localhost'
+          },
+          {
+            'Time' => '1000',
+            'Id' => '11',
+            'db' => undef,
+            'User' => 'msandbox',
+            'State' => 'init',
+            'Command' => 'Query',
+            'Info' => 'SELECT SLEEP(100000)',
+            'Host' => '192.9.9.9'
           }
         ];
 

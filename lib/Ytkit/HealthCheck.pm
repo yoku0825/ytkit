@@ -47,8 +47,8 @@ use constant DEFAULT_OPTION =>
   long_query       => { enable        => { default => 1, },
                         warning       => { default => 5, },
                         critical      => { default => 100, },
-                        exclude_host  => [],
-                        exclude_query => [], },
+                        exclude_host  => { default => [] },
+                        exclude_query => { default => [] }, },
   connection_count => { enable   => { default => 1, },
                         warning  => { default => 70, },
                         critical => { default => 95, }, },
@@ -227,7 +227,8 @@ sub check_long_query
     };
 
     ### Exclude by host.
-    next if grep { $row->{Host} eq $_ } @{$self->{long_query}->{exclude_host}};
+    my ($host_without_port)= split(/:/, $row->{Host});
+    next if grep { $host_without_port eq $_ } @{$self->{long_query}->{exclude_host}};
 
     ### Exclude by statement regexp.
     next if grep { $row->{Info} =~ /$_/ } @{$self->{long_query}->{exclude_query}};

@@ -85,7 +85,7 @@ subtest "check_long_query" => sub
   $prog->{long_query}->{warning}= 100;
   $prog->{long_query}->{critical}= 100;
   $prog->{long_query}->{enable}= 1;
-  $prog->{long_query}->{exclude_host}= ["192.9.9.9"];
+  $prog->{long_query}->{exclude_host}= ["192.168.0.1"];
   $prog->check_long_query;
   is($prog->{status}->{str}, "OK", "Time was exceeded but excluded by host");
   &clear_status;

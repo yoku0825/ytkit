@@ -49,7 +49,7 @@ $VAR1 = [
             'State' => 'init',
             'Command' => 'Query',
             'Info' => 'SELECT SLEEP(100000)',
-            'Host' => '192.9.9.9'
+            'Host' => '192.168.0.1:32275'
           }
         ];
 

@@ -22,6 +22,7 @@ use strict;
 use warnings;
 use v5.10;
 
+use Ytkit::Config;
 use Ytkit::HealthCheck;
 
 use constant DEFAULT_OPTION =>
@@ -42,7 +43,7 @@ use constant DEFAULT_OPTION =>
 sub new
 {
   my ($class, @orig_argv)= @_;
-  my ($opt, @argv)= Ytkit::Config::options(DEFAULT_OPTION, @orig_argv);
+  my ($opt, @argv)= options(DEFAULT_OPTION, @orig_argv);
   return -255 if $opt->{help};
   return -254 if $opt->{version};
 

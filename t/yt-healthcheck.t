@@ -42,12 +42,30 @@ is($prog->hostname, "Can't fetch hostname", "Default hostname when connection ha
 
 subtest "decide_role" => sub
 {
-  $prog->{_show_slave_status}= [];
-  is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS");
-  
   require "$Bin/data/06_show_slave_status_ok.txt";
+  require "$Bin/data/06_show_processlist.txt";
+  require "$Bin/data/show_processlist_with_nongtid_slave.txt";
+  require "$Bin/data/show_processlist_with_gtid_slave.txt";
+
+  $prog->{_show_slave_status}= [];
+  $prog->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
+  is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master without slave)");
+
+  $prog->{_show_slave_status}= [];
+  $prog->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_NONGTID_SLAVE::VAR1;
+  is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with non-gtid slaves)");
+  
+  $prog->{_show_slave_status}= [];
+  $prog->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_GTID_SLAVE::VAR1;
+  is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with gtid slaves)");
+
   $prog->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
-  is($prog->decide_role, "slave", "decide_role with SHOW SLAVE STATUS");
+  $prog->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
+  is($prog->decide_role, "slave", "decide_role with SHOW SLAVE STATUS / PROCESSLIST(slave)");
+
+  $prog->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
+  $prog->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_NONGTID_SLAVE::VAR1;
+  is($prog->decide_role, "intermidiate", "decide_role with SHOW SLAVE STATUS / PROCESSLIST(intermidiate)");
 };
 
 subtest "check_long_query" => sub

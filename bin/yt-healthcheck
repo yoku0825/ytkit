@@ -76,7 +76,7 @@ and returns Nagios compatible result code,
 
 =head1 OPTIONS
 
-=head2 --role={master,slave,backup,auto,fabric,none}
+=head2 --role={master,slave,backup,intermidiate,auto,fabric,none}
 
 Switching check-item as below,
 
@@ -112,6 +112,24 @@ Switching check-item as below,
 
 =back
 
+=item "intermidiate"
+
+=over 1
+
+=item - Long query
+
+=item - Connection count
+
+=item - AUTO_INCREMENT usage
+
+=item - Replication threads
+
+=item - Replication delay
+
+=item - read_only should be OFF
+
+=back
+
 =item "backup"
 
 =over 1
@@ -124,7 +142,7 @@ Switching check-item as below,
 
 =item "auto"
 
-Script determines MySQL is "master" or "slave" automatically by using SHOW SLAVE STATUS(Result is empty or not)
+Script determines MySQL is "master", "slave" or "intermidiate" automatically by using SHOW SLAVE STATUS and SHOW SLAVE HOSTS(Result is empty or not)
 
 =back
 

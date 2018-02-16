@@ -36,7 +36,7 @@ use constant DEFAULT_OPTION =>
 {
   version    => { alias => ["version", "V"], default => 0 },
   role       => { alias => ["role"],
-                  isa => ["auto", "master", "slave", "backup", "fabric", "none"], },
+                  isa => ["auto", "master", "slave", "backup", "fabric", "none", "intermidiate"], },
   user       => ["u", "user"],
   host       => ["h", "host"],
   port       => ["P", "port"],
@@ -135,6 +135,16 @@ sub new
       $self->{read_only}->{should_be}= 1;
       $self->check_read_only;
     };
+    when("intermidiate")
+    {
+      ### Intermidiate master in cascaded replication toporogy.
+      $self->check_long_query;
+      $self->check_connection_count;
+      $self->check_autoinc_usage;
+      $self->check_slave_status;
+      $self->{read_only}->{should_be}= 0;
+      $self->check_read_only;
+    };
     when("backup")
     {
       ### Check only replication threads, read_only should be ON.
@@ -169,12 +179,28 @@ sub new
 sub decide_role
 {
   my ($self)= @_;
+  my $master= my $slave= 0;
 
-  if ($self->show_slave_status->[0])
+  $master= 1 if $self->show_slaves_via_processlist;
+  $slave = 1 if $self->show_slave_status->[0];
+
+  if ($master && $slave)
+  {
+    return "intermidiate";
+  }
+  elsif($master)
+  {
+    return "master";
+  }
+  elsif($slave)
   {
     return "slave";
   }
-  return "master";
+  else
+  {
+    ### Master server without any slaves.
+    return "master";
+  }
 }
 
 sub result
@@ -539,6 +565,20 @@ sub select_autoinc_usage
   my ($self)= @_;
   $self->{_select_autoinc_usage}= $self->{instance}->select_autoinc_usage if !(defined($self->{_select_autoinc_usage}));
   return $self->{_select_autoinc_usage};
+}
+
+sub show_slaves_via_processlist
+{
+  my ($self)= @_;
+
+  foreach my $row (@{$self->show_processlist})
+  {
+    if ($row->{Command} =~ /^Binlog\sDump/)
+    {
+      return 1;
+    }
+  }
+  return 0;
 }
 
 sub query_fabric

@@ -35,8 +35,9 @@ use constant NAGIOS_UNKNOWN  => { exit_code => 3, str => "UNKNOWN" };
 use constant DEFAULT_OPTION =>
 {
   version    => { alias => ["version", "V"], default => 0 },
-  role       => { alias => ["role"],
-                  isa => ["auto", "master", "slave", "backup", "fabric", "none", "intermidiate"], },
+  role       => { alias   => ["role"],
+                  isa     => ["auto", "master", "slave", "backup", "fabric", "none", "intermidiate"],
+                  default => "auto" },
   user       => ["u", "user"],
   host       => ["h", "host"],
   port       => ["P", "port"],

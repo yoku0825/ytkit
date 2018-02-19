@@ -27,6 +27,14 @@ binlog entries between 170720 15:10 and 170817 17:40
 $ yt-healthcheck -h 172.17.0.1 -u user_name -p'password' -P 3306
 ```
 
+## yt-wait-replication
+
+- Wait for `Seconds_Behind_Master < --seconds-behind-master` during `--timeout` secs.
+
+```
+$ yt-healthcheck -h 172.17.0.1 -u user_name -p'password' -P 3306 --seconds-behind-master=5 --timeout=3600
+```
+
 # Installation
 
 ## Install by rpm
@@ -35,7 +43,7 @@ $ yt-healthcheck -h 172.17.0.1 -u user_name -p'password' -P 3306
   - rpm will be provided only when tag is updated.
 
 ```
-$ sudo yum install -y https://github.com/yoku0825/ytkit/releases/download/0.0.5/ytkit-0.0.5-1.noarch.rpm
+$ sudo yum install -y https://github.com/yoku0825/ytkit/releases/download/0.0.10/ytkit-0.0.10-1.noarch.rpm
 ```
 
 ## Install as is

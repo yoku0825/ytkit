@@ -144,8 +144,6 @@ Switching check-item as below,
 
 Script determines MySQL is "master", "slave" or "intermidiate" automatically by using SHOW SLAVE STATUS and SHOW SLAVE HOSTS(Result is empty or not)
 
-=back
-
 =item "none"
 
 Check only connectivity. For calling as library.
@@ -153,6 +151,8 @@ Check only connectivity. For calling as library.
 =item "fabric"
 
 Checking for mikasafabric for MySQL.
+
+=back
 
 =head2 --host=string, -h string
 

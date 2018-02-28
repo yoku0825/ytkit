@@ -261,7 +261,7 @@ sub check_long_query
     }
 
     ### Exclude by statement regexp.
-    if ($self->{long_query}->{exclude_query}->[0])
+    if ($self->{long_query}->{exclude_query}->[0] && $row->{Info})
     {
       next if grep { $row->{Info} =~ /$_/ } @{$self->{long_query}->{exclude_query}};
     }

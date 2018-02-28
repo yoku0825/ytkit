@@ -32,7 +32,7 @@ $ yt-healthcheck -h 172.17.0.1 -u user_name -p'password' -P 3306
 - Wait for `Seconds_Behind_Master < --seconds-behind-master` during `--timeout` secs.
 
 ```
-$ yt-healthcheck -h 172.17.0.1 -u user_name -p'password' -P 3306 --seconds-behind-master=5 --timeout=3600
+$ yt-wait-replication -h 172.17.0.1 -u user_name -p'password' -P 3306 --seconds-behind-master=5 --timeout=3600
 ```
 
 # Installation

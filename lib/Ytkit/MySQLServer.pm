@@ -167,5 +167,18 @@ sub select_autoinc_usage
   return $self->{_select_autoinc_usage};
 }
 
+sub show_master_logs
+{
+  my ($self)= @_;
+
+  ### if use "||=", can't decide result is blank or never execute the query.
+  if (!(defined($self->{_show_master_logs})))
+  {
+    my $sql= "SHOW MASTER LOGS";
+    $self->{_show_master_logs}= $self->{conn}->selectall_arrayref($sql, {Slice => {}});
+  }
+  return $self->{_show_master_logs};
+}
+
 return 1;
 

@@ -71,5 +71,12 @@ subtest "show_variables" => sub
   delete($server->{_show_variables});
 };
 
+subtest "show_master_logs" => sub
+{
+  require "$Bin/data/show_master_logs.txt";
+  $server->{_show_master_logs}= $Ytkit::Test::SHOW_MASTER_LOGS::VAR1;
+  is_deeply($server->show_master_logs, $Ytkit::Test::SHOW_MASTER_LOGS::VAR1, "SHOW MASTER LOGS");
+  delete($server->{_show_master_logs});
+};
 
 done_testing;

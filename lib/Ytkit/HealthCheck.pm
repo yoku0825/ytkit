@@ -183,7 +183,7 @@ sub decide_role
   my $master= my $slave= 0;
 
   $master= 1 if $self->show_slaves_via_processlist;
-  $slave = 1 if $self->show_slave_status->[0];
+  $slave = 1 if ($self->show_slave_status && $self->show_slave_status->[0]);
 
   if ($master && $slave)
   {
@@ -571,6 +571,7 @@ sub select_autoinc_usage
 sub show_slaves_via_processlist
 {
   my ($self)= @_;
+  return 0 unless $self->show_processlist;
 
   foreach my $row (@{$self->show_processlist})
   {

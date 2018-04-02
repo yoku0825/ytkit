@@ -88,11 +88,11 @@ sub hostname
 sub show_slave_status
 {
   my ($self)= @_;
-  return 0 if !($self->{conn});
 
   ### if use "||=", can't decide result is blank or never execute the query.
   if (!(defined($self->{_show_slave_status})))
   {
+    return 0 if !($self->{conn});
     $self->{_show_slave_status}= $self->{conn}->selectall_arrayref("SHOW SLAVE STATUS", {Slice => {}});
   }
   return $self->{_show_slave_status};
@@ -101,11 +101,11 @@ sub show_slave_status
 sub show_slave_hosts
 {
   my ($self)= @_;
-  return 0 if !($self->{conn});
 
   ### if use "||=", can't decide result is blank or never execute the query.
   if (!(defined($self->{_show_slave_hosts})))
   {
+    return 0 if !($self->{conn});
     $self->{_show_slave_hosts}= $self->{conn}->selectall_arrayref("SHOW SLAVE HOSTS", {Slice => {}});
   }
   return $self->{_show_slave_hosts};
@@ -114,11 +114,11 @@ sub show_slave_hosts
 sub show_processlist
 {
   my ($self)= @_;
-  return 0 if !($self->{conn});
 
   ### if use "||=", can't decide result is blank or never execute the query.
   if (!(defined($self->{_show_processlist})))
   {
+    return 0 if !($self->{conn});
     $self->{_show_processlist}= $self->{conn}->selectall_arrayref("SHOW FULL PROCESSLIST", {Slice => {}});
   }
   return $self->{_show_processlist};
@@ -127,11 +127,11 @@ sub show_processlist
 sub show_status
 {
   my ($self)= @_;
-  return 0 if !($self->{conn});
 
   ### if use "||=", can't decide result is blank or never execute the query.
   if (!(defined($self->{_show_status})))
   {
+    return 0 if !($self->{conn});
     $self->{_show_status}= $self->{conn}->selectall_hashref("SHOW GLOBAL STATUS", ["Variable_name"]);
   }
   return $self->{_show_status};
@@ -140,11 +140,11 @@ sub show_status
 sub show_variables
 {
   my ($self)= @_;
-  return 0 if !($self->{conn});
 
   ### if use "||=", can't decide result is blank or never execute the query.
   if (!(defined($self->{_show_variables})))
   {
+    return 0 if !($self->{conn});
     $self->{_show_variables}= $self->{conn}->selectall_hashref("SHOW GLOBAL VARIABLES", ["Variable_name"]);
     $self->{hostname}= $self->{_show_variables}->{hostname}->{Value};
   }
@@ -154,11 +154,11 @@ sub show_variables
 sub select_autoinc_usage
 {
   my ($self)= @_;
-  return 0 if !($self->{conn});
 
   ### if use "||=", can't decide result is blank or never execute the query.
   if (!(defined($self->{_select_autoinc_usage})))
   {
+    return 0 if !($self->{conn});
     my $sql= "SELECT table_schema, table_name, column_name, auto_increment, column_type " .
              "FROM information_schema.tables JOIN information_schema.columns USING(table_schema, table_name) " .
              "WHERE auto_increment IS NOT NULL AND extra = 'auto_increment'";
@@ -174,6 +174,7 @@ sub show_master_logs
   ### if use "||=", can't decide result is blank or never execute the query.
   if (!(defined($self->{_show_master_logs})))
   {
+    return 0 if !($self->{conn});
     my $sql= "SHOW MASTER LOGS";
     $self->{_show_master_logs}= $self->{conn}->selectall_arrayref($sql, {Slice => {}});
   }

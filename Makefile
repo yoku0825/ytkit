@@ -24,14 +24,17 @@ install:
 test:
 	prove
 
-fatpack: setup yt-binlog-groupby yt-healthcheck
+.PHONY: fatpack
+fatpack: setup yt-binlog-groupby yt-healthcheck yt-wait-replication
 
 fatinstall:
 	cp fatpack/* $(INSTALL)/bin
 
-yt-binlog-groupby: bin/yt-binlog-groupby lib/Ytkit/BinlogGroupby.pm
+yt-binlog-groupby: bin/yt-binlog-groupby lib/Ytkit/BinlogGroupby.pm lib/Ytkit/Config.pm
 	fatpack-simple bin/$@ -o fatpack/$@
 
-yt-healthcheck: bin/yt-healthcheck lib/Ytkit/HealthCheck.pm
+yt-healthcheck: bin/yt-healthcheck lib/Ytkit/HealthCheck.pm lib/Ytkit/HealthCheck.pm lib/Ytkit/MySQLServer.pm
 	fatpack-simple bin/$@ -o fatpack/$@
 
+yt-wait-replication: bin/yt-wait-replication lib/Ytkit/WaitReplication.pm lib/Ytkit/HealthCheck.pm lib/Ytkit/Config.pm
+	fatpack-simple bin/$@ -o fatpack/$@

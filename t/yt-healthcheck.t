@@ -38,6 +38,7 @@ is($prog->{status}->{str}, "CRITICAL", "Connection Failed");
 is($prog->hostname, "Can't fetch hostname", "Default hostname when connection has failed.");
 
 ### Imitate "connection is alive"
+bless $prog->{instance} => "Ytkit::MySQLServer";
 &clear_status;
 
 subtest "decide_role" => sub
@@ -47,31 +48,44 @@ subtest "decide_role" => sub
   require "$Bin/data/show_processlist_with_nongtid_slave.txt";
   require "$Bin/data/show_processlist_with_gtid_slave.txt";
 
-  $prog->{_show_slave_status}= [];
-  $prog->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
+  $prog->{instance}->{_show_slave_status}= [];
+  $prog->{instance}->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
   is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master without slave)");
+  delete($prog->{_show_slave_status});
+  delete($prog->{_show_processlist});
 
-  $prog->{_show_slave_status}= [];
-  $prog->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_NONGTID_SLAVE::VAR1;
+  $prog->{instance}->{_show_slave_status}= [];
+  $prog->{instance}->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_NONGTID_SLAVE::VAR1;
   is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with non-gtid slaves)");
+  delete($prog->{_show_slave_status});
+  delete($prog->{_show_processlist});
   
-  $prog->{_show_slave_status}= [];
-  $prog->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_GTID_SLAVE::VAR1;
+  $prog->{instance}->{_show_slave_status}= [];
+  $prog->{instance}->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_GTID_SLAVE::VAR1;
   is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with gtid slaves)");
+  delete($prog->{_show_slave_status});
+  delete($prog->{_show_processlist});
 
-  $prog->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
-  $prog->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
+  $prog->{instance}->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
+  $prog->{instance}->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
   is($prog->decide_role, "slave", "decide_role with SHOW SLAVE STATUS / PROCESSLIST(slave)");
+  delete($prog->{_show_slave_status});
+  delete($prog->{_show_processlist});
 
-  $prog->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
-  $prog->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_NONGTID_SLAVE::VAR1;
+  $prog->{instance}->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
+  $prog->{instance}->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_NONGTID_SLAVE::VAR1;
   is($prog->decide_role, "intermidiate", "decide_role with SHOW SLAVE STATUS / PROCESSLIST(intermidiate)");
+  delete($prog->{_show_slave_status});
+  delete($prog->{_show_processlist});
+
+  delete($prog->{instance}->{_show_slave_status});
+  delete($prog->{instance}->{_show_processlist});
 };
 
 subtest "check_long_query" => sub
 {
   require "$Bin/data/06_show_processlist.txt";
-  $prog->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
+  $prog->{instance}->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
 
   ### Max query time is 125 (expect of replication threads)
 
@@ -129,14 +143,15 @@ subtest "check_long_query" => sub
   delete($prog->{long_query});
 
   delete($prog->{_show_processlist});
+  delete($prog->{instance}->{_show_processlist});
 };
 
 subtest "connection_count" => sub
 {
   require "$Bin/data/06_show_status.txt";
   require "$Bin/data/06_show_variables.txt";
-  $prog->{_show_status}   = $Ytkit::Test::SHOW_STATUS::VAR1;
-  $prog->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
+  $prog->{instance}->{_show_status}   = $Ytkit::Test::SHOW_STATUS::VAR1;
+  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
 
   ### max_connections= 151 and Threads_connected= 102, about 67.5% used.
 
@@ -174,12 +189,14 @@ subtest "connection_count" => sub
 
   delete($prog->{_show_status});
   delete($prog->{_show_variables});
+  delete($prog->{instance}->{_show_status});
+  delete($prog->{instance}->{_show_variables});
 };
 
 subtest "autoinc_usage" => sub
 {
   require "$Bin/data/06_select_autoinc_usage.txt";
-  $prog->{_select_autoinc_usage}   = $Ytkit::Test::AUTOINC_USAGE::VAR1;
+  $prog->{instance}->{_select_autoinc_usage}   = $Ytkit::Test::AUTOINC_USAGE::VAR1;
  
   ### Max autoinc is 10001 on unsigned smallint(65535), about 15.2% used.
   
@@ -215,11 +232,11 @@ subtest "autoinc_usage" => sub
   &clear_status;
   delete($prog->{autoinc_usage});
 
-
   delete($prog->{_select_autoinc_usage});
+  delete($prog->{instance}->{_select_autoinc_usage});
 
   require "$Bin/data/06_select_autoinc_usage_signed.txt";
-  $prog->{_select_autoinc_usage}   = $Ytkit::Test::AUTOINC_USAGE_SIGNED::VAR1;
+  $prog->{instance}->{_select_autoinc_usage}   = $Ytkit::Test::AUTOINC_USAGE_SIGNED::VAR1;
  
   ### Max autoinc is 10001 on signed smallint(32767), about 30.5% used.
   
@@ -232,13 +249,14 @@ subtest "autoinc_usage" => sub
   delete($prog->{autoinc_usage});
 
   delete($prog->{_select_autoinc_usage});
+  delete($prog->{instance}->{_select_autoinc_usage});
 };
 
 subtest "read_only" => sub
 {
   ### read_only= 0
   require "$Bin/data/06_show_variables.txt";
-  $prog->{_show_variables}   = $Ytkit::Test::SHOW_VARIABLES::VAR1;
+  $prog->{instance}->{_show_variables}   = $Ytkit::Test::SHOW_VARIABLES::VAR1;
  
   $prog->{read_only}->{should_be}= 1; ### For slaves.
   $prog->check_read_only;
@@ -253,10 +271,11 @@ subtest "read_only" => sub
   delete($prog->{read_only});
 
   delete($prog->{_show_variables});
+  delete($prog->{instance}->{_show_variables});
 
   ### read_only= 1
   require "$Bin/data/06_show_variables_read_only.txt";
-  $prog->{_show_variables}   = $Ytkit::Test::SHOW_VARIABLES_READ_ONLY::VAR1;
+  $prog->{instance}->{_show_variables}   = $Ytkit::Test::SHOW_VARIABLES_READ_ONLY::VAR1;
  
   $prog->{read_only}->{should_be}= 1; ### For slaves.
   $prog->check_read_only;
@@ -271,12 +290,13 @@ subtest "read_only" => sub
   delete($prog->{read_only});
 
   delete($prog->{_show_variables});
+  delete($prog->{instance}->{_show_variables});
 };
 
 subtest "slave_status" => sub
 {
   require "$Bin/data/06_show_slave_status_ok.txt";
-  $prog->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
+  $prog->{instance}->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
 
   ### I/O Running and SQL Running are "YES", Seconds_Behind_Master is 43.
  
@@ -305,9 +325,10 @@ subtest "slave_status" => sub
   delete($prog->{slave_status});
 
   delete($prog->{_show_slave_status});
+  delete($prog->{instance}->{_show_slave_status});
 
   require "$Bin/data/06_show_slave_status_ng.txt";
-  $prog->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_NG::VAR1;
+  $prog->{instance}->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_NG::VAR1;
 
   ### SQL Running is "NO", always should be CRITICAL
  
@@ -328,6 +349,7 @@ subtest "slave_status" => sub
   delete($prog->{slave_status});
 
   delete($prog->{_show_slave_status});
+  delete($prog->{instance}->{_show_slave_status});
 };
 
 subtest "--role=fabric" => sub

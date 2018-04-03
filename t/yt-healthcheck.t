@@ -39,7 +39,7 @@ is($prog->hostname, "Can't fetch hostname", "Default hostname when connection ha
 
 ### Imitate "connection is alive"
 bless $prog->{instance} => "Ytkit::MySQLServer";
-&clear_status;
+&reset_param;
 
 subtest "decide_role" => sub
 {
@@ -51,35 +51,24 @@ subtest "decide_role" => sub
   $prog->{instance}->{_show_slave_status}= [];
   $prog->{instance}->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
   is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master without slave)");
-  delete($prog->{_show_slave_status});
-  delete($prog->{_show_processlist});
 
   $prog->{instance}->{_show_slave_status}= [];
   $prog->{instance}->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_NONGTID_SLAVE::VAR1;
   is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with non-gtid slaves)");
-  delete($prog->{_show_slave_status});
-  delete($prog->{_show_processlist});
   
   $prog->{instance}->{_show_slave_status}= [];
   $prog->{instance}->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_GTID_SLAVE::VAR1;
   is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with gtid slaves)");
-  delete($prog->{_show_slave_status});
-  delete($prog->{_show_processlist});
 
   $prog->{instance}->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
   $prog->{instance}->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
   is($prog->decide_role, "slave", "decide_role with SHOW SLAVE STATUS / PROCESSLIST(slave)");
-  delete($prog->{_show_slave_status});
-  delete($prog->{_show_processlist});
 
   $prog->{instance}->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
   $prog->{instance}->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_NONGTID_SLAVE::VAR1;
   is($prog->decide_role, "intermidiate", "decide_role with SHOW SLAVE STATUS / PROCESSLIST(intermidiate)");
-  delete($prog->{_show_slave_status});
-  delete($prog->{_show_processlist});
 
-  delete($prog->{instance}->{_show_slave_status});
-  delete($prog->{instance}->{_show_processlist});
+  &clear_cache;
 };
 
 subtest "check_long_query" => sub
@@ -94,24 +83,21 @@ subtest "check_long_query" => sub
   $prog->{long_query}->{enable}= 1;
   $prog->check_long_query;
   is($prog->{status}->{str}, "OK", "check_long_query < warning");
-  &clear_status;
-  delete($prog->{long_query});
+  &reset_param;
 
   $prog->{long_query}->{warning}= 100;
   $prog->{long_query}->{critical}= 10000;
   $prog->{long_query}->{enable}= 1;
   $prog->check_long_query;
   is($prog->{status}->{str}, "WARNING", "check_long_query between warning and critical");
-  &clear_status;
-  delete($prog->{long_query});
+  &reset_param;
 
   $prog->{long_query}->{warning}= 100;
   $prog->{long_query}->{critical}= 100;
   $prog->{long_query}->{enable}= 1;
   $prog->check_long_query;
   is($prog->{status}->{str}, "CRITICAL", "check_long_query > critical");
-  &clear_status;
-  delete($prog->{long_query});
+  &reset_param;
 
   ### Excluded by host.
   $prog->{long_query}->{warning}= 100;
@@ -120,8 +106,7 @@ subtest "check_long_query" => sub
   $prog->{long_query}->{exclude_host}= ["192.168.0.1"];
   $prog->check_long_query;
   is($prog->{status}->{str}, "OK", "Time was exceeded but excluded by host");
-  &clear_status;
-  delete($prog->{long_query});
+  &reset_param;
 
   ### Excluded by SQL
   $prog->{long_query}->{warning}= 100;
@@ -130,8 +115,7 @@ subtest "check_long_query" => sub
   $prog->{long_query}->{exclude_query}= ["SELECT SLEEP"];
   $prog->check_long_query;
   is($prog->{status}->{str}, "OK", "Time was exceeded but excluded by query");
-  &clear_status;
-  delete($prog->{long_query});
+  &reset_param;
 
   ### disabled by option
   $prog->{long_query}->{warning}= 100;
@@ -139,11 +123,9 @@ subtest "check_long_query" => sub
   $prog->{long_query}->{enable}= 0;
   $prog->check_long_query;
   is($prog->{status}->{str}, "OK", "Disabled by --long-query-enable=0");
-  &clear_status;
-  delete($prog->{long_query});
+  &reset_param;
 
-  delete($prog->{_show_processlist});
-  delete($prog->{instance}->{_show_processlist});
+  &clear_cache;
 };
 
 subtest "connection_count" => sub
@@ -160,37 +142,30 @@ subtest "connection_count" => sub
   $prog->{connection_count}->{enable}= 1;
   $prog->check_connection_count;
   is($prog->{status}->{str}, "OK", "connections < warning");
-  &clear_status;
-  delete($prog->{connection_count});
+  &reset_param;
 
   $prog->{connection_count}->{warning}= 60;
   $prog->{connection_count}->{critical}= 100;
   $prog->{connection_count}->{enable}= 1;
   $prog->check_connection_count;
   is($prog->{status}->{str}, "WARNING", "connections between warning and critical");
-  &clear_status;
-  delete($prog->{connection_count});
+  &reset_param;
 
   $prog->{connection_count}->{warning}= 60;
   $prog->{connection_count}->{critical}= 60;
   $prog->{connection_count}->{enable}= 1;
   $prog->check_connection_count;
   is($prog->{status}->{str}, "CRITICAL", "connections > critical");
-  &clear_status;
-  delete($prog->{connection_count});
+  &reset_param;
 
   $prog->{connection_count}->{warning}= 60;
   $prog->{connection_count}->{critical}= 60;
   $prog->{connection_count}->{enable}= 0;
   $prog->check_connection_count;
   is($prog->{status}->{str}, "OK", "Disabled by --connection-count-enable=0");
-  &clear_status;
-  delete($prog->{connection_count});
+  &reset_param;
 
-  delete($prog->{_show_status});
-  delete($prog->{_show_variables});
-  delete($prog->{instance}->{_show_status});
-  delete($prog->{instance}->{_show_variables});
+  &clear_cache;
 };
 
 subtest "autoinc_usage" => sub
@@ -205,35 +180,30 @@ subtest "autoinc_usage" => sub
   $prog->{autoinc_usage}->{enable}= 1;
   $prog->check_autoinc_usage;
   is($prog->{status}->{str}, "OK", "autoinc_usage < warning");
-  &clear_status;
-  delete($prog->{autoinc_usage});
+  &reset_param;
 
   $prog->{autoinc_usage}->{warning}= 10;
   $prog->{autoinc_usage}->{critical}= 90;
   $prog->{autoinc_usage}->{enable}= 1;
   $prog->check_autoinc_usage;
   is($prog->{status}->{str}, "WARNING", "autoinc_usage between warning and critical");
-  &clear_status;
-  delete($prog->{autoinc_usage});
+  &reset_param;
 
   $prog->{autoinc_usage}->{warning}= 10;
   $prog->{autoinc_usage}->{critical}= 15;
   $prog->{autoinc_usage}->{enable}= 1;
   $prog->check_autoinc_usage;
   is($prog->{status}->{str}, "CRITICAL", "autoinc_usage > critical");
-  &clear_status;
-  delete($prog->{autoinc_usage});
+  &reset_param;
 
   $prog->{autoinc_usage}->{warning}= 10;
   $prog->{autoinc_usage}->{critical}= 15;
   $prog->{autoinc_usage}->{enable}= 0;
   $prog->check_autoinc_usage;
   is($prog->{status}->{str}, "OK", "Disabled by --autoinc-usage-enable=0");
-  &clear_status;
-  delete($prog->{autoinc_usage});
+  &reset_param;
 
-  delete($prog->{_select_autoinc_usage});
-  delete($prog->{instance}->{_select_autoinc_usage});
+  &clear_cache;
 
   require "$Bin/data/06_select_autoinc_usage_signed.txt";
   $prog->{instance}->{_select_autoinc_usage}   = $Ytkit::Test::AUTOINC_USAGE_SIGNED::VAR1;
@@ -245,11 +215,9 @@ subtest "autoinc_usage" => sub
   $prog->{autoinc_usage}->{enable}= 1;
   $prog->check_autoinc_usage;
   is($prog->{status}->{str}, "WARNING", "Signed smallint is handled correctly.");
-  &clear_status;
-  delete($prog->{autoinc_usage});
+  &reset_param;
 
-  delete($prog->{_select_autoinc_usage});
-  delete($prog->{instance}->{_select_autoinc_usage});
+  &clear_cache;
 };
 
 subtest "read_only" => sub
@@ -261,17 +229,14 @@ subtest "read_only" => sub
   $prog->{read_only}->{should_be}= 1; ### For slaves.
   $prog->check_read_only;
   is($prog->{status}->{str}, "WARNING", "Slave is expected read_only= 1 but not");
-  &clear_status;
-  delete($prog->{read_only});
+  &reset_param;
 
   $prog->{read_only}->{should_be}= 0; ### For master.
   $prog->check_read_only;
   is($prog->{status}->{str}, "OK", "Master is expected read_only= 0 and correct");
-  &clear_status;
-  delete($prog->{read_only});
+  &reset_param;
 
-  delete($prog->{_show_variables});
-  delete($prog->{instance}->{_show_variables});
+  &clear_cache;
 
   ### read_only= 1
   require "$Bin/data/06_show_variables_read_only.txt";
@@ -280,17 +245,14 @@ subtest "read_only" => sub
   $prog->{read_only}->{should_be}= 1; ### For slaves.
   $prog->check_read_only;
   is($prog->{status}->{str}, "OK", "Slave is expected read_only= 1 and correct");
-  &clear_status;
-  delete($prog->{read_only});
+  &reset_param;
 
   $prog->{read_only}->{should_be}= 0; ### For master.
   $prog->check_read_only;
   is($prog->{status}->{str}, "CRITICAL", "Master is expected read_only= 0 but not");
-  &clear_status;
-  delete($prog->{read_only});
+  &reset_param;
 
-  delete($prog->{_show_variables});
-  delete($prog->{instance}->{_show_variables});
+  &clear_cache;
 };
 
 subtest "slave_status" => sub
@@ -305,27 +267,23 @@ subtest "slave_status" => sub
   $prog->{slave_status}->{enable}= 1;
   $prog->check_slave_status;
   is($prog->{status}->{str}, "OK", "slave_status < warning");
-  &clear_status;
-  delete($prog->{slave_status});
+  &reset_param;
 
   $prog->{slave_status}->{warning}= 10;
   $prog->{slave_status}->{critical}= 1000;
   $prog->{slave_status}->{enable}= 1;
   $prog->check_slave_status;
   is($prog->{status}->{str}, "WARNING", "slave_status between warning and critical");
-  &clear_status;
-  delete($prog->{slave_status});
+  &reset_param;
 
   $prog->{slave_status}->{warning}= 10;
   $prog->{slave_status}->{critical}= 15;
   $prog->{slave_status}->{enable}= 1;
   $prog->check_slave_status;
   is($prog->{status}->{str}, "CRITICAL", "slave_status > critical");
-  &clear_status;
-  delete($prog->{slave_status});
+  &reset_param;
 
-  delete($prog->{_show_slave_status});
-  delete($prog->{instance}->{_show_slave_status});
+  &clear_cache;
 
   require "$Bin/data/06_show_slave_status_ng.txt";
   $prog->{instance}->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_NG::VAR1;
@@ -337,19 +295,15 @@ subtest "slave_status" => sub
   $prog->{slave_status}->{enable}= 1;
   $prog->check_slave_status;
   is($prog->{status}->{str}, "CRITICAL", "SQL Thread is not running");
-  &clear_status;
-  delete($prog->{slave_status});
+  &reset_param;
 
   $prog->{slave_status}->{warning}= 100;
   $prog->{slave_status}->{critical}= 1000;
   $prog->{slave_status}->{enable}= 0;
   $prog->check_slave_status;
   is($prog->{status}->{str}, "OK", "Disabled by --slave-status-enable=0");
-  &clear_status;
-  delete($prog->{slave_status});
-
-  delete($prog->{_show_slave_status});
-  delete($prog->{instance}->{_show_slave_status});
+  &reset_param;
+  &clear_cache;
 };
 
 subtest "--role=fabric" => sub
@@ -373,8 +327,23 @@ done_testing;
 
 exit 0;
 
-sub clear_status
+sub reset_param
 {
   $prog->{status}= Ytkit::HealthCheck::NAGIOS_OK;
   $prog->{output}= "";
+
+  foreach (qw{long_query connection_count autoinc_usage read_only slave_status})
+  {
+    delete($prog->{$_});
+  }
 }
+
+sub clear_cache
+{
+  foreach (qw{_show_slave_status _show_slave_hosts _show_processlist 
+              _show_status _show_variables _select_autoinc_usage _show_master_logs})
+  {
+    delete($prog->{instance}->{$_});
+  }
+}
+

@@ -532,40 +532,31 @@ sub update_status
 sub show_slave_status
 {
   my ($self)= @_;
-
-  $self->{_show_slave_status}= $self->{instance}->show_slave_status if !(defined($self->{_show_slave_status}));
-  return $self->{_show_slave_status};
+  return $self->{instance}->show_slave_status;
 }
 
 sub show_processlist
 {
   my ($self)= @_;
-
-  $self->{_show_processlist}= $self->{instance}->show_processlist if !(defined($self->{_show_processlist}));
-  return $self->{_show_processlist};
+  return $self->{instance}->show_processlist;
 }
 
 sub show_status
 {
   my ($self)= @_;
-
-  $self->{_show_status}= $self->{instance}->show_status if !(defined($self->{_show_status}));
-  return $self->{_show_status};
+  return $self->{instance}->show_status;
 }
 
 sub show_variables
 {
   my ($self)= @_;
-
-  $self->{_show_variables}= $self->{instance}->show_variables if !(defined($self->{_show_variables}));
-  return $self->{_show_variables};
+  return $self->{instance}->show_variables;
 }
 
 sub select_autoinc_usage
 {
   my ($self)= @_;
-  $self->{_select_autoinc_usage}= $self->{instance}->select_autoinc_usage if !(defined($self->{_select_autoinc_usage}));
-  return $self->{_select_autoinc_usage};
+  return $self->{instance}->select_autoinc_usage;
 }
 
 sub show_slaves_via_processlist

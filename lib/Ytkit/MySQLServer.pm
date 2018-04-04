@@ -48,19 +48,14 @@ sub connect_to_mysql
   my ($dsn, $user, $password, $timeout)= @_;
   $timeout ||= 10;
 
-  my $conn;
-  eval
-  {
-    $conn= DBI->connect($dsn, $user, $password,
-                        {mysql_enable_utf8     => 1,
-                         mysql_connect_timeout => $timeout,
-                         mysql_write_timeout   => $timeout, 
-                         mysql_read_timeout    => $timeout,
-                         RaiseError            => 1, 
-                         PrintError            => 0,
-                        });
-  };
-
+  my $conn= DBI->connect($dsn, $user, $password,
+                         {mysql_enable_utf8     => 1,
+                          mysql_connect_timeout => $timeout,
+                          mysql_write_timeout   => $timeout, 
+                          mysql_read_timeout    => $timeout,
+                          RaiseError            => 1, 
+                          PrintError            => 0,
+                         });
   return $conn;
 }
 

@@ -100,15 +100,20 @@ sub new
     fabric_fd        => { enable        => $opt->{fabric_fd_enable},
                           warning       => $opt->{fabric_fd_warning},
                           critical      => $opt->{fabric_fd_critical}, },
-    instance => Ytkit::MySQLServer->new($opt),
   };
   bless $self => $class;
+  eval
+  {
+    $self->{instance}= Ytkit::MySQLServer->new($opt);
+  };
 
-  if (!($self->{instance}->{conn}))
+  if ($@)
   {
     ### Early return if can't connect to MySQL.
+    $self->{instance}= {};
+    bless $self->{instance} => "Ytkit::MySQLServer";
     $self->{status}= NAGIOS_CRITICAL;
-    $self->{output}= "Can't connect to MySQL Server.";
+    $self->{output}= "Can't connect to MySQL Server($@)";
     $self->{role}= $opt->{role} eq "auto" ? "unknown" : $opt->{role};
     return $self;
   }

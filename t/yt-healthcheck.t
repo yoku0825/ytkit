@@ -33,12 +33,10 @@ no warnings "once";
 my @argv= qw{--role=auto};
 
 ### Connection failed.
-my $prog=Ytkit::HealthCheck->new(@argv);
+my $prog= Ytkit::HealthCheck->new(@argv);
 is($prog->{status}->{str}, "CRITICAL", "Connection Failed");
 is($prog->hostname, "Can't fetch hostname", "Default hostname when connection has failed.");
 
-### Imitate "connection is alive"
-bless $prog->{instance} => "Ytkit::MySQLServer";
 &reset_param;
 
 subtest "decide_role" => sub

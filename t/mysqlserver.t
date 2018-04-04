@@ -31,7 +31,11 @@ use Ytkit::MySQLServer;
 no warnings "once";
 
 ### Connection failed.
-my $server= Ytkit::MySQLServer->new({host => "localhost"});
+my $server;
+eval
+{
+  $server= Ytkit::MySQLServer->new({host => "localhost"});
+};
 ok(!(defined($server->{conn})), "Connection failed");
 
 ### Dummy instance.

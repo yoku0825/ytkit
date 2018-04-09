@@ -32,6 +32,17 @@ use constant NAGIOS_WARNING  => { exit_code => 1, str => "WARNING" };
 use constant NAGIOS_CRITICAL => { exit_code => 2, str => "CRITICAL" };
 use constant NAGIOS_UNKNOWN  => { exit_code => 3, str => "UNKNOWN" };
 
+### Data-type map
+use constant BYTES =>
+{
+  tinyint   => 1,
+  smallint  => 2,
+  mediumint => 3,
+  int       => 4,
+  bigint    => 8,
+};
+
+
 use constant DEFAULT_OPTION =>
 {
   version    => { alias => ["version", "V"], default => 0 },
@@ -120,64 +131,61 @@ sub new
 
   ### Set role for check items.
   $self->{role}= $opt->{role} eq "auto" ? $self->decide_role : $opt->{role};
+  my $role= $self->{role};
 
-  given($self->{role})
+  if ($role eq "master")
   {
-    when("master")
-    {
-      ### Check too long query, connection count, AUTO_INCREMENT usage, read_only should be OFF.
-      $self->check_long_query;
-      $self->check_connection_count;
-      $self->check_autoinc_usage;
-      $self->{read_only}->{should_be}= 0;
-      $self->check_read_only;
-    };
-    when("slave")
-    {
-      ### Check too long query, replication threads, replication delay, connection count, read_only should be ON.
-      $self->check_long_query;
-      $self->check_connection_count;
-      $self->check_slave_status;
-      $self->{read_only}->{should_be}= 1;
-      $self->check_read_only;
-    };
-    when("intermidiate")
-    {
-      ### Intermidiate master in cascaded replication toporogy.
-      $self->check_long_query;
-      $self->check_connection_count;
-      $self->check_autoinc_usage;
-      $self->check_slave_status;
-      $self->{read_only}->{should_be}= 0;
-      $self->check_read_only;
-    };
-    when("backup")
-    {
-      ### Check only replication threads, read_only should be ON.
-      $self->check_slave_status;
-      $self->{read_only}->{should_be}= 1;
-      $self->check_read_only;
-    };
-    when("none")
-    {
-      ### Nothing to check (automatically).
-      ### Use this role when call Ytkit::HealthCheck as library.
-    };
-    when("fabric")
-    {
-      ### mikasafabric couldn't return its hostname.
-      $self->{instance}->{_hostname}= $opt->{host};
-      ### mikasafabric for MySQL specific checks.
-      $self->check_fabric;
-    };
-
-    default
-    {
-      ### Unexpected role was specified by user.
-      $self->{status}= NAGIOS_UNKNOWN;
-      $self->{output}= sprintf("Unexpected role was specified. %s", $self->{role});
-    };
-  };
+    ### Check too long query, connection count, AUTO_INCREMENT usage, read_only should be OFF.
+    $self->check_long_query;
+    $self->check_connection_count;
+    $self->check_autoinc_usage;
+    $self->{read_only}->{should_be}= 0;
+    $self->check_read_only;
+  }
+  elsif ($role eq "slave")
+  {
+    ### Check too long query, replication threads, replication delay, connection count, read_only should be ON.
+    $self->check_long_query;
+    $self->check_connection_count;
+    $self->check_slave_status;
+    $self->{read_only}->{should_be}= 1;
+    $self->check_read_only;
+  }
+  elsif ($role eq "intermidiate")
+  {
+    ### Intermidiate master in cascaded replication toporogy.
+    $self->check_long_query;
+    $self->check_connection_count;
+    $self->check_autoinc_usage;
+    $self->check_slave_status;
+    $self->{read_only}->{should_be}= 0;
+    $self->check_read_only;
+  }
+  elsif ($role eq "backup")
+  {
+    ### Check only replication threads, read_only should be ON.
+    $self->check_slave_status;
+    $self->{read_only}->{should_be}= 1;
+    $self->check_read_only;
+  }
+  elsif ($role eq "none")
+  {
+    ### Nothing to check (automatically).
+    ### Use this role when call Ytkit::HealthCheck as library.
+  }
+  elsif ($role eq "fabric")
+  {
+    ### mikasafabric couldn't return its hostname.
+    $self->{instance}->{_hostname}= $opt->{host};
+    ### mikasafabric for MySQL specific checks.
+    $self->check_fabric;
+  }
+  else
+  {
+    ### Unexpected role was specified by user.
+    $self->{status}= NAGIOS_UNKNOWN;
+    $self->{output}= sprintf("Unexpected role was specified. %s", $role);
+  }
 
   return $self;
 }
@@ -239,24 +247,21 @@ sub check_long_query
   ### Evaluate each thread.
   foreach my $row (@{$self->show_processlist})
   {
+    my $user= $row->{User};
+
     ### Exclude by user.
-    given($row->{User})
+    if (grep {/^$user$/} ("system user", "event_scheduler"))
     {
       ### Ignore replication threads and daemon plugin
-      when(["system user", "event_scheduler"])
-      {
-        next;
-      }
-    };
+      next;
+    }
 
     ### Exclude by command.
-    given($row->{Command})
+    my $command= $row->{Command};
+    if (grep {/^$command$/} ("Sleep", "Killed", "Binlog Dump", "Binlog Dump GTID", "Delayed insert"))
     {
-      when(["Sleep", "Killed", "Binlog Dump", "Binlog Dump GTID", "Delayed insert"])
-      {
-        next;
-      }
-    };
+      next;
+    }
 
     ### Exclude by host.
     if ($self->{long_query}->{exclude_host}->[0])
@@ -272,19 +277,9 @@ sub check_long_query
     }
 
     ### Evaluate by time.
-    my $status;
-    given($row->{Time})
-    {
-      $_ ||= 0;
-      when($_ > $self->{long_query}->{critical})
-      {
-        $status= NAGIOS_CRITICAL;
-      };
-      when($_ > $self->{long_query}->{warning})
-      {
-        $status= NAGIOS_WARNING;
-      };
-    };
+    my $time= $row->{Time} ? $row->{Time} : 0;
+    my $status= compare_threshold($time, $self->{long_query});
+
     $self->update_status($status, sprintf(qq{Detected long query: "%s"\t}, $row->{Info})) if $status;
 
   } ### End of foreach, goes to the next row.
@@ -297,23 +292,10 @@ sub check_connection_count
   my ($self)= @_;
   return 0 unless $self->{connection_count}->{enable};
 
-  my $status;
-
   my $current= $self->show_status->{Threads_connected}->{Value};
   my $setting= $self->show_variables->{max_connections}->{Value};
   my $ratio  = ($current / $setting) * 100;
-
-  given($ratio)
-  {
-    when($_ > $self->{connection_count}->{critical})
-    {
-      $status= NAGIOS_CRITICAL;
-    };
-    when($_ > $self->{connection_count}->{warning})
-    {
-      $status= NAGIOS_WARNING;
-    };
-  };
+  my $status = compare_threshold($ratio, $self->{connection_count});
   $self->update_status($status, sprintf(qq{Caution for too many connections: "%5.2f(%d/%d)"\t},
                                         $ratio, $current, $setting)) if $status;
   return;
@@ -328,46 +310,10 @@ sub check_autoinc_usage
   {
     ### Calculate max value of autoinc from datatype.
     my ($type, $unsigned)= $row->{column_type} =~ /^([a-z]+)\(.+\)(\s+(unsigned))?/;
-    my $max;
-    given($type)
-    {
-      when("tinyint")
-      {
-        $max= 2 ** ($unsigned ? 8 : 7) - 1;
-      };
-      when("smallint")
-      {
-        $max= 2 ** ($unsigned ? 16 : 15) - 1;
-      };
-      when("mediumint")
-      {
-        $max= 2 ** ($unsigned ? 24 : 23) - 1;
-      };
-      when("int")
-      {
-        $max= 2 ** ($unsigned ? 32 : 31) - 1;
-      };
-      when("bigint")
-      {
-        $max= 2 ** ($unsigned ? 64 : 63) - 1;
-      };
-    };
-
+    my $max= 2 ** (BYTES->{$type} * 8 - ($unsigned ? 0 : 1));
     my $ratio= ($row->{auto_increment} / $max) * 100;
 
-    my $status;
-    given($ratio)
-    {
-      when($_ > $self->{autoinc_usage}->{critical})
-      {
-        $status= NAGIOS_CRITICAL;
-      };
-      when($_ > $self->{autoinc_usage}->{warning})
-      {
-        $status= NAGIOS_WARNING;
-      };
-    };
-  
+    my $status= compare_threshold($ratio, $self->{autoinc_usage});
     $self->update_status($status, sprintf(qq{table %s.%s uses auto_increment column %s %5.2f%%(%d/%d)"\t},
                                           $row->{table_schema}, $row->{table_name}, $row->{column_name},
                                           $ratio, $row->{auto_increment}, $max)) if $status;
@@ -381,18 +327,17 @@ sub check_read_only
   my ($self)= @_;
 
   my $status;
-  given($self->show_variables->{read_only}->{Value})
+  my $read_only= $self->show_variables->{read_only}->{Value};
+
+  if ($read_only eq "ON")
   {
-    when("ON")
-    {
-      ### If master server(read_only should_be 0) turns on read_only, raise as CRITICAL.
-      $status= $self->{read_only}->{should_be} == 0 ? NAGIOS_CRITICAL : undef
-    };
-    when("OFF")
-    {
-      ### Just warning if slave server(read_only should_be 1) turns off read_only.
-      $status= $self->{read_only}->{should_be} == 1 ? NAGIOS_WARNING : undef;
-    };
+    ### If master server(read_only should_be 0) turns on read_only, raise as CRITICAL.
+    $status= $self->{read_only}->{should_be} == 0 ? NAGIOS_CRITICAL : undef
+  }
+  elsif ($read_only eq "OFF")
+  {
+    ### Just warning if slave server(read_only should_be 1) turns off read_only.
+    $status= $self->{read_only}->{should_be} == 1 ? NAGIOS_WARNING : undef;
   }
 
   $self->update_status($status, sprintf(qq{read_only should be %s but current setting is %s}, 
@@ -428,19 +373,8 @@ sub check_slave_status
       next;
     }
 
-    given($row->{Seconds_Behind_Master})
-    {
-      when($_ > $self->{slave_status}->{critical})
-      {
-        $status= NAGIOS_CRITICAL;
-        $output= sprintf("Seconds_Behind_Master is %d", $_);
-      };
-      when($_ > $self->{slave_status}->{warning})
-      {
-        $status= NAGIOS_WARNING;
-        $output= sprintf("Seconds_Behind_Master is %d", $_);
-      };
-    };
+    my $second= $row->{Seconds_Behind_Master} ? $row->{Seconds_Behind_Master} : 0;
+    $status= compare_threshold($second, $self->{slave_status});
     $self->update_status($status, $output) if $status;
   } ### Evaluate each CHANNEL in SHOW SLAVE STATUS
   return;
@@ -488,24 +422,10 @@ sub check_fabric
   my $max_fd    = $openfds->[0]->{max};
   my $pct_fd    = ($current_fd / $max_fd) * 100;
 
-  given($pct_fd)
-  {
-    when($_ > $self->{fabric_fd}->{critical})
-    {
-      $status= NAGIOS_CRITICAL;
-      $output= sprintf("File-descriptor count %d/%d is over %d%%", $current_fd, $max_fd, $self->{fabric_fd}->{critical});
-    };
-    when($_ > $self->{fabric_fd}->{warning})
-    {
-      $status= NAGIOS_WARNING;
-      $output= sprintf("File-descriptor count %d/%d is over %d%%", $current_fd, $max_fd, $self->{fabric_fd}->{critical});
-    };
-    default
-    {
-      $status= NAGIOS_OK;
-      $output= sprintf("File-descriptor count %d/%d", $current_fd, $max_fd);
-    }
-  };
+  $status= compare_threshold($pct_fd, $self->{fabric_fd});
+
+  ### Information message when $status = NAGIOS_OK
+  $output= sprintf("File-descriptor count %d/%d", $current_fd, $max_fd) if $status eq NAGIOS_OK;
   $self->update_status($status, $output) if $status;
 
   return;
@@ -532,6 +452,21 @@ sub update_status
   }
 
   return;
+}
+
+sub compare_threshold
+{
+  my ($value, $threshold)= @_;
+
+  if ($value > $threshold->{critical})
+  {
+    return NAGIOS_CRITICAL;
+  }
+  elsif ($value > $threshold->{warning})
+  {
+    return NAGIOS_WARNING;
+  }
+  return NAGIOS_OK;
 }
 
 sub show_slave_status

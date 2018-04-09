@@ -93,49 +93,46 @@ sub parse
     }
     if ($self->{time_string} && $dml && $table)
     {
-      given($self->{group_by})
+      if ($self->compare_groupby("exec,statement,table,time", "all,exec"))
       {
-        when([sort_csv("exec,statement,table,time"), sort_csv("all,exec")])
-        {
-          $self->{count_hash}->{$self->{time_string}}->{$table}->{$dml}->{$self->{exec_time}}++;
-        };
-        when([sort_csv("all"), sort_csv("statement,table,time")])
-        {
-          $self->{count_hash}->{$self->{time_string}}->{$table}->{$dml}++;
-          push(@{$self->{exec_time_hash}->{$self->{time_string}}->{$table}->{$dml}}, $self->{exec_time});
-        };
-        when([sort_csv("table,time")])
-        {
-          $self->{count_hash}->{$self->{time_string}}->{$table}++;
-          push(@{$self->{exec_time_hash}->{$self->{time_string}}->{$table}}, $self->{exec_time});
-        };
-        when([sort_csv("time")])
-        {
-          $self->{count_hash}->{$self->{time_string}}++;
-          push(@{$self->{exec_time_hash}->{$self->{time_string}}}, $self->{exec_time});
-        };
-        when([sort_csv("table")])
-        {
-          $self->{count_hash}->{$table}++;
-          push(@{$self->{exec_time_hash}->{$table}}, $self->{exec_time});
-        };
-        when([sort_csv("statement")])
-        {
-          $self->{count_hash}->{$dml}++;
-          push(@{$self->{exec_time_hash}->{$dml}}, $self->{exec_time});
-        };
-        when([sort_csv("statement,time")])
-        {
-          $self->{count_hash}->{$self->{time_string}}->{$dml}++;
-          push(@{$self->{exec_time_hash}->{$self->{time_string}}->{$dml}}, $self->{exec_time});
-        };
-        when([sort_csv("statement,table")])
-        {
-          $self->{count_hash}->{$table}->{$dml}++;
-          push(@{$self->{exec_time_hash}->{$table}->{$dml}}, $self->{exec_time});
-        };
-      };
-        
+        $self->{count_hash}->{$self->{time_string}}->{$table}->{$dml}->{$self->{exec_time}}++;
+      }
+      elsif ($self->compare_groupby("all", "statement,table,time"))
+      {
+        $self->{count_hash}->{$self->{time_string}}->{$table}->{$dml}++;
+        push(@{$self->{exec_time_hash}->{$self->{time_string}}->{$table}->{$dml}}, $self->{exec_time});
+      }
+      elsif ($self->compare_groupby("table,time"))
+      {
+        $self->{count_hash}->{$self->{time_string}}->{$table}++;
+        push(@{$self->{exec_time_hash}->{$self->{time_string}}->{$table}}, $self->{exec_time});
+      }
+      elsif ($self->compare_groupby("time"))
+      {
+        $self->{count_hash}->{$self->{time_string}}++;
+        push(@{$self->{exec_time_hash}->{$self->{time_string}}}, $self->{exec_time});
+      }
+      elsif ($self->compare_groupby("table"))
+      {
+        $self->{count_hash}->{$table}++;
+        push(@{$self->{exec_time_hash}->{$table}}, $self->{exec_time});
+      }
+      elsif ($self->compare_groupby("statement"))
+      {
+        $self->{count_hash}->{$dml}++;
+        push(@{$self->{exec_time_hash}->{$dml}}, $self->{exec_time});
+      }
+      elsif ($self->compare_groupby("statement,time"))
+      {
+        $self->{count_hash}->{$self->{time_string}}->{$dml}++;
+        push(@{$self->{exec_time_hash}->{$self->{time_string}}->{$dml}}, $self->{exec_time});
+      }
+      elsif ($self->compare_groupby("statement,table"))
+      {
+        $self->{count_hash}->{$table}->{$dml}++;
+        push(@{$self->{exec_time_hash}->{$table}->{$dml}}, $self->{exec_time});
+      }
+
       $self->{time_string}= $self->{exec_time}= $dml= $table= "";
     }
   }
@@ -152,82 +149,78 @@ sub output
 
   my $count_hash    = $self->{count_hash};
   my $exec_time_hash= $self->{exec_time_hash};
-  given($self->{group_by})
-  {
-    when(["table", "statement"])
-    {
-      ### Only have 1 element.
-      foreach my $element (sort(keys(%$count_hash)))
-      {
-        push(@ret, $self->build_line($element, $count_hash->{$element},
-                                     $exec_time_hash->{$element}));
-      }
-    };
-    when(["statement,table"])
-    {
-      ### Have 2 elements without "time"
-      foreach my $table (sort(keys(%$count_hash)))
-      {
-        foreach my $dml (sort(keys(%{$count_hash->{$table}})))
-        {
-          push(@ret, $self->build_line($table, $dml, $count_hash->{$table}->{$dml},
-                                       $exec_time_hash->{$table}->{$dml}));
-        }
-      }
-    };
 
-    ### else
+  if ($self->compare_groupby("table", "statement"))
+  {
+    ### Only have 1 element.
+    foreach my $element (sort(keys(%$count_hash)))
+    {
+      push(@ret, $self->build_line($element, $count_hash->{$element},
+                                   $exec_time_hash->{$element}));
+    }
+  }
+  elsif ($self->compare_groupby("statement,table"))
+  {
+    ### Have 2 elements without "time"
+    foreach my $table (sort(keys(%$count_hash)))
+    {
+      foreach my $dml (sort(keys(%{$count_hash->{$table}})))
+      {
+        push(@ret, $self->build_line($table, $dml, $count_hash->{$table}->{$dml},
+                                     $exec_time_hash->{$table}->{$dml}));
+      }
+    }
+  }
+  else
+  {
     ### starting with "time"
     foreach my $time (sort(keys(%$count_hash)))
     {
       my $time_printable= sprintf($self->{print_format}, $time);
   
-      given($self->{group_by})
+      if ($self->compare_groupby("time"))
       {
-        when([sort_csv("time")])
+        push(@ret, $self->build_line($time_printable, $count_hash->{$time},
+                                     $exec_time_hash->{$time}));
+      }
+      elsif ($self->compare_groupby("table,time", "statement,time"))
+      {
+        foreach my $element (sort(keys(%{$count_hash->{$time}})))
         {
-          push(@ret, $self->build_line($time_printable, $count_hash->{$time},
-                                       $exec_time_hash->{$time}));
-        };
-        when([sort_csv("table,time"), sort_csv("statement,time")])
+          push(@ret, $self->build_line($time_printable, $element,
+                                       $count_hash->{$time}->{$element},
+                                       $exec_time_hash->{$time}->{$element}));
+        }
+      }
+      elsif ($self->compare_groupby("all", "statement,table,time"))
+      {
+        foreach my $table (sort(keys(%{$count_hash->{$time}})))
         {
-          foreach my $element (sort(keys(%{$count_hash->{$time}})))
+          foreach my $dml (sort(keys(%{$count_hash->{$time}->{$table}})))
           {
-            push(@ret, $self->build_line($time_printable, $element,
-                                         $count_hash->{$time}->{$element},
-                                         $exec_time_hash->{$time}->{$element}));
+            push(@ret, $self->build_line($time_printable, $table, $dml,
+                                         $count_hash->{$time}->{$table}->{$dml},
+                                         $exec_time_hash->{$time}->{$table}->{$dml}));
           }
-        };
-        when([sort_csv("all"), sort_csv("statement,table,time")])
+        }
+      }
+      elsif ($self->compare_groupby("all,exec", "exec,statement,table,time"))
+      {
+        foreach my $table (sort(keys(%{$count_hash->{$time}})))
         {
-          foreach my $table (sort(keys(%{$count_hash->{$time}})))
+          foreach my $dml (sort(keys(%{$count_hash->{$time}->{$table}})))
           {
-            foreach my $dml (sort(keys(%{$count_hash->{$time}->{$table}})))
+            foreach my $exec (sort(keys(%{$count_hash->{$time}->{$table}->{$dml}})))
             {
               push(@ret, $self->build_line($time_printable, $table, $dml,
-                                           $count_hash->{$time}->{$table}->{$dml},
-                                           $exec_time_hash->{$time}->{$table}->{$dml}));
+                                           "exec_time:" . $exec,
+                                           $count_hash->{$time}->{$table}->{$dml}->{$exec}, {}));
             }
           }
-        };
-        when([sort_csv("all,exec"), sort_csv("exec,statement,table,time")])
-        {
-          foreach my $table (sort(keys(%{$count_hash->{$time}})))
-          {
-            foreach my $dml (sort(keys(%{$count_hash->{$time}->{$table}})))
-            {
-              foreach my $exec (sort(keys(%{$count_hash->{$time}->{$table}->{$dml}})))
-              {
-                push(@ret, $self->build_line($time_printable, $table, $dml,
-                                             "exec_time:" . $exec,
-                                             $count_hash->{$time}->{$table}->{$dml}->{$exec}, {}));
-              }
-            }
-          }
-        };
-      };
+        }
+      }
     }
-  };
+  }
 
   return \@ret;
 }  
@@ -261,46 +254,64 @@ sub set_parser
   my ($cell)= @_;
   my ($parse, $format);
 
-  given($cell)
+  if (grep { $cell eq $_ } qw{d day 1d})
   {
-    when([qw/d day 1d/])
-    {
-      $parse = qr/^#(\d{2}\d{2}\d{2})\s+\d{1,2}:\d{2}:\d{2}.+exec_time=(\d+)/;
-      $format= "%s";
-    };
-    when([qw/h hour 1h/])
-    {
-      $parse = qr/^#(\d{2}\d{2}\d{2}\s+\d{1,2}):\d{2}:\d{2}.+exec_time=(\d+)/;
-      $format= "%s:00";
-    };
-    when([qw/m minute 1m/])
-    {
-      $parse = qr/^#(\d{2}\d{2}\d{2}\s+\d{1,2}:\d{2}):\d{2}.+exec_time=(\d+)/;
-      $format= "%s";
-    };
-    when([qw/10m/])
-    {
-      $parse = qr/^#(\d{2}\d{2}\d{2}\s+\d{1,2}:\d{1})\d{1}:\d{2}.+exec_time=(\d+)/;
-      $format= "%s0";
-    };
-    when([qw/10s/])
-    {
-      $parse = qr/^#(\d{2}\d{2}\d{2}\s+\d{1,2}:\d{2}:\d{1})\d{1}.+exec_time=(\d+)/;
-      $format= "%s0";
-    };
-    when([qw/s second 1s/])
-    {
-      $parse = qr/^#(\d{2}\d{2}\d{2}\s+\d{1,2}:\d{2}:\d{2}).+exec_time=(\d+)/;
-      $format= "%s";
-    };
-    default
-    {
-      $parse = undef;
-      $format= undef;
-    };
+    $parse = qr/^#(\d{2}\d{2}\d{2})\s+\d{1,2}:\d{2}:\d{2}.+exec_time=(\d+)/;
+    $format= "%s";
+  }
+  elsif (grep { $cell eq $_ } qw{h hour 1h})
+  {
+    $parse = qr/^#(\d{2}\d{2}\d{2}\s+\d{1,2}):\d{2}:\d{2}.+exec_time=(\d+)/;
+    $format= "%s:00";
+  }
+  elsif (grep { $cell eq $_ } qw{m minute 1m})
+  {
+    $parse = qr/^#(\d{2}\d{2}\d{2}\s+\d{1,2}:\d{2}):\d{2}.+exec_time=(\d+)/;
+    $format= "%s";
+  }
+  elsif (grep { $cell eq $_ } qw{10m})
+  {
+    $parse = qr/^#(\d{2}\d{2}\d{2}\s+\d{1,2}:\d{1})\d{1}:\d{2}.+exec_time=(\d+)/;
+    $format= "%s0";
+  }
+  elsif (grep { $cell eq $_ } qw{10s})
+  {
+    $parse = qr/^#(\d{2}\d{2}\d{2}\s+\d{1,2}:\d{2}:\d{1})\d{1}.+exec_time=(\d+)/;
+    $format= "%s0";
+  }
+  elsif (grep { $cell eq $_ } qw{s second 1s})
+  {
+    $parse = qr/^#(\d{2}\d{2}\d{2}\s+\d{1,2}:\d{2}:\d{2}).+exec_time=(\d+)/;
+    $format= "%s";
+  }
+  else
+  {
+    $parse = undef;
+    $format= undef;
   }
 
   return ($parse, $format);
+}
+
+sub compare_csv
+{
+  my ($csv1, $csv2)= @_;
+  return 0 if !(defined($csv1)) || !(defined($csv2));
+
+  $csv1= sort_csv($csv1);
+  $csv2= sort_csv($csv2);
+  return $csv1 eq $csv2;
+}
+
+sub compare_groupby
+{
+  my ($self, @groupby_list)= @_;
+  
+  foreach (@groupby_list)
+  {
+    return 1 if compare_csv($self->{group_by}, $_);
+  }
+  return 0;
 }
 
 return 1;

@@ -83,80 +83,74 @@ sub options
     last unless defined($argv[0]);
     my ($key, $value);
     my $arg= shift(@argv);
-    given($arg)
+
+    if ($arg =~ /^--([^=]+)=(.*)$/)
     {
-      ### --option=value style.
-      when(/^--([^=]+)=(.*)$/)
+      ### "--option=value" style.
+      ($key, $value)= ($1, $2);
+    }
+    elsif ($arg =~ /^--([^\s]+)$/)
+    {
+      ### only "--option"(bool style) or first element in "--option value" style
+      $key= $1;
+
+      ### Decide bool style or "--option value" style.
+      my $next= shift(@argv);
+
+      ### Next element doesn't exists(last part of argv is evaluating now) or
+      ### next element starts with "-", current part is bool style option.
+      ###   TODO: How about a negative number?
+      if (!($next) || $next =~ /^-/)
       {
-        ($key, $value)= ($1, $2);
-      };
+        ### bool style.
+        $value= 1;
 
-      ### only --option(bool style) or first element in --option value style
-      when(/^--([^\s]+)$/)
+        ### Write back next element.
+        unshift(@argv, $next);
+      }
+      else
       {
-        $key= $1;
+        ### "--option value" style.
+        $value= $next;
+      }
+    }
+    elsif ($arg =~ /^-([^=-])=(.*)$/)
+    {
+      ### "-o=value" style
+      ($key, $value)= ($1, $2);
+    }
+    elsif ($arg =~ /^-([^-])$/)
+    {
+      ### only "-o"(bool style) or first element in "-o value" style
+      $key= $1;
 
-        ### Decide bool style or --option value style.
-        my $next= shift(@argv);
+      ### Decide bool style or "-o value" style.
+      my $next= shift(@argv);
 
-        ### Next element doesn't exists(last part of argv is evaluating now) or
-        ### next element starts with "-", current part is bool style option.
-        ###   TODO: How about a negative number?
-        if (!($next) || $next =~ /^-/)
-        {
-          ### bool style.
-          $value= 1;
-
-          ### Write back next element.
-          unshift(@argv, $next);
-        }
-        else
-        {
-          ### --option value style.
-          $value= $next;
-        }
-      };
-
-      ### -o=value style
-      when(/^-([^=-])=(.*)$/)
+      ### Next element doesn't exists(last part of argv is evaluating now) or
+      ### next element starts with "-", current part is bool style option.
+      ###   TODO: How about a negative number?
+      if (!($next) || $next =~ /^-/)
       {
-        ($key, $value)= ($1, $2);
-      };
+        ### bool style.
+        $value= 1;
 
-      ### only -o(bool style) or first element in -o value style
-      when(/^-([^-])$/)
+        ### Write back next element.
+        unshift(@argv, $next);
+      }
+      else
       {
-        $key= $1;
-
-        ### Decide bool style or -o value style.
-        my $next= shift(@argv);
-
-        ### Next element doesn't exists(last part of argv is evaluating now) or
-        ### next element starts with "-", current part is bool style option.
-        ###   TODO: How about a negative number?
-        if (!($next) || $next =~ /^-/)
-        {
-          ### bool style.
-          $value= 1;
-
-          ### Write back next element.
-          unshift(@argv, $next);
-        }
-        else
-        {
-          ### --option value style.
-          $value= $next;
-        }
-      };
-
+        ### "-o value" style.
+        $value= $next;
+      }
+    }
+    elsif ($arg =~ /^-([^-])(.+)$/)
+    {
       ### -oValue style.
-      when(/^-([^-])(.+)$/)
-      {
-        ($key, $value)= ($1, $2);
-      };
+      ($key, $value)= ($1, $2);
+    }
 
-      ### if any $key and $value is set, treated as argument and push into left_argv later.
-    };
+    ### if any $key and $value is set, treated as argument and push into left_argv later.
 
     ### Normalize "-" to "_" in $key.
     $key =~ s/-/_/g if $key;
@@ -229,7 +223,6 @@ sub load_config
   ### return as is.
   return $opt unless -r $config_file;
 
-
   open(my $fh, "<", $config_file);
 
   my $current_section= "";
@@ -237,49 +230,41 @@ sub load_config
   {
     chomp($line);
 
-    given($line)
+    if ($line =~/^\s*$/)
     {
       ### Skip blank line
-      when(/^\s*$/)
-      {
-        next;
-      };
-
+      next;
+    }
+    elsif ($line =~ /^\s*#/)
+    {
       ### Comment when started by "#"
-      when(/^\s*#/)
-      {
-        next;
-      };
-
+      next;
+    }
+    elsif ($line =~ /^\[([^\[\]]+)\]$/)
+    {
       ### [section_name]
-      when(/^\[([^\[\]]+)\]$/)
-      {
-        $current_section= $1;
-        next;
-      };
+      $current_section= $1;
+      next;
+    }
+    next if $current_section ne $config_section;
 
-      next if $current_section ne $config_section;
-
+    if ($line =~/^([^\s=]+)\s*=\s*(.*)$/)
+    {
       ### key=value
-      when(/^([^\s=]+)\s*=\s*(.*)$/)
-      {
-        my ($key, $value)= ($1, $2);
+      my ($key, $value)= ($1, $2);
 
-        ### Remove quote
-        $value =~ s/^"([^"]*)"$/$1/;
-        $value =~ s/^'([^']*)'$/$1/;
-        
-        ### Add $original_opt(options from command-line) only that doesn't exist.
-        $opt->{$key} ||= $value;
-      };
-
-      ### bool
-      default
-      {
-        ### Add $original_opt(options from command-line) only that doesn't exist.
-        $opt->{$line} ||= 1;
-      };
-    };
+      ### Remove quote
+      $value =~ s/^"([^"]*)"$/$1/;
+      $value =~ s/^'([^']*)'$/$1/;
+      
+      ### Add $original_opt(options from command-line) only that doesn't exist.
+      $opt->{$key} ||= $value;
+    }
+    else
+    {
+      ### Add $original_opt(options from command-line) only that doesn't exist.
+      $opt->{$line} ||= 1;
+    }
   }
   close($fh);
 

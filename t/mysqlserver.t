@@ -72,6 +72,8 @@ subtest "show_variables" => sub
   require "$Bin/data/06_show_variables.txt";
   $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
   is_deeply($server->show_variables, $Ytkit::Test::SHOW_VARIABLES::VAR1, "SHOW VARIABLES");
+  is($server->hostname, "163-44-175-117", "Fetch hostname");
+  is($server->mysqld_version, 50719, "Fetch version-string");
   delete($server->{_show_variables});
 };
 

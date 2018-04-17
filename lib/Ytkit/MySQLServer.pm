@@ -20,7 +20,8 @@ package Ytkit::MySQLServer;
 
 use strict;
 use warnings;
-use v5.10;
+use utf8;
+
 use DBI;
 
 sub new
@@ -35,6 +36,7 @@ sub new
   my $self=
   {
     _hostname        => undef,
+    _version         => undef,
     timeout          => $opt->{timeout} ? $opt->{timeout} : 10,
   };
   bless $self => $class;
@@ -78,6 +80,20 @@ sub hostname
   return "Can't fetch hostname" if !($self->{conn});
   $self->{_hostname} ||= $self->show_variables->{hostname}->{Value};
   return $self->{_hostname};
+}
+
+sub mysqld_version
+{
+  my ($self)= @_;
+  return "Can't fetch version" if !($self->{conn});
+
+  if (!($self->{_version}))
+  {
+    my $version_raw= $self->show_variables->{version}->{Value};
+    $version_raw =~ /^(\d+)\.(\d+)\.(\d+)/;
+    $self->{_version}= sprintf("%d%02d%02d", $1, $2, $3);
+  }
+  return $self->{_version};
 }
 
 sub show_slave_status

@@ -24,7 +24,7 @@ use utf8;
 
 use Exporter qw{import};
 our @EXPORT= qw{options load_config version};
-our $VERSION= "0.0.16";
+our $VERSION= '0.0.17';
 our $CONNECT_OPTION=
 {
   user     => { alias => ["u", "user"] },
@@ -87,7 +87,7 @@ sub options
       $evaluate_struct->{$_}= $opt;
 
       ### Set default value.
-      $ret->{$opt}= $option_struct->{$opt}->{default} if $option_struct->{$opt}->{default};
+      $ret->{$opt}= $option_struct->{$opt}->{default} if exists($option_struct->{$opt}->{default});
     }
   }
 

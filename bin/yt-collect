@@ -1,0 +1,166 @@
+#!/usr/bin/perl
+
+########################################################################
+# Copyright (C) 2018  yoku0825
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+########################################################################
+
+use strict;
+use warnings;
+use utf8;
+use Pod::Usage;
+
+use FindBin qw/$Bin/;
+use lib "$Bin/../lib";
+use Ytkit::Collect;
+
+my $prog= Ytkit::Collect->new(@ARGV);
+
+if ($prog == -255)
+{
+  pod2usage({ -verbose => 2 });
+  exit 0;
+}
+elsif ($prog == -254)
+{
+  printf("%s - %s\n", $0, Ytkit::Config::version());
+  exit 0;
+}
+
+$prog->collect;
+
+
+
+__END__
+
+=encoding utf8
+
+=head1 SCRIPT NAME
+
+yt-ps-collect - Collect data from performance_schema and information_schema
+
+=head1 SYNOPSIS
+
+  $ yt-ps-collect --host=your_mysql_host --port=your_mysql_port --user=your_mysql_account --password=your_password --output=sql --iteration=60 --interval=60  ### collect data each 1 minutes during 1 hour and exits
+
+=head1 DESCRIPTION
+
+yt-ps-collect gets some statistics from p_s and prints as tsv/csv/sql/json.
+
+=head1 OPTIONS
+
+=head2 --host=string, -h string
+
+MySQL host.
+
+=head2 --port=integer, -P integer
+
+MySQL port number.
+
+=head2 --socket=string, -S string
+
+Path to mysql.sock (this parameter is used when --host=localhost)
+
+=head2 --user=string, -u string
+
+MySQL account using for fetching p_s tables.
+(need GRANT SELECT on performance_schema.*)
+
+=head2 --password=string, -p string
+
+Password for the user specified by --user
+
+=head2 --timeout=int
+
+Seconds before timeout(read_timeout, write_timeout, connect_timeout)
+
+=head2 --output={tsv,csv,json,sql} (default: tsv)
+
+Results output style.
+
+=head2 --record-path=directory, -r directory
+
+When specified, each collection-methods write into the directory(When not set, write into STDOUT)
+
+=head2 --no-header, -n
+
+Never print header-line (Only --output=tsv and --output=csv are affected)
+
+=head2 --interval=integer, -i integer (default: 600)
+
+Sleep seconds during each collecting iterations.
+
+=head2 --iteration=integer, --count=integer, -c integer (default: 1)
+
+How many times does script collect information.
+
+=head2 --table_size_enable=[0|1] (default: 1)
+
+Querying information_schema.tables for collecting table_size.
+
+=head2 --table_size_limit=integer (default: 30)
+
+Using `ORDER BY index_length + data_length DESC LIMIT ..` for collecting table_size.
+
+=head2 --table_size_output_name=string (default: "table_status_info")
+
+Specify name of table(--output=sql) or name of top-element(--output=json)
+
+=head2 --table_latency_enable=[0|1] (default: 1)
+
+Querying performance_schema.table_io_waits_summary_by_table for collecting latency.
+
+=head2 --table_latency_limit=integer (default: 30)
+
+Using `ORDER BY count_star DESC LIMIT ..` for collecting latency.
+
+=head2 --table_latency_output_name=string (default: "ps_table_info")
+
+Specify name of table(--output=sql) or name of top-element(--output=json)
+
+=head2 --innodb_metrics_enable=[0|1] (default: 1)
+
+Querying information_schema.innodb_metrics.
+
+=head2 --innodb_metrics_output_name=string (default: "ps_table_info")
+
+Specify name of table(--output=sql) or name of top-element(--output=json)
+
+=head2 --query_latency_enable=[0|1] (default: 1)
+
+Querying performance_schema.vents_statements_summary_by_digest for collecting latency.
+
+=head2 --query_latency_limit=integer (default: 30)
+
+Using `ORDER BY count_star DESC LIMIT ..` for collecting latency.
+
+=head2 --show_status_enable=[0|1] (default: 1)
+
+Querying `SHOW GLOBAL STATUS`
+
+=head2 --show_grants_enable=[0|1] (default: 0)
+
+Querying `SHOW GRANTS` for each account for collecting grant_string.
+
+=head2 --show_slave_enable=[0|1] (default: 0)
+
+Querying `SHOW SLAVE STATUS` for collecting master_host and master_port.
+
+=head2 --show_variables_enable=[0|1] (default: 0)
+
+Querying `SHOW GLOBAL VARIABLES`
+
+=cut

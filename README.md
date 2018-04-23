@@ -35,6 +35,14 @@ $ yt-healthcheck -h 172.17.0.1 -u user_name -p'password' -P 3306
 $ yt-wait-replication -h 172.17.0.1 -u user_name -p'password' -P 3306 --seconds-behind-master=5 --timeout=3600
 ```
 
+## yt-collect
+
+- Getting statistics and write some formats.
+
+```
+$ yt-collect -h 172.17.0.1 -u user_name -p'password' -P 3306 --iteration=60 --interval=60 --table_size-enable=1 --output=sql
+```
+
 # Installation
 
 ## Install by rpm

@@ -1,6 +1,6 @@
 Name:		ytkit
-Version:	0.0.16
-Release:	4
+Version:	0.0.17
+Release:	1
 Summary:	ytkit is Yoku-san no Tool KIT scripts.
 
 #Group:		
@@ -11,7 +11,7 @@ Source0:	%{name}-%{version}.tar.gz
 Requires:	perl perl-DBD-MySQL
 AutoReq:        no
 BuildArch:      noarch
-BuildRequires:  make perl perl-Test-Harness perl-Time-HiRes
+BuildRequires:  make perl perl-Test-Harness perl-Time-HiRes perl-Test-MockTime
 #BuildRequires: perl(App::cpanminus)
 
 %define _rpmfilename %{name}-%{version}-%{release}.noarch.rpm

@@ -35,16 +35,9 @@ sub new
 
   my $self=
   {
-    _hostname             => undef,
-    _version              => undef,
-    _show_slave_status    => undef,
-    _show_slave_hosts     => undef,
-    _show_processlist     => undef,
-    _show_status          => undef,
-    _show_variables       => undef,
-    _select_autoinc_usage => undef,
-    _show_master_logs     => undef,
-    timeout          => $opt->{timeout} ? $opt->{timeout} : 10,
+    _hostname => undef,
+    _version  => undef,
+    timeout   => $opt->{timeout} ? $opt->{timeout} : 10,
   };
   bless $self => $class;
 
@@ -87,6 +80,14 @@ sub hostname
   return "Can't fetch hostname" if !($self->{conn});
   $self->{_hostname} ||= $self->show_variables->{hostname}->{Value};
   return $self->{_hostname};
+}
+
+sub port
+{
+  my ($self)= @_;
+  return undef if !($self->{conn});
+  $self->{_port} ||= $self->show_variables->{port}->{Value};
+  return $self->{_port};
 }
 
 sub mysqld_version
@@ -159,28 +160,126 @@ sub show_master_logs
   return $self->query_arrayref("SHOW MASTER LOGS");
 }
 
+sub select_ps_digest
+{
+  my ($self, $limit)= @_;
+  my $sql= "SELECT schema_name, digest, count_star, sum_timer_wait, NOW() AS now " .
+           "FROM performance_schema.events_statements_summary_by_digest " .
+           "ORDER BY count_star DESC";
+  $sql .= sprintf(" LIMIT %d", $limit) if $limit;
+ 
+  return $self->query_arrayref($sql);
+}
+
+sub select_ps_table
+{
+  my ($self, $limit)= @_;
+  my $sql= << "EOS";
+SELECT
+  object_schema, 
+  object_name,
+  count_read,
+  sum_timer_read,
+  count_write,
+  sum_timer_write,
+  NOW() AS now
+FROM 
+  performance_schema.table_io_waits_summary_by_table
+WHERE
+  count_star > 0
+ORDER BY
+  count_star DESC
+EOS
+  $sql .= sprintf(" LIMIT %d", $limit) if $limit;
+  $sql =~ s/\n/ /g;
+ 
+  return $self->query_arrayref($sql);
+}
+
+sub select_is_table_by_size
+{
+  my ($self, $limit)= @_;
+  my $sql= << "EOS";
+SELECT
+  table_schema AS table_schema,
+  table_name AS table_name,
+  table_rows AS table_rows,
+  data_length AS data_length,
+  index_length AS index_length,
+  data_free AS data_free,
+  NOW() AS now
+FROM
+  information_schema.tables
+ORDER BY
+  data_length + index_length DESC
+EOS
+  $sql .= sprintf(" LIMIT %d", $limit) if $limit;
+  $sql =~ s/\n/ /g;
+
+  return $self->query_arrayref($sql);
+}
+
+sub select_is_metrics
+{
+  my ($self)= @_;
+  my $sql= "SELECT name AS name, " .
+                  "count AS count, " .
+                  "NOW() AS now " .
+           "FROM information_schema.innodb_metrics " .
+           "WHERE STATUS <> 'disabled'";
+  return $self->query_arrayref($sql);
+}
+
+sub select_user_list
+{
+  my ($self)= @_;
+  return $self->query_arrayref("SELECT user, host FROM mysql.user ORDER BY user, host");
+}
+
+sub show_grants
+{
+  my ($self, $user, $host)= @_;
+
+  $user ||= '';
+  $host ||= '%';
+
+  ### Fix variable column-name
+  if (my $ret= $self->query_arrayref("SHOW GRANTS FOR ?@?", $user, $host))
+  {
+    my ($column_name)= keys(%{$ret->[0]});
+    my @ret= map { +{ grants => $_->{$column_name} } } @$ret;
+
+    ### Don't have cache.
+    delete($self->{_show_grants});
+    return \@ret;
+  }
+  ### Don't have cache.
+  delete($self->{_show_grants});
+  return undef;
+}
+
 sub query_arrayref
 {
-  my ($self, $sql)= @_;
+  my ($self, $sql, @argv)= @_;
   my ($caller_name)= (caller 1)[3] =~ /::([^:]+)$/;
 
   if (!(defined($self->{"_" . ${caller_name}})))
   {
     return 0 if !($self->{conn});
-    $self->{"_" . ${caller_name}}= $self->{conn}->selectall_arrayref($sql, {Slice => {}});
+    $self->{"_" . ${caller_name}}= $self->{conn}->selectall_arrayref($sql, {Slice => {}}, @argv);
   }
   return $self->{"_" . ${caller_name}};
 }
 
 sub query_hashref
 {
-  my ($self, $sql, $key)= @_;
+  my ($self, $sql, $key, @argv)= @_;
   my ($caller_name)= (caller 1)[3] =~ /::([^:]+)$/;
 
   if (!(defined($self->{"_" . ${caller_name}})))
   {
     return 0 if !($self->{conn});
-    $self->{"_" . ${caller_name}}= $self->{conn}->selectall_hashref($sql, [$key]);
+    $self->{"_" . ${caller_name}}= $self->{conn}->selectall_hashref($sql, [$key], @argv);
   }
   return $self->{"_" . ${caller_name}};
 }
@@ -192,6 +291,28 @@ sub clear_cache
   foreach (keys(%$self))
   {
     $self->{$_}= undef if $_ =~ /^_/;
+  }
+}
+
+sub quote
+{
+  my ($self, $str)= @_;
+
+  my $ret;
+  eval
+  {
+    $ret= $self->{conn}->quote($str);
+  };
+
+  if ($@)
+  {
+    ### Return immitate-quote, if $self->{conn} is not connected.
+    $str =~ s/\'/\\'/g;
+    return qq{'$str'};
+  }
+  else
+  {
+    return $ret;
   }
 }
 

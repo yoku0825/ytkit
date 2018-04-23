@@ -27,6 +27,7 @@ use Test::More::Color qw{foreground};
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
 use Ytkit::MySQLServer;
+require "$Bin/Test.pl";
 
 no warnings "once";
 
@@ -45,7 +46,6 @@ $server->{conn}= "dummy";
 
 subtest "show_slave_status" => sub
 {
-  require "$Bin/data/show_slave_status_ok.pl";
   $server->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
   is_deeply($server->show_slave_status, $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1, "SHOW SLAVE STATUS");
   delete($server->{_show_slave_status});
@@ -53,7 +53,6 @@ subtest "show_slave_status" => sub
 
 subtest "show_processlist" => sub
 {
-  require "$Bin/data/show_processlist.pl";
   $server->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
   is_deeply($server->show_processlist, $Ytkit::Test::SHOW_PROCESSLIST::VAR1, "SHOW PROCESSLIST");
   delete($server->{_show_processlist});
@@ -61,7 +60,6 @@ subtest "show_processlist" => sub
 
 subtest "show_status" => sub
 {
-  require "$Bin/data/show_status.pl";
   $server->{_show_status}   = $Ytkit::Test::SHOW_STATUS::VAR1;
   is_deeply($server->show_status, $Ytkit::Test::SHOW_STATUS::VAR1, "SHOW STATUS");
   delete($server->{_show_status});
@@ -69,7 +67,6 @@ subtest "show_status" => sub
 
 subtest "show_variables" => sub
 {
-  require "$Bin/data/show_variables.pl";
   $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
   is_deeply($server->show_variables, $Ytkit::Test::SHOW_VARIABLES::VAR1, "SHOW VARIABLES");
   is($server->hostname, "163-44-175-117", "Fetch hostname");
@@ -79,7 +76,6 @@ subtest "show_variables" => sub
 
 subtest "show_master_logs" => sub
 {
-  require "$Bin/data/show_master_logs.pl";
   $server->{_show_master_logs}= $Ytkit::Test::SHOW_MASTER_LOGS::VAR1;
   is_deeply($server->show_master_logs, $Ytkit::Test::SHOW_MASTER_LOGS::VAR1, "SHOW MASTER LOGS");
   delete($server->{_show_master_logs});

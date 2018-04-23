@@ -27,6 +27,7 @@ use Test::More::Color qw{foreground};
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
 use Ytkit::HealthCheck;
+require "$Bin/Test.pl";
 
 no warnings "once";
 
@@ -41,11 +42,6 @@ is($prog->hostname, "Can't fetch hostname", "Default hostname when connection ha
 
 subtest "decide_role" => sub
 {
-  require "$Bin/data/show_slave_status_ok.pl";
-  require "$Bin/data/show_processlist.pl";
-  require "$Bin/data/show_processlist_with_nongtid_slave.pl";
-  require "$Bin/data/show_processlist_with_gtid_slave.pl";
-
   $prog->{instance}->{_show_slave_status}= [];
   $prog->{instance}->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
   is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master without slave)");
@@ -71,7 +67,6 @@ subtest "decide_role" => sub
 
 subtest "check_long_query" => sub
 {
-  require "$Bin/data/show_processlist.pl";
   $prog->{instance}->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
 
   ### Max query time is 125 (expect of replication threads)
@@ -128,8 +123,6 @@ subtest "check_long_query" => sub
 
 subtest "connection_count" => sub
 {
-  require "$Bin/data/show_status.pl";
-  require "$Bin/data/show_variables.pl";
   $prog->{instance}->{_show_status}   = $Ytkit::Test::SHOW_STATUS::VAR1;
   $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
 
@@ -168,7 +161,6 @@ subtest "connection_count" => sub
 
 subtest "autoinc_usage" => sub
 {
-  require "$Bin/data/select_autoinc_usage.pl";
   $prog->{instance}->{_select_autoinc_usage}   = $Ytkit::Test::AUTOINC_USAGE::VAR1;
  
   ### Max autoinc is 10001 on unsigned smallint(65535), about 15.2% used.
@@ -203,7 +195,6 @@ subtest "autoinc_usage" => sub
 
   $prog->clear_cache;
 
-  require "$Bin/data/select_autoinc_usage_signed.pl";
   $prog->{instance}->{_select_autoinc_usage}   = $Ytkit::Test::AUTOINC_USAGE_SIGNED::VAR1;
  
   ### Max autoinc is 10001 on signed smallint(32767), about 30.5% used.
@@ -221,7 +212,6 @@ subtest "autoinc_usage" => sub
 subtest "read_only" => sub
 {
   ### read_only= 0
-  require "$Bin/data/show_variables.pl";
   $prog->{instance}->{_show_variables}   = $Ytkit::Test::SHOW_VARIABLES::VAR1;
  
   $prog->{read_only}->{should_be}= 1; ### For slaves.
@@ -237,7 +227,6 @@ subtest "read_only" => sub
   $prog->clear_cache;
 
   ### read_only= 1
-  require "$Bin/data/show_variables_read_only.pl";
   $prog->{instance}->{_show_variables}   = $Ytkit::Test::SHOW_VARIABLES_READ_ONLY::VAR1;
  
   $prog->{read_only}->{should_be}= 1; ### For slaves.
@@ -255,7 +244,6 @@ subtest "read_only" => sub
 
 subtest "slave_status" => sub
 {
-  require "$Bin/data/show_slave_status_ok.pl";
   $prog->{instance}->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
 
   ### I/O Running and SQL Running are "YES", Seconds_Behind_Master is 43.
@@ -283,7 +271,6 @@ subtest "slave_status" => sub
 
   $prog->clear_cache;
 
-  require "$Bin/data/show_slave_status_ng.pl";
   $prog->{instance}->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_NG::VAR1;
 
   ### SQL Running is "NO", always should be CRITICAL
@@ -306,11 +293,9 @@ subtest "slave_status" => sub
 
 subtest "--role=fabric" => sub
 {
-  require "$Bin/data/lookup_groups.pl";
   $prog->{_query_fabric}= $Ytkit::TEST::Lookup_Groups::VAR1;
   is($prog->query_fabric("lookup_groups", "")->[0]->{group_id}, "myfabric", "Parse group.lookup_groups");
 
-  require "$Bin/data/group_health.pl";
   $prog->{_query_fabric}= $Ytkit::TEST::Group_Health::VAR1;
 
   foreach my $row (@{$prog->query_fabric("group_health", "myfabric")})

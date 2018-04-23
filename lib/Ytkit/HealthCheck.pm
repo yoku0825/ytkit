@@ -20,8 +20,7 @@ package Ytkit::HealthCheck;
 
 use strict;
 use warnings;
-use v5.10;
-use DBI;
+use utf8;
 
 use Ytkit::Config;
 use Ytkit::MySQLServer;
@@ -41,7 +40,6 @@ use constant BYTES =>
   int       => 4,
   bigint    => 8,
 };
-
 
 use constant DEFAULT_OPTION =>
 {
@@ -537,6 +535,12 @@ sub query_fabric
   ### Clear buffer each time.
   delete($self->{_query_fabric});
   return $ret;
+}
+
+sub clear_cache
+{
+  my ($self)= @_;
+  return $self->{instance}->clear_cache;
 }
 
 return 1;

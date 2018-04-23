@@ -66,7 +66,7 @@ subtest "decide_role" => sub
   $prog->{instance}->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_NONGTID_SLAVE::VAR1;
   is($prog->decide_role, "intermidiate", "decide_role with SHOW SLAVE STATUS / PROCESSLIST(intermidiate)");
 
-  &clear_cache;
+  $prog->clear_cache;
 };
 
 subtest "check_long_query" => sub
@@ -123,7 +123,7 @@ subtest "check_long_query" => sub
   is($prog->{status}->{str}, "OK", "Disabled by --long-query-enable=0");
   &reset_param;
 
-  &clear_cache;
+  $prog->clear_cache;
 };
 
 subtest "connection_count" => sub
@@ -163,7 +163,7 @@ subtest "connection_count" => sub
   is($prog->{status}->{str}, "OK", "Disabled by --connection-count-enable=0");
   &reset_param;
 
-  &clear_cache;
+  $prog->clear_cache;
 };
 
 subtest "autoinc_usage" => sub
@@ -201,7 +201,7 @@ subtest "autoinc_usage" => sub
   is($prog->{status}->{str}, "OK", "Disabled by --autoinc-usage-enable=0");
   &reset_param;
 
-  &clear_cache;
+  $prog->clear_cache;
 
   require "$Bin/data/06_select_autoinc_usage_signed.txt";
   $prog->{instance}->{_select_autoinc_usage}   = $Ytkit::Test::AUTOINC_USAGE_SIGNED::VAR1;
@@ -215,7 +215,7 @@ subtest "autoinc_usage" => sub
   is($prog->{status}->{str}, "WARNING", "Signed smallint is handled correctly.");
   &reset_param;
 
-  &clear_cache;
+  $prog->clear_cache;
 };
 
 subtest "read_only" => sub
@@ -234,7 +234,7 @@ subtest "read_only" => sub
   is($prog->{status}->{str}, "OK", "Master is expected read_only= 0 and correct");
   &reset_param;
 
-  &clear_cache;
+  $prog->clear_cache;
 
   ### read_only= 1
   require "$Bin/data/06_show_variables_read_only.txt";
@@ -250,7 +250,7 @@ subtest "read_only" => sub
   is($prog->{status}->{str}, "CRITICAL", "Master is expected read_only= 0 but not");
   &reset_param;
 
-  &clear_cache;
+  $prog->clear_cache;
 };
 
 subtest "slave_status" => sub
@@ -281,7 +281,7 @@ subtest "slave_status" => sub
   is($prog->{status}->{str}, "CRITICAL", "slave_status > critical");
   &reset_param;
 
-  &clear_cache;
+  $prog->clear_cache;
 
   require "$Bin/data/06_show_slave_status_ng.txt";
   $prog->{instance}->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_NG::VAR1;
@@ -301,7 +301,7 @@ subtest "slave_status" => sub
   $prog->check_slave_status;
   is($prog->{status}->{str}, "OK", "Disabled by --slave-status-enable=0");
   &reset_param;
-  &clear_cache;
+  $prog->clear_cache;
 };
 
 subtest "--role=fabric" => sub
@@ -333,15 +333,6 @@ sub reset_param
   foreach (qw{long_query connection_count autoinc_usage read_only slave_status})
   {
     delete($prog->{$_});
-  }
-}
-
-sub clear_cache
-{
-  foreach (qw{_show_slave_status _show_slave_hosts _show_processlist 
-              _show_status _show_variables _select_autoinc_usage _show_master_logs})
-  {
-    delete($prog->{instance}->{$_});
   }
 }
 

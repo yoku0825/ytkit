@@ -35,8 +35,15 @@ sub new
 
   my $self=
   {
-    _hostname        => undef,
-    _version         => undef,
+    _hostname             => undef,
+    _version              => undef,
+    _show_slave_status    => undef,
+    _show_slave_hosts     => undef,
+    _show_processlist     => undef,
+    _show_status          => undef,
+    _show_variables       => undef,
+    _select_autoinc_usage => undef,
+    _show_master_logs     => undef,
     timeout          => $opt->{timeout} ? $opt->{timeout} : 10,
   };
   bless $self => $class;
@@ -190,6 +197,16 @@ sub show_master_logs
     $self->{_show_master_logs}= $self->{conn}->selectall_arrayref($sql, {Slice => {}});
   }
   return $self->{_show_master_logs};
+}
+
+sub clear_cache
+{
+  my ($self)= @_;
+
+  foreach (keys(%$self))
+  {
+    delete $self->{$_} if $_ =~ /^_/;
+  }
 }
 
 return 1;

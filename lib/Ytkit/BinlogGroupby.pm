@@ -21,7 +21,6 @@ package Ytkit::BinlogGroupby;
 use strict;
 use warnings;
 use utf8;
-use v5.10;
 
 use Ytkit::Config;
 
@@ -56,6 +55,7 @@ sub new
     first_seen      => undef,
     last_seen       => undef,
     exec_time       => undef,
+    current_schema  => undef,
     header_parser   => $header_parser,
     count_hash      => undef,
     exec_time_hash  => undef,
@@ -81,16 +81,29 @@ sub parse
     $self->{last_seen}    = $1;
     $self->{exec_time}    = $2;
   }
+  ### USE statement
+  elsif ($line =~ /^use\s([^\/]+)/)
+  {
+    $self->{current_schema}= $1;
+    $self->{current_schema} =~ s/`//g;
+  }
   ### parsing dml-line (only parse simple INSERT, UPDATE, DELETE, REPLACE)
   elsif ($line =~ $self->{sbr_regex} ||
          $line =~ $self->{rbr_regex})
   {
     my ($dml, $table)= (uc($1), lc($2));
     $table =~ s/`//g;
+
     if ($table =~ /([^\(]+)\(/)
     {
       $table= $1;
     }
+
+    if ($table !~ /\./)
+    {
+      $table= sprintf("%s.%s", $self->{current_schema}, $table) if $self->{current_schema};
+    }
+
     if ($self->{time_string} && $dml && $table)
     {
       if ($self->compare_groupby("exec,statement,table,time", "all,exec"))

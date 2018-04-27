@@ -1,0 +1,128 @@
+/*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE=1*/;
+/*!50003 SET @OLD_COMPLETION_TYPE=@@COMPLETION_TYPE,COMPLETION_TYPE=0*/;
+DELIMITER /*!*/;
+# at 4
+#180427 11:34:43 server id 1080  end_log_pos 124        Start: binlog v 4, server v 8.0.11 created 180427 11:34:43
+# Warning: this binlog is either in use or was not closed properly.
+BINLOG '
+Q4ziWg84BAAAeAAAAHwAAAABAAQAOC4wLjExAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAEwANAAgAAAAABAAEAAAAYAAEGggAAAAICAgCAAAACgoKKioAEjQA
+CgDirkBh
+'/*!*/;
+# at 124
+#180427 11:34:43 server id 1080  end_log_pos 191        Previous-GTIDs
+# 9e4b7835-4440-11e8-be3c-0201a32caf75:1-4735
+# at 191
+#180427 11:34:50 server id 1080  end_log_pos 260        GTID    last_committed=0        sequence_number=1       rbr_only=no     original_committed_timestamp=1524796490297891 immediate_commit_timestamp=1524796490297891     transaction_length=192
+# original_commit_timestamp=1524796490297891 (2018-04-27 11:34:50.297891 JST)
+# immediate_commit_timestamp=1524796490297891 (2018-04-27 11:34:50.297891 JST)
+/*!80001 SET @@session.original_commit_timestamp=1524796490297891*//*!*/;
+SET @@SESSION.GTID_NEXT= '9e4b7835-4440-11e8-be3c-0201a32caf75:4736'/*!*/;
+# at 260
+#180427 11:34:50 server id 1080  end_log_pos 383        Query   thread_id=45    exec_time=0     error_code=0    Xid = 67
+use `d1`/*!*/;
+SET TIMESTAMP=1524796490/*!*/;
+SET @@session.pseudo_thread_id=45/*!*/;
+SET @@session.foreign_key_checks=1, @@session.sql_auto_is_null=0, @@session.unique_checks=1, @@session.autocommit=1/*!*/;
+SET @@session.sql_mode=1168113696/*!*/;
+SET @@session.auto_increment_increment=1, @@session.auto_increment_offset=1/*!*/;
+/*!\C utf8mb4 *//*!*/;
+SET @@session.character_set_client=255,@@session.collation_connection=255,@@session.collation_server=303/*!*/;
+SET @@session.lc_time_names=0/*!*/;
+SET @@session.collation_database=DEFAULT/*!*/;
+/*!80005 SET @@session.default_collation_for_utf8mb4=255*//*!*/;
+CREATE TABLE t1 (num serial, val varchar(32))
+/*!*/;
+# at 383
+#180427 11:34:59 server id 1080  end_log_pos 454        GTID    last_committed=1        sequence_number=2       rbr_only=yes    original_committed_timestamp=1524796500031016 immediate_commit_timestamp=1524796500031016     transaction_length=274
+/*!50718 SET TRANSACTION ISOLATION LEVEL READ COMMITTED*//*!*/;
+# original_commit_timestamp=1524796500031016 (2018-04-27 11:35:00.031016 JST)
+# immediate_commit_timestamp=1524796500031016 (2018-04-27 11:35:00.031016 JST)
+/*!80001 SET @@session.original_commit_timestamp=1524796500031016*//*!*/;
+SET @@SESSION.GTID_NEXT= '9e4b7835-4440-11e8-be3c-0201a32caf75:4737'/*!*/;
+# at 454
+#180427 11:34:59 server id 1080  end_log_pos 523        Query   thread_id=45    exec_time=1     error_code=0
+SET TIMESTAMP=1524796499/*!*/;
+BEGIN
+/*!*/;
+# at 523
+#180427 11:34:59 server id 1080  end_log_pos 573        Table_map: `d1`.`t1` mapped to number 74
+# at 573
+#180427 11:34:59 server id 1080  end_log_pos 630        Write_rows: table id 74 flags: STMT_END_F
+
+BINLOG '
+U4ziWhM4BAAAMgAAAD0CAAAAAEoAAAAAAAEAAmQxAAJ0MQACCA8CgAACAQGAAgP8LwE=
+U4ziWh44BAAAOQAAAHYCAAAAAEoAAAAAAAEAAgAC/wABAAAAAAAAAANvbmUAAgAAAAAAAAADdHdv
+'/*!*/;
+### INSERT INTO `d1`.`t1`
+### SET
+###   @1=1 /* LONGINT meta=0 nullable=0 is_null=0 */
+###   @2='one' /* VARSTRING(128) meta=128 nullable=1 is_null=0 */
+### INSERT INTO `d1`.`t1`
+### SET
+###   @1=2 /* LONGINT meta=0 nullable=0 is_null=0 */
+###   @2='two' /* VARSTRING(128) meta=128 nullable=1 is_null=0 */
+# at 630
+#180427 11:34:59 server id 1080  end_log_pos 657        Xid = 68
+COMMIT/*!*/;
+# at 657
+#180427 11:35:06 server id 1080  end_log_pos 728        GTID    last_committed=2        sequence_number=3       rbr_only=yes    original_committed_timestamp=1524796506578967 immediate_commit_timestamp=1524796506578967     transaction_length=263
+/*!50718 SET TRANSACTION ISOLATION LEVEL READ COMMITTED*//*!*/;
+# original_commit_timestamp=1524796506578967 (2018-04-27 11:35:06.578967 JST)
+# immediate_commit_timestamp=1524796506578967 (2018-04-27 11:35:06.578967 JST)
+/*!80001 SET @@session.original_commit_timestamp=1524796506578967*//*!*/;
+SET @@SESSION.GTID_NEXT= '9e4b7835-4440-11e8-be3c-0201a32caf75:4738'/*!*/;
+# at 728
+#180427 11:35:06 server id 1080  end_log_pos 797        Query   thread_id=45    exec_time=0     error_code=0
+SET TIMESTAMP=1524796506/*!*/;
+BEGIN
+/*!*/;
+# at 797
+#180427 11:35:06 server id 1080  end_log_pos 847        Table_map: `d1`.`t1` mapped to number 74
+# at 847
+#180427 11:35:06 server id 1080  end_log_pos 893        Write_rows: table id 74 flags: STMT_END_F
+
+BINLOG '
+WoziWhM4BAAAMgAAAE8DAAAAAEoAAAAAAAEAAmQxAAJ0MQACCA8CgAACAQGAAgP8LwE=
+WoziWh44BAAALgAAAH0DAAAAAEoAAAAAAAEAAgAC/wADAAAAAAAAAAV0aHJlZQ==
+'/*!*/;
+### INSERT INTO `d1`.`t1`
+### SET
+###   @1=3 /* LONGINT meta=0 nullable=0 is_null=0 */
+###   @2='three' /* VARSTRING(128) meta=128 nullable=1 is_null=0 */
+# at 893
+#180427 11:35:06 server id 1080  end_log_pos 920        Xid = 69
+COMMIT/*!*/;
+# at 920
+#180427 11:35:19 server id 1080  end_log_pos 991        GTID    last_committed=3        sequence_number=4       rbr_only=yes    original_committed_timestamp=1524796519716531 immediate_commit_timestamp=1524796519716531     transaction_length=262
+/*!50718 SET TRANSACTION ISOLATION LEVEL READ COMMITTED*//*!*/;
+# original_commit_timestamp=1524796519716531 (2018-04-27 11:35:19.716531 JST)
+# immediate_commit_timestamp=1524796519716531 (2018-04-27 11:35:19.716531 JST)
+/*!80001 SET @@session.original_commit_timestamp=1524796519716531*//*!*/;
+SET @@SESSION.GTID_NEXT= '9e4b7835-4440-11e8-be3c-0201a32caf75:4739'/*!*/;
+# at 991
+#180427 11:35:19 server id 1080  end_log_pos 1060       Query   thread_id=45    exec_time=0     error_code=0
+SET TIMESTAMP=1524796519/*!*/;
+BEGIN
+/*!*/;
+# at 1060
+#180427 11:35:19 server id 1080  end_log_pos 1110       Table_map: `d1`.`t1` mapped to number 74
+# at 1110
+#180427 11:35:19 server id 1080  end_log_pos 1155       Write_rows: table id 74 flags: STMT_END_F
+
+BINLOG '
+Z4ziWhM4BAAAMgAAAFYEAAAAAEoAAAAAAAEAAmQxAAJ0MQACCA8CgAACAQGAAgP8LwE=
+Z4ziWh44BAAALQAAAIMEAAAAAEoAAAAAAAEAAgAC/wAEAAAAAAAAAARmb3Vy
+'/*!*/;
+### INSERT INTO `d1`.`t1`
+### SET
+###   @1=4 /* LONGINT meta=0 nullable=0 is_null=0 */
+###   @2='four' /* VARSTRING(128) meta=128 nullable=1 is_null=0 */
+# at 1155
+#180427 11:35:19 server id 1080  end_log_pos 1182       Xid = 71
+COMMIT/*!*/;
+SET @@SESSION.GTID_NEXT= 'AUTOMATIC' /* added by mysqlbinlog */ /*!*/;
+DELIMITER ;
+# End of log file
+/*!50003 SET COMPLETION_TYPE=@OLD_COMPLETION_TYPE*/;
+/*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE=0*/;

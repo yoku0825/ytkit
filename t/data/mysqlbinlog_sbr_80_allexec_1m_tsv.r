@@ -1,0 +1,1 @@
+180427 11:42	t1	INSERT	exec_time:0	3

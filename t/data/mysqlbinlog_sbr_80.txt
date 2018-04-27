@@ -1,0 +1,97 @@
+/*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE=1*/;
+/*!50003 SET @OLD_COMPLETION_TYPE=@@COMPLETION_TYPE,COMPLETION_TYPE=0*/;
+DELIMITER /*!*/;
+# at 4
+#180427 11:42:17 server id 1080  end_log_pos 124 	Start: binlog v 4, server v 8.0.11 created 180427 11:42:17
+# Warning: this binlog is either in use or was not closed properly.
+BINLOG '
+CY7iWg84BAAAeAAAAHwAAAABAAQAOC4wLjExAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAEwANAAgAAAAABAAEAAAAYAAEGggAAAAICAgCAAAACgoKKioAEjQA
+CgDwMoWO
+'/*!*/;
+# at 124
+#180427 11:42:17 server id 1080  end_log_pos 191 	Previous-GTIDs
+# 9e4b7835-4440-11e8-be3c-0201a32caf75:1-4740
+# at 191
+#180427 11:42:20 server id 1080  end_log_pos 260 	GTID	last_committed=0	sequence_number=1	rbr_only=no	original_committed_timestamp=1524796940429569	immediate_commit_timestamp=1524796940429569	transaction_length=192
+# original_commit_timestamp=1524796940429569 (2018-04-27 11:42:20.429569 JST)
+# immediate_commit_timestamp=1524796940429569 (2018-04-27 11:42:20.429569 JST)
+/*!80001 SET @@session.original_commit_timestamp=1524796940429569*//*!*/;
+SET @@SESSION.GTID_NEXT= '9e4b7835-4440-11e8-be3c-0201a32caf75:4741'/*!*/;
+# at 260
+#180427 11:42:20 server id 1080  end_log_pos 383 	Query	thread_id=46	exec_time=0	error_code=0	Xid = 77
+use `d1`/*!*/;
+SET TIMESTAMP=1524796940/*!*/;
+SET @@session.pseudo_thread_id=46/*!*/;
+SET @@session.foreign_key_checks=1, @@session.sql_auto_is_null=0, @@session.unique_checks=1, @@session.autocommit=1/*!*/;
+SET @@session.sql_mode=1168113696/*!*/;
+SET @@session.auto_increment_increment=1, @@session.auto_increment_offset=1/*!*/;
+/*!\C utf8mb4 *//*!*/;
+SET @@session.character_set_client=255,@@session.collation_connection=255,@@session.collation_server=303/*!*/;
+SET @@session.lc_time_names=0/*!*/;
+SET @@session.collation_database=DEFAULT/*!*/;
+/*!80005 SET @@session.default_collation_for_utf8mb4=255*//*!*/;
+CREATE TABLE t1 (num serial, val varchar(32))
+/*!*/;
+# at 383
+#180427 11:42:25 server id 1080  end_log_pos 454 	GTID	last_committed=1	sequence_number=2	rbr_only=no	original_committed_timestamp=1524796945257113	immediate_commit_timestamp=1524796945257113	transaction_length=285
+# original_commit_timestamp=1524796945257113 (2018-04-27 11:42:25.257113 JST)
+# immediate_commit_timestamp=1524796945257113 (2018-04-27 11:42:25.257113 JST)
+/*!80001 SET @@session.original_commit_timestamp=1524796945257113*//*!*/;
+SET @@SESSION.GTID_NEXT= '9e4b7835-4440-11e8-be3c-0201a32caf75:4742'/*!*/;
+# at 454
+#180427 11:42:25 server id 1080  end_log_pos 528 	Query	thread_id=46	exec_time=0	error_code=0
+SET TIMESTAMP=1524796945/*!*/;
+BEGIN
+/*!*/;
+# at 528
+#180427 11:42:25 server id 1080  end_log_pos 641 	Query	thread_id=46	exec_time=0	error_code=0
+SET TIMESTAMP=1524796945/*!*/;
+INSERT INTO t1 VALUES (1, 'one'), (2, 'two')
+/*!*/;
+# at 641
+#180427 11:42:25 server id 1080  end_log_pos 668 	Xid = 78
+COMMIT/*!*/;
+# at 668
+#180427 11:42:31 server id 1080  end_log_pos 739 	GTID	last_committed=2	sequence_number=3	rbr_only=no	original_committed_timestamp=1524796951186834	immediate_commit_timestamp=1524796951186834	transaction_length=275
+# original_commit_timestamp=1524796951186834 (2018-04-27 11:42:31.186834 JST)
+# immediate_commit_timestamp=1524796951186834 (2018-04-27 11:42:31.186834 JST)
+/*!80001 SET @@session.original_commit_timestamp=1524796951186834*//*!*/;
+SET @@SESSION.GTID_NEXT= '9e4b7835-4440-11e8-be3c-0201a32caf75:4743'/*!*/;
+# at 739
+#180427 11:42:31 server id 1080  end_log_pos 813 	Query	thread_id=46	exec_time=0	error_code=0
+SET TIMESTAMP=1524796951/*!*/;
+BEGIN
+/*!*/;
+# at 813
+#180427 11:42:31 server id 1080  end_log_pos 916 	Query	thread_id=46	exec_time=0	error_code=0
+SET TIMESTAMP=1524796951/*!*/;
+INSERT INTO t1 VALUES (3, 'three')
+/*!*/;
+# at 916
+#180427 11:42:31 server id 1080  end_log_pos 943 	Xid = 79
+COMMIT/*!*/;
+# at 943
+#180427 11:42:47 server id 1080  end_log_pos 1014 	GTID	last_committed=3	sequence_number=4	rbr_only=no	original_committed_timestamp=1524796967532755	immediate_commit_timestamp=1524796967532755	transaction_length=274
+# original_commit_timestamp=1524796967532755 (2018-04-27 11:42:47.532755 JST)
+# immediate_commit_timestamp=1524796967532755 (2018-04-27 11:42:47.532755 JST)
+/*!80001 SET @@session.original_commit_timestamp=1524796967532755*//*!*/;
+SET @@SESSION.GTID_NEXT= '9e4b7835-4440-11e8-be3c-0201a32caf75:4744'/*!*/;
+# at 1014
+#180427 11:42:47 server id 1080  end_log_pos 1088 	Query	thread_id=46	exec_time=0	error_code=0
+SET TIMESTAMP=1524796967/*!*/;
+BEGIN
+/*!*/;
+# at 1088
+#180427 11:42:47 server id 1080  end_log_pos 1190 	Query	thread_id=46	exec_time=0	error_code=0
+SET TIMESTAMP=1524796967/*!*/;
+INSERT INTO t1 VALUES (4, 'four')
+/*!*/;
+# at 1190
+#180427 11:42:47 server id 1080  end_log_pos 1217 	Xid = 81
+COMMIT/*!*/;
+SET @@SESSION.GTID_NEXT= 'AUTOMATIC' /* added by mysqlbinlog */ /*!*/;
+DELIMITER ;
+# End of log file
+/*!50003 SET COMPLETION_TYPE=@OLD_COMPLETION_TYPE*/;
+/*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE=0*/;

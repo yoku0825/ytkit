@@ -29,14 +29,20 @@ use Ytkit::BinlogGroupby;
 
 subtest "--group-by=all" => sub
 {
-  run_test("01_parse_sbr_57.txt", "01_parse_sbr_57.r", qw{--group-by=all --cell=1m --output=tsv});
-  run_test("01_parse_rbr_57.txt", "01_parse_rbr_57.r", qw{--group-by=all --cell=1m --output=tsv});
+  my @option= qw{--group-by=all --cell=1m --output=tsv};
+  run_test("01_parse_sbr_57.txt", "01_parse_sbr_57.r", @option);
+  run_test("01_parse_rbr_57.txt", "01_parse_rbr_57.r", @option);
+  run_test("mysqlbinlog_rbr_80.txt", "mysqlbinlog_rbr_80_all_1m_tsv.r", @option);
+  run_test("mysqlbinlog_sbr_80.txt", "mysqlbinlog_sbr_80_all_1m_tsv.r", @option);
 };
 
 subtest "--group-by=all,exec" => sub
 {
   no warnings "qw";
-  run_test("01_parse_sbr_57.txt", "01_parse_sbr_57_all_exec.r", qw{--group-by=all,exec --cell=1m --output=tsv});
+  my @option= qw{--group-by=all,exec --cell=1m --output=tsv};
+  run_test("01_parse_sbr_57.txt", "01_parse_sbr_57_all_exec.r", @option);
+  run_test("mysqlbinlog_rbr_80.txt", "mysqlbinlog_rbr_80_allexec_1m_tsv.r", @option);
+  run_test("mysqlbinlog_sbr_80.txt", "mysqlbinlog_sbr_80_allexec_1m_tsv.r", @option);
 };
 
 done_testing;

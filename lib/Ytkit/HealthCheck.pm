@@ -324,18 +324,18 @@ sub check_read_only
 {
   my ($self)= @_;
 
-  my $status;
+  my $status   = NAGIOS_OK;
   my $read_only= $self->show_variables->{read_only}->{Value};
 
   if ($read_only eq "ON")
   {
     ### If master server(read_only should_be 0) turns on read_only, raise as CRITICAL.
-    $status= $self->{read_only}->{should_be} == 0 ? NAGIOS_CRITICAL : undef
+    $status= $self->{read_only}->{should_be} == 0 ? NAGIOS_CRITICAL : NAGIOS_OK;
   }
   elsif ($read_only eq "OFF")
   {
     ### Just warning if slave server(read_only should_be 1) turns off read_only.
-    $status= $self->{read_only}->{should_be} == 1 ? NAGIOS_WARNING : undef;
+    $status= $self->{read_only}->{should_be} == 1 ? NAGIOS_WARNING : NAGIOS_OK;
   }
 
   $self->update_status($status, sprintf(qq{read_only should be %s but current setting is %s}, 
@@ -432,6 +432,7 @@ sub check_fabric
 sub update_status
 {
   my ($self, $new_status, $new_output)= @_;
+  return if $new_status->{exit_code} == NAGIOS_OK->{exit_code};
 
   if ($self->{status}->{exit_code} == $new_status->{exit_code})
   {

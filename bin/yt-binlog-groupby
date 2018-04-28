@@ -21,6 +21,7 @@
 use strict;
 use warnings;
 use utf8;
+binmode STDOUT, ":utf8";
 use Pod::Usage;
 
 use FindBin qw/$Bin/;

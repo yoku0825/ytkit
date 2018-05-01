@@ -30,6 +30,10 @@ fatpack: setup yt-binlog-groupby yt-healthcheck yt-wait-replication
 fatinstall:
 	cp fatpack/* $(INSTALL)/bin
 
+.PHONY: rpmbuild
+rpmbuild:
+	bash build.sh
+
 yt-binlog-groupby: bin/yt-binlog-groupby lib/Ytkit/BinlogGroupby.pm lib/Ytkit/Config.pm
 	fatpack-simple bin/$@ -o fatpack/$@
 

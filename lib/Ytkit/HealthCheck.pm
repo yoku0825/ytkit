@@ -348,20 +348,22 @@ sub check_slave_status
   my ($self)= @_;
   return 0 unless $self->{slave_status}->{enable};
 
-  my $status;
-  my $output= "";
   foreach my $row (@{$self->show_slave_status})
   {
+    my $status;
+    my $output= "";
+    my $channel_name= $row->{Channel_Name} ? "Channel: " . $row->{Channel_Name} . " " : "";
+
     ### Each $row means each CHANNEL (correspond to Multi-Source Replication)
     if ($row->{Slave_IO_Running} ne "Yes")
     {
       $status  = NAGIOS_CRITICAL;
-      $output .= "Slave I/O Thread is NOT Running. ";
+      $output .= sprintf("%sSlave I/O Thread is NOT Running. ", $channel_name);
     }
     if ($row->{Slave_SQL_Running} ne "Yes")
     {
       $status  = NAGIOS_CRITICAL;
-      $output .= "Slave SQL Thread is NOT Running. ";
+      $output .= sprintf("%sSlave SQL Thread is NOT Running. ", $channel_name);
     }
 
     ### Don't evaluate Seconds_Behind_Master when replication thread is down.

@@ -192,6 +192,12 @@ sub options
           ### Evaluate regexp
           $ret->{$evaluate_struct->{$key}}= (($value =~ $isa) ? $value : undef);
         }
+        elsif ($isa eq "bool" || $isa eq "Bool" || $isa eq "BOOL")
+        {
+          ### Force set 1 and return $value into @argv if isa eq "bool"
+          $ret->{$evaluate_struct->{$key}}= 1;
+          unshift(@argv, $value);
+        }
         else
         {
           ### isa is non-supported type.

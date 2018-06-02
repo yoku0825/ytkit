@@ -425,7 +425,7 @@ sub check_fabric
   $status= compare_threshold($pct_fd, $self->{fabric_fd});
 
   ### Information message when $status = NAGIOS_OK
-  $output= sprintf("File-descriptor count %d/%d", $current_fd, $max_fd) if $status eq NAGIOS_OK;
+  $output= sprintf("File-descriptor count %d/%d", $current_fd, $max_fd) if $status;
   $self->update_status($status, $output) if $status;
 
   return;

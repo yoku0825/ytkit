@@ -25,25 +25,21 @@ use v5.10;
 use Ytkit::Config;
 use Ytkit::HealthCheck;
 
-use constant DEFAULT_OPTION =>
+my $default_option=
 {
-  version    => { alias => ["version", "V"], default => 0 },
-  user       => ["u", "user"],
-  host       => ["h", "host"],
-  port       => ["P", "port"],
-  socket     => ["S", "socket"],
-  password   => ["p", "password"],
-  timeout    => { alias => ["timeout"], default => 1800 },
-  silent     => { alias => ["silent", "s", "quiet", "q"], default => 1},
-  sleep      => { alias => ["sleep", "interval", "i"], default => 3 },
-  help       => ["help", "usage"],
+  silent => { alias => ["silent", "s", "quiet", "q"], default => 1},
+  sleep  => { alias => ["sleep", "interval", "i"], default => 3 },
   seconds_behind_master => { default => 5 },
 };
+$default_option= { %$default_option, %$Ytkit::Config::CONNECT_OPTION, %$Ytkit::Config::COMMON_OPTION };
+
+### Fix
+$default_option->{timeout}->{default}= 1800;
 
 sub new
 {
   my ($class, @orig_argv)= @_;
-  my ($opt, @argv)= options(DEFAULT_OPTION, @orig_argv);
+  my ($opt, @argv)= options($default_option, @orig_argv);
   return -255 if $opt->{help};
   return -254 if $opt->{version};
 

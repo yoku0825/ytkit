@@ -24,20 +24,25 @@ use utf8;
 
 use Ytkit::Config;
 
-use constant DEFAULT_OPTION =>
+my $default_option=
 {
-  cell     => { alias => ["cell", "c"],  isa => [qw{s second 1s 10s m minute 1m 10m h hour 1h}], default => "10m" },
-  group_by => { alias => ["group-by", "g"], default => "time" },
-  output   => { alias => ["output", "o"], default => "tsv" },
+  cell     => { alias => ["cell", "c"],
+                isa   => [qw{s second 1s 10s m minute 1m 10m h hour 1h}],
+                default => "10m" },
+  group_by => { alias => ["group-by", "g"],
+                default => "time" },
+  output   => { alias => ["output", "o"],
+                default => "tsv" },
   help     => { alias => ["help", "usage", "h"] },
   verbose  => { alias => ["verbose", "v"], default => 0 },
   version  => { alias => ["version", "V"], default => 0 },
 };
+$default_option= { %$default_option, %$Ytkit::Config::COMMON_OPTION };
 
 sub new
 {
   my ($class, @orig_argv)= @_;
-  my ($opt, @argv)= options(DEFAULT_OPTION, @orig_argv);
+  my ($opt, @argv)= options($default_option, @orig_argv);
   return -255 if $opt->{help};
   return -254 if $opt->{version};
 

@@ -41,19 +41,11 @@ use constant BYTES =>
   bigint    => 8,
 };
 
-use constant DEFAULT_OPTION =>
+my $default_option=
 {
-  version    => { alias => ["version", "V"], default => 0 },
   role       => { alias   => ["role"],
                   isa     => ["auto", "master", "slave", "backup", "fabric", "none", "intermidiate"],
                   default => "auto" },
-  user       => ["u", "user"],
-  host       => ["h", "host"],
-  port       => ["P", "port"],
-  socket     => ["S", "socket"],
-  password   => ["p", "password"],
-  timeout    => { default => 1 },
-  help       => ["help", "usage"],
   long_query       => { enable        => { default => 1, },
                         warning       => { default => 5, },
                         critical      => { default => 100, },
@@ -71,14 +63,14 @@ use constant DEFAULT_OPTION =>
   fabric_fd        => { enable   => { default => 1, },
                         warning  => { default => 50, },
                         critical => { default => 70, }, },
-  config_file      => { alias => ["c", "config-file"] },
   config_group     => { alias => ["config-group"], default => "yt-healthcheck" },
 };
+$default_option= { %$default_option, %$Ytkit::Config::CONNECT_OPTION, %$Ytkit::Config::COMMON_OPTION };
 
 sub new
 {
   my ($class, @orig_argv)= @_;
-  my ($opt, @argv)= options(DEFAULT_OPTION, @orig_argv);
+  my ($opt, @argv)= options($default_option, @orig_argv);
   return -255 if $opt->{help};
   return -254 if $opt->{version};
   load_config($opt, $opt->{config_file}, $opt->{config_group}) if $opt->{config_file};

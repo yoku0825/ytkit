@@ -25,6 +25,21 @@ use utf8;
 use Exporter qw{import};
 our @EXPORT= qw{options load_config version};
 our $VERSION= "0.0.16";
+our $CONNECT_OPTION=
+{
+  user     => { alias => ["u", "user"] },
+  host     => { alias => ["h", "host"] },
+  port     => { alias => ["P", "port"] },
+  socket   => { alias => ["S", "socket"] },
+  password => { alias => ["p", "password"] },
+  timeout  => { alias => ["timeout"], default => 1 },
+};
+our $COMMON_OPTION=
+{
+  help        => { alias => ["help", "usage"] },
+  version     => { alias => ["version", "V"], default => 0 },
+  config_file => { alias => ["c", "config-file"] },
+};
 
 sub options
 {

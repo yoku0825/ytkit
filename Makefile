@@ -30,7 +30,8 @@ fatpack: setup yt-binlog-groupby yt-healthcheck yt-wait-replication
 fatinstall:
 	cp fatpack/* $(INSTALL)/bin
 
-.PHONY: rpmbuild
+.PHONY: rpmbuild rpm
+rpm: rpmbuild
 rpmbuild:
 	bash build.sh
 

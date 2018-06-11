@@ -366,6 +366,7 @@ sub check_slave_status
     }
 
     my $second= $row->{Seconds_Behind_Master} ? $row->{Seconds_Behind_Master} : 0;
+    $output .= sprintf("%sSlave Seconds_Behind_Master is %d. ", $channel_name, $second);
     $status= compare_threshold($second, $self->{slave_status});
     $self->update_status($status, $output) if $status;
   } ### Evaluate each CHANNEL in SHOW SLAVE STATUS

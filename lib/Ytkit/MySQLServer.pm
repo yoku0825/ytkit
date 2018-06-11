@@ -136,9 +136,21 @@ sub show_variables
 sub select_autoinc_usage
 {
   my ($self)= @_;
-  return $self->query_arrayref("SELECT table_schema, table_name, column_name, auto_increment, column_type " .
-                               "FROM information_schema.tables JOIN information_schema.columns USING(table_schema, table_name) " .
-                               "WHERE auto_increment IS NOT NULL AND extra = 'auto_increment'");
+  my $sql= << "EOS";
+SELECT
+  table_schema AS table_schema,
+  table_name AS table_name,
+  column_name AS column_name,
+  auto_increment AS auto_increment,
+  column_type AS column_type
+FROM
+  information_schema.tables 
+    JOIN information_schema.columns USING(table_schema, table_name)
+WHERE
+  auto_increment IS NOT NULL AND 
+  extra = 'auto_increment'
+EOS
+  return $self->query_arrayref($sql);
 }
 
 sub show_master_logs

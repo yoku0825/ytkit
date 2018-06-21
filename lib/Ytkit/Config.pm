@@ -69,7 +69,7 @@ sub options
 
   ### Change struct from { variable => [expression1, expression2] }
   ###   to { expression1 => variable, expression2 => variable, }
-  my $evaluate_struct;
+  my $alias_dict;
   foreach my $opt (keys(%$option_struct))
   {
     ### use option-name as variable-name if alias is not set.
@@ -84,7 +84,7 @@ sub options
     {
       ### Normalize "-" to "_" in key.
       s/-/_/g;
-      $evaluate_struct->{$_}= $opt;
+      $alias_dict->{$_}= $opt;
 
       ### Set default value.
       $ret->{$opt}= $option_struct->{$opt}->{default} if exists($option_struct->{$opt}->{default});
@@ -170,7 +170,7 @@ sub options
     $key =~ s/-/_/g if $key;
 
     ### Is known option?
-    if ($key && $evaluate_struct->{$key})
+    if ($key && $alias_dict->{$key})
     {
       if ($value =~ /^"([^"]*)/)
       {
@@ -194,41 +194,41 @@ sub options
       }
 
       ### isa is set?
-      if (my $isa= $option_struct->{$evaluate_struct->{$key}}->{isa})
+      if (my $isa= $option_struct->{$alias_dict->{$key}}->{isa})
       {
         ### Validation.
         if (ref($isa) eq "ARRAY")
         {
           ### Array-style isa, grep
-          $ret->{$evaluate_struct->{$key}}= ((grep {$value eq $_} @$isa) ? $value : undef);
+          $ret->{$alias_dict->{$key}}= ((grep {$value eq $_} @$isa) ? $value : undef);
         }
         elsif (ref($isa) eq "Regexp")
         {
           ### Evaluate regexp
-          $ret->{$evaluate_struct->{$key}}= (($value =~ $isa) ? $value : undef);
+          $ret->{$alias_dict->{$key}}= (($value =~ $isa) ? $value : undef);
         }
         elsif ($isa eq "noarg" || $isa eq "NOARG")
         {
           ### Force set 1 and return $value into @argv if isa eq "bool"
-          $ret->{$evaluate_struct->{$key}}= 1;
+          $ret->{$alias_dict->{$key}}= 1;
           unshift(@argv, $value);
         }
         elsif ($isa eq "multi" || $isa eq "MULTI" || $isa eq "multiple" || $isa eq "MULTIPLE")
         {
           ### Multiple choise (store into array) option.
           ###  TODO: How to validate each value?
-          push(@{$ret->{$evaluate_struct->{$key}}}, $value);
+          push(@{$ret->{$alias_dict->{$key}}}, $value);
         }
         else
         {
           ### isa is non-supported type.
-          $ret->{$evaluate_struct->{$key}}= undef;
+          $ret->{$alias_dict->{$key}}= undef;
         }
       }
       else
       {
         ### Don't need to validate.
-        $ret->{$evaluate_struct->{$key}}= $value;
+        $ret->{$alias_dict->{$key}}= $value;
       }
     }
     else

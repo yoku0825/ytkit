@@ -213,7 +213,7 @@ sub options
           $ret->{$evaluate_struct->{$key}}= 1;
           unshift(@argv, $value);
         }
-        elsif ($isa eq "multi" || $isa eq "MULTI")
+        elsif ($isa eq "multi" || $isa eq "MULTI" || $isa eq "multiple" || $isa eq "MULTIPLE")
         {
           ### Multiple choise (store into array) option.
           ###  TODO: How to validate each value?

@@ -52,7 +52,7 @@ my $default_option=
   iteration      => { alias => ["iteration", "count", "c"], default => 1 },
   output         => { alias => ["output", "o"], default => "tsv", isa => [qw{tsv csv json sql}] },
   record_path    => { alias => ["record-path", "r"], default => undef },
-  no_header      => { alias => ["no-header", "n"], default => 0, isa => "bool" },
+  no_header      => { alias => ["no-header", "n"], default => 0, isa => "noarg" },
   config_group   => { alias => ["config-group"], default => "yt-collect" },
 };
 $default_option= { %$default_option, %$Ytkit::Config::CONNECT_OPTION, %$Ytkit::Config::COMMON_OPTION };

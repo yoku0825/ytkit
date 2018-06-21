@@ -207,7 +207,7 @@ sub options
           ### Evaluate regexp
           $ret->{$evaluate_struct->{$key}}= (($value =~ $isa) ? $value : undef);
         }
-        elsif ($isa eq "bool" || $isa eq "Bool" || $isa eq "BOOL")
+        elsif ($isa eq "noarg" || $isa eq "NOARG")
         {
           ### Force set 1 and return $value into @argv if isa eq "bool"
           $ret->{$evaluate_struct->{$key}}= 1;

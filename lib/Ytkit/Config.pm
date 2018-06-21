@@ -24,7 +24,7 @@ use utf8;
 
 use Exporter qw{import};
 our @EXPORT= qw{options load_config version};
-our $VERSION= '0.0.17';
+our $VERSION= '0.0.18';
 our $CONNECT_OPTION=
 {
   user     => { alias => ["u", "user"] },
@@ -212,6 +212,12 @@ sub options
           ### Force set 1 and return $value into @argv if isa eq "bool"
           $ret->{$evaluate_struct->{$key}}= 1;
           unshift(@argv, $value);
+        }
+        elsif ($isa eq "multi" || $isa eq "MULTI")
+        {
+          ### Multiple choise (store into array) option.
+          ###  TODO: How to validate each value?
+          push(@{$ret->{$evaluate_struct->{$key}}}, $value);
         }
         else
         {

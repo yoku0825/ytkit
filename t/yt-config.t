@@ -125,6 +125,8 @@ subtest "isa and hyphen-minus-normalization" => sub
     test_regexp_isa_success => { isa => qr{test} },
     normalize_hyphen_option => { alias => ["normalize-hyphen-option"] },
     normalize_underscore    => { alias => ["normalize_underscore"] },
+    test_noarg_isa          => { alias => ["noarg"], isa => "noarg" },
+    test_multiple_isa       => { alias => ["multiple"], isa => "multi" },
   };
   
   my @test_argv= qw{
@@ -133,8 +135,11 @@ subtest "isa and hyphen-minus-normalization" => sub
                       --test_array_isa_success="test"
                       --test_regexp_isa_fail="THIS_IS_FAIL_TEST"
                       --test_regexp_isa_success="this_is_success_test"
+                      --noarg this_should_be_left_in_argv_because_noarg
                       --normalize_hyphen_option="ALIAS_USES_HYPHEN_BUT_OPTION_SPECIFIED_UNDERSCORE"
                       --normalize-underscore="ALIAS_USES_UNDERSCORE_BUT_OPTION_SPECIFIED_HYPHEN"
+                      --multiple=a
+                      --multiple=b
                       this_should_be_left_in_argv
                    };
   
@@ -148,9 +153,11 @@ subtest "isa and hyphen-minus-normalization" => sub
     test_regexp_isa_success => "this_is_success_test",
     normalize_hyphen_option => "ALIAS_USES_HYPHEN_BUT_OPTION_SPECIFIED_UNDERSCORE",
     normalize_underscore    => "ALIAS_USES_UNDERSCORE_BUT_OPTION_SPECIFIED_HYPHEN",
+    test_noarg_isa          => 1,
+    test_multiple_isa       => [qw{a b}],
   };
   
-  my @expected_argv= qw{ this_should_be_left_in_argv };
+  my @expected_argv= qw{ this_should_be_left_in_argv_because_noarg this_should_be_left_in_argv };
   my ($got_opt, @got_argv)= options($option_struct, @test_argv);
   is_deeply($got_opt, $expected_opt, "Options by Ytkit::Config::options");
   is_deeply(\@got_argv, \@expected_argv, "ARGV by Ytkit::Config::options");

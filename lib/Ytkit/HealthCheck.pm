@@ -49,8 +49,8 @@ my $default_option=
   long_query       => { enable        => { default => 1, },
                         warning       => { default => 5, },
                         critical      => { default => 100, },
-                        exclude_host  => { default => [] },
-                        exclude_query => { default => [] }, },
+                        exclude_host  => { default => [], isa => "multi" },
+                        exclude_query => { default => [], isa => "multi" }, },
   connection_count => { enable   => { default => 1, },
                         warning  => { default => 70, },
                         critical => { default => 95, }, },
@@ -85,8 +85,8 @@ sub new
       enable        => $opt->{long_query_enable},
       warning       => $opt->{long_query_warning},
       critical      => $opt->{long_query_critical},
-      exclude_host  => $opt->{long_query_exclude_host} ? [split(/,/, $opt->{long_query_exclude_host})] : [],
-      exclude_query => $opt->{long_query_exclude_query} ? [split(/,/, $opt->{long_query_exclude_query})] : [],
+      exclude_host  => $opt->{long_query_exclude_host} ? $opt->{long_query_exclude_host} : [],
+      exclude_query => $opt->{long_query_exclude_query} ? $opt->{long_query_exclude_query} : [],
     },
     connection_count => { enable        => $opt->{connection_count_enable},
                           warning       => $opt->{connection_count_warning},
@@ -103,6 +103,7 @@ sub new
                           critical      => $opt->{fabric_fd_critical}, },
   };
   bless $self => $class;
+
   eval
   {
     $self->{instance}= Ytkit::MySQLServer->new($opt);

@@ -75,6 +75,8 @@ subtest "options from command-line" => sub
     quoted_long_without_equal  => "QUOTED_LONG_WITHOUT_EQUAL",
     quoted_short_with_equal    => "QUOTED_SHORT_WITH_EQUAL",
     quoted_short_without_equal => "QUOTED_SHORT_WITHOUT_EQUAL",
+    orig_argv                  => \@test_argv,
+    left_argv                  => ["this_should_be_left_in_argv", "this_should_be_left_in_argv_too"],
   };
   
   my @expected_argv= qw{ this_should_be_left_in_argv this_should_be_left_in_argv_too };
@@ -155,6 +157,9 @@ subtest "isa and hyphen-minus-normalization" => sub
     normalize_underscore    => "ALIAS_USES_UNDERSCORE_BUT_OPTION_SPECIFIED_HYPHEN",
     test_noarg_isa          => 1,
     test_multiple_isa       => [qw{a b}],
+    orig_argv               => \@test_argv,
+    left_argv               => ["this_should_be_left_in_argv_because_noarg", "this_should_be_left_in_argv"],
+ 
   };
   
   my @expected_argv= qw{ this_should_be_left_in_argv_because_noarg this_should_be_left_in_argv };
@@ -186,6 +191,8 @@ subtest "hash-style option" => sub
     parent_child1 => "ccc",
     parent_child2 => "bbb",
     parent_child3 => "eee",
+    orig_argv     => \@test_argv,
+    left_argv     => ["this_should_be_left_in_argv"],
   };
   
   my @expected_argv= qw{ this_should_be_left_in_argv };
@@ -218,6 +225,8 @@ subtest "test for space-including value" => sub
     doublequoted_space_without_equal => "s p a c e 2",
     singlequoted_space_with_equal    => "s p a c e 3",
     singlequoted_space_without_equal => "s p a c e 4",
+    orig_argv                        => \@test_argv,
+    left_argv                        => ["this_should_be_left_in_argv"],
   };
   
   my @expected_argv= qw{ this_should_be_left_in_argv };

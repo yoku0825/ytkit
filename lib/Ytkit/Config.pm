@@ -45,6 +45,7 @@ sub options
 {
   my ($option_struct, @argv)= @_;
   my ($ret, @left_argv);
+  $ret->{orig_argv}= [@argv];
 
   ### Normalize { parent => { child => { option_hash } } } style
   ###  to { parent-child => { option_hash } style.
@@ -238,6 +239,7 @@ sub options
     }
     ($key, $value)= ();
   } ### End while parsing argument.
+  $ret->{left_argv}= [@left_argv];
 
   return $ret, @left_argv;
 }

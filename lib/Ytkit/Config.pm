@@ -48,23 +48,22 @@ sub options
   $ret->{orig_argv}= [@argv];
 
   ### Normalize { parent => { child => { option_hash } } } style
-  ###  to { parent-child => { option_hash } style.
-  foreach my $parent (keys(%$option_struct))
+  ###  to { parent_child => { option_hash } style.
+  while (my ($parent_key, $child)= each(%$option_struct))
   {
-    ### if { parent => [alias1, alias2] } style, next.
-    next unless ref($option_struct->{$parent}) eq "HASH";
+    ### if already { parent => [alias1, alias2] } style, next.
+    next if !(ref($child) eq "HASH");
 
-    foreach my $child (keys(%{$option_struct->{$parent}}))
+    while (my ($child_key, $child_value)= each(%$child))
     {
-      if (ref($option_struct->{$parent}->{$child}) eq "HASH")
-      {
-        my $new_option= sprintf("%s_%s", $parent, $child);
-        $option_struct->{$new_option}= $option_struct->{$parent}->{$child};
-        delete($option_struct->{$parent}->{$child});
+      ### decide { parent => { child => { .. } } } style or { parent => { default => .., } } style.
+      next if !(ref($child_value) eq "HASH");
+      my $new_option= sprintf("%s_%s", $parent_key, $child_key);
+      $option_struct->{$new_option}= $option_struct->{$parent_key}->{$child_key};
+      delete($option_struct->{$parent_key}->{$child_key});
 
-        ### Delete parent if all children are normalized.
-        delete($option_struct->{$parent}) unless %{$option_struct->{$parent}};
-      }
+      ### Delete parent if all children are normalized.
+      delete($option_struct->{$parent_key}) unless %{$option_struct->{$parent_key}};
     }
   }
 

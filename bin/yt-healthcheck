@@ -180,6 +180,11 @@ Password for the user specified by --user
 
 Seconds before timeout(read_timeout, write_timeout, connect_timeout)
 
+=head2 --dump-detail=filepath
+
+When result is NOT NAGIOS_OK,
+output results of "SHOW PROCESSLIST" and "SHOW SLAVE STATUS" into specified file,
+
 =head2 --long-query-enable=0
 
 Turn off SHOW PROCESSLIST's check.

@@ -21,8 +21,11 @@ package Ytkit::HealthCheck;
 use strict;
 use warnings;
 use utf8;
+use POSIX;
 
-use Ytkit::Config;
+use IO::File;
+use Time::Piece qw{localtime};
+use Ytkit::Config qw{options load_config};
 use Ytkit::MySQLServer;
 
 ### return code for Nagios-compats.
@@ -63,6 +66,8 @@ my $default_option=
   fabric_fd        => { enable   => { default => 1, },
                         warning  => { default => 50, },
                         critical => { default => 70, }, },
+  dump_detail      => { alias   => ["dump-detail"],
+                        default => undef, },
   config_group     => { alias => ["config-group"], default => "yt-healthcheck" },
 };
 $default_option= { %$default_option, %$Ytkit::Config::CONNECT_OPTION, %$Ytkit::Config::COMMON_OPTION };
@@ -101,6 +106,7 @@ sub new
     fabric_fd        => { enable        => $opt->{fabric_fd_enable},
                           warning       => $opt->{fabric_fd_warning},
                           critical      => $opt->{fabric_fd_critical}, },
+    dump_detail      => $opt->{dump_detail},
   };
   bless $self => $class;
 
@@ -177,6 +183,7 @@ sub new
     $self->{status}= NAGIOS_UNKNOWN;
     $self->{output}= sprintf("Unexpected role was specified. %s", $role);
   }
+  $self->dump_detail;
 
   return $self;
 }
@@ -225,9 +232,10 @@ sub hostname
 sub print_status
 {
   my ($self)= @_;
-  printf("%s on %s: %s (%s)\n",
+  printf("%s on %s: %s (%s)\n%s",
          $self->{status}->{str}, $self->hostname,
-         $self->{output}, $self->{role});
+         $self->{output}, $self->{role},
+         $self->{dump_detail} ? "-  Details in " . $self->{dump_detail} : "");
 }
 
 sub check_long_query
@@ -502,10 +510,8 @@ sub show_slaves_via_processlist
 
   foreach my $row (@{$self->show_processlist})
   {
-    if ($row->{Command} =~ /^Binlog\sDump/)
-    {
-      return 1;
-    }
+    ### "Binlog Dump (GTID)" is in processlist, the server maybe master.
+    return 1 if $row->{Command} =~ /^Binlog\sDump/;
   }
   return 0;
 }
@@ -539,6 +545,81 @@ sub clear_cache
 {
   my ($self)= @_;
   return $self->{instance}->clear_cache;
+}
+
+sub dump_detail
+{
+  my ($self)= @_;
+  return 0 if !($self->{dump_detail});
+
+  ### Don't dump information when status is OK.
+  return 0 if $self->{status}->{exit_code} eq NAGIOS_OK->{exit_code};
+
+  my $fh;
+  eval
+  {
+    $fh= IO::File->new($self->{dump_detail}, "a");
+  };
+
+  if ($@ || !($fh))
+  {
+    ### Falling down to STDERR
+    printf("Couldn't open %s, falling back to STDERR\n", $self->{dump_detail});
+    $fh= IO::Handle->new_from_fd(2, "w");
+  }
+
+  printf($fh "# %s\n", Time::Piece::localtime->strftime("%Y/%m/%d %H:%M:%S"));
+  printf($fh "# %s on %s: %s (%s)\n",
+         $self->{status}->{str}, $self->hostname,
+         $self->{output}, $self->{role},
+         Time::Piece::localtime->cdate);
+  printf($fh "\n%sSHOW PROCESSLIST%s\n\n", "=" x 10, "=" x 10);
+  print_table($fh, $self->{instance}->show_processlist);
+  printf($fh "\n%sSHOW SLAVE STATUS%s\n", "=" x 10, "=" x 10);
+  print_table($fh, $self->{instance}->show_slave_status);
+  return 1;
+}
+
+sub print_table
+{
+  ### $ret should be `selectall_arrayref($sql, {Slice => {}})`
+  my ($fh, $ret)= @_;
+  return 0 if !($fh);
+
+  if (!($ret && $ret->[0]))
+  {
+    ### Empty
+    printf($fh "Empty\n");
+    return 0;
+  }
+
+  my @columns= sort(keys(%{$ret->[0]}));
+
+  ### Evaluate width of resultset.
+  my %width= map { $_ => length($_) } @columns;
+  foreach my $row (@$ret)
+  {
+    foreach my $column (@columns)
+    {
+      my $length= length($row->{$column});
+      $length ||= 0;
+      $width{$column}= $length
+        if !($width{$column}) || ($width{$column} < $length);
+    }
+  }
+  
+  ### Print header-line
+  printf($fh "| %s |\n", join(" | ", map { my $format= sprintf("%%-%ds", $width{$_}); sprintf($format, $_); } @columns));
+  printf($fh "| %s |\n", join(" | ", map { sprintf("-" x $width{$_}); } @columns));
+
+  ### Print each line
+  foreach my $row (@$ret)
+  {
+    printf($fh "| %s |\n", join(" | ",
+                                map { my $format= sprintf("%%-%ds", $width{$_});
+                                      sprintf($format, $row->{$_} ? $row->{$_} : ""); } @columns));
+  }
+  return 1;
 }
 
 return 1;

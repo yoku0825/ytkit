@@ -1,6 +1,6 @@
 Name:		ytkit
-Version:	0.0.18
-Release:	2
+Version:	0.0.19
+Release:	1
 Summary:	ytkit is Yoku-san no Tool KIT scripts.
 
 #Group:		
@@ -8,7 +8,7 @@ License:	GPLv2
 URL:		https://github.com/yoku0825/ytkit/archive/%{version}.tar.gz#/%{name}-%{version}.tar.gz
 Source0:	%{name}-%{version}.tar.gz
 
-Requires:	perl perl-DBD-MySQL
+Requires:	perl perl-DBD-MySQL perl-Time-Piece
 AutoReq:        no
 BuildArch:      noarch
 BuildRequires:  make perl perl-Test-Harness perl-Time-HiRes perl-Test-MockTime

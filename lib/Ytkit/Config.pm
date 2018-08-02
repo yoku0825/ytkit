@@ -24,7 +24,7 @@ use utf8;
 
 use Exporter qw{import};
 our @EXPORT= qw{options load_config version};
-our $VERSION= '0.0.18';
+our $VERSION= '0.0.19';
 our $CONNECT_OPTION=
 {
   user     => { alias => ["u", "user"] },

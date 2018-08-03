@@ -46,29 +46,48 @@ use constant BYTES =>
 
 my $default_option=
 {
-  role       => { alias   => ["role"],
-                  isa     => ["auto", "master", "slave", "backup", "fabric", "none", "intermidiate"],
-                  default => "auto" },
-  long_query       => { enable        => { default => 1, },
-                        warning       => { default => 5, },
-                        critical      => { default => 100, },
-                        exclude_host  => { default => [], isa => "multi" },
-                        exclude_query => { default => [], isa => "multi" }, },
-  connection_count => { enable   => { default => 1, },
-                        warning  => { default => 70, },
-                        critical => { default => 95, }, },
-  autoinc_usage    => { enable   => { default => 1, },
-                        warning  => { default => 50, },
-                        critical => { default => 90, }, },
-  slave_status     => { enable   => { default => 1, },
-                        warning  => { default => 5, },
-                        critical => { default => 30, }, },
-  fabric_fd        => { enable   => { default => 1, },
-                        warning  => { default => 50, },
-                        critical => { default => 70, }, },
+  role =>
+  {
+    alias   => ["role"],
+    isa     => ["auto", "master", "slave", "backup", "fabric", "none", "intermidiate"],
+    default => "auto"
+  },
+  long_query =>
+  {
+    enable        => { default => 1, },
+    warning       => { default => 5, },
+    critical      => { default => 100, },
+    exclude_host  => { multi   => 1, },
+    exclude_query => { multi   => 1, },
+  },
+  connection_count =>
+  {
+    enable   => { default => 1, },
+    warning  => { default => 70, },
+    critical => { default => 95, },
+  },
+  autoinc_usage =>
+  {
+    enable   => { default => 1, },
+    warning  => { default => 50, },
+    critical => { default => 90, },
+  },
+  slave_status =>
+  {
+    enable   => { default => 1, },
+    warning  => { default => 5, },
+    critical => { default => 30, },
+  },
+  fabric_fd  =>
+  {
+    enable   => { default => 1, },
+    warning  => { default => 50, },
+    critical => { default => 70, },
+  },
   dump_detail      => { alias   => ["dump-detail"],
                         default => undef, },
-  config_group     => { alias => ["config-group"], default => "yt-healthcheck" },
+  config_group     => { alias => ["config-group"],
+                        default => "yt-healthcheck" },
 };
 $default_option= { %$default_option, %$Ytkit::Config::CONNECT_OPTION, %$Ytkit::Config::COMMON_OPTION };
 
@@ -78,36 +97,16 @@ sub new
   my ($opt, @argv)= options($default_option, @orig_argv);
   return -255 if $opt->{help};
   return -254 if $opt->{version};
+  return -253 if @argv;
   load_config($opt, $opt->{config_file}, $opt->{config_group}) if $opt->{config_file};
 
   my $self=
   {
     status           => NAGIOS_OK,  ### default.
     output           => "",
-    timeout          => $opt->{timeout},
-    long_query       =>
-    {
-      enable        => $opt->{long_query_enable},
-      warning       => $opt->{long_query_warning},
-      critical      => $opt->{long_query_critical},
-      exclude_host  => $opt->{long_query_exclude_host} ? $opt->{long_query_exclude_host} : [],
-      exclude_query => $opt->{long_query_exclude_query} ? $opt->{long_query_exclude_query} : [],
-    },
-    connection_count => { enable        => $opt->{connection_count_enable},
-                          warning       => $opt->{connection_count_warning},
-                          critical      => $opt->{connection_count_critical}, },
-    autoinc_usage    => { enable        => $opt->{autoinc_usage_enable},
-                          warning       => $opt->{autoinc_usage_warning},
-                          critical      => $opt->{autoinc_usage_critical}, },
-    read_only        => { should_be     => undef },
-    slave_status     => { enable        => $opt->{slave_status_enable},
-                          warning       => $opt->{slave_status_warning},
-                          critical      => $opt->{slave_status_critical}, },
-    fabric_fd        => { enable        => $opt->{fabric_fd_enable},
-                          warning       => $opt->{fabric_fd_warning},
-                          critical      => $opt->{fabric_fd_critical}, },
-    dump_detail      => $opt->{dump_detail},
+    read_only        => { should_be => undef },
   };
+  $self= { %$self, %$opt };
   bless $self => $class;
 
   eval

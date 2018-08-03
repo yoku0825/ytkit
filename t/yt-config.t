@@ -75,8 +75,6 @@ subtest "options from command-line" => sub
     quoted_long_without_equal  => "QUOTED_LONG_WITHOUT_EQUAL",
     quoted_short_with_equal    => "QUOTED_SHORT_WITH_EQUAL",
     quoted_short_without_equal => "QUOTED_SHORT_WITHOUT_EQUAL",
-    orig_argv                  => \@test_argv,
-    left_argv                  => ["this_should_be_left_in_argv", "this_should_be_left_in_argv_too"],
   };
   
   my @expected_argv= qw{ this_should_be_left_in_argv this_should_be_left_in_argv_too };
@@ -127,8 +125,8 @@ subtest "isa and hyphen-minus-normalization" => sub
     test_regexp_isa_success => { isa => qr{test} },
     normalize_hyphen_option => { alias => ["normalize-hyphen-option"] },
     normalize_underscore    => { alias => ["normalize_underscore"] },
-    test_noarg_isa          => { alias => ["noarg"], isa => "noarg" },
-    test_multiple_isa       => { alias => ["multiple"], isa => "multi" },
+    test_noarg_isa          => { alias => ["noarg"], noarg => 1 },
+    test_multiple           => { alias => ["multiple"], multi => 1 },
   };
   
   my @test_argv= qw{
@@ -156,12 +154,8 @@ subtest "isa and hyphen-minus-normalization" => sub
     normalize_hyphen_option => "ALIAS_USES_HYPHEN_BUT_OPTION_SPECIFIED_UNDERSCORE",
     normalize_underscore    => "ALIAS_USES_UNDERSCORE_BUT_OPTION_SPECIFIED_HYPHEN",
     test_noarg_isa          => 1,
-    test_multiple_isa       => [qw{a b}],
-    orig_argv               => \@test_argv,
-    left_argv               => ["this_should_be_left_in_argv_because_noarg", "this_should_be_left_in_argv"],
- 
+    test_multiple           => [qw{a b}],
   };
-  
   my @expected_argv= qw{ this_should_be_left_in_argv_because_noarg this_should_be_left_in_argv };
   my ($got_opt, @got_argv)= options($option_struct, @test_argv);
   is_deeply($got_opt, $expected_opt, "Options by Ytkit::Config::options");
@@ -188,13 +182,11 @@ subtest "hash-style option" => sub
   
   my $expected_opt= 
   {
-    parent_child1 => "ccc",
-    parent_child2 => "bbb",
-    parent_child3 => "eee",
-    orig_argv     => \@test_argv,
-    left_argv     => ["this_should_be_left_in_argv"],
+    parent => { child1 => "ccc",
+                child2 => "bbb", 
+                child3 => "eee", },
   };
-  
+
   my @expected_argv= qw{ this_should_be_left_in_argv };
   my ($got_opt, @got_argv)= options($option_struct, @test_argv);
   is_deeply($got_opt, $expected_opt, "Options by Ytkit::Config::options");
@@ -218,15 +210,12 @@ subtest "test for space-including value" => sub
                   qq{--singlequoted_space_with_equal="s p a c e 3"},
                   qq{--singlequoted_space_without_equal}, qq{"s p a c e 4"},
                   "this_should_be_left_in_argv",);
-  
   my $expected_opt= 
   {
     doublequoted_space_with_equal    => "s p a c e 1",
     doublequoted_space_without_equal => "s p a c e 2",
     singlequoted_space_with_equal    => "s p a c e 3",
     singlequoted_space_without_equal => "s p a c e 4",
-    orig_argv                        => \@test_argv,
-    left_argv                        => ["this_should_be_left_in_argv"],
   };
   
   my @expected_argv= qw{ this_should_be_left_in_argv };

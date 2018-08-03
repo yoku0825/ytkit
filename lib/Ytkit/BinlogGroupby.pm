@@ -45,6 +45,7 @@ sub new
   my ($opt, @argv)= options($default_option, @orig_argv);
   return -255 if $opt->{help};
   return -254 if $opt->{version};
+  return -253 if @argv;
 
   my ($header_parser, $print_format)= set_parser($opt->{cell});
   return 0 unless $header_parser;

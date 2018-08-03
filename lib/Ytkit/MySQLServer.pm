@@ -37,7 +37,7 @@ sub new
   {
     _hostname => undef,
     _version  => undef,
-    timeout   => $opt->{timeout} ? $opt->{timeout} : 10,
+    timeout   => $opt->{timeout},
   };
   bless $self => $class;
 

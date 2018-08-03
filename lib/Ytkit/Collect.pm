@@ -48,12 +48,20 @@ my $default_option=
                       output_name => { default => "slave_info" } },
   show_variables => { enable      => { default => 0 },
                       output_name => { default => "variable_info" } },
-  interval       => { alias => ["interval", "i", "sleep"], default => 600 },
-  iteration      => { alias => ["iteration", "count", "c"], default => 1 },
-  output         => { alias => ["output", "o"], default => "tsv", isa => [qw{tsv csv json sql}] },
-  record_path    => { alias => ["record-path", "r"], default => undef },
-  no_header      => { alias => ["no-header", "n"], default => 0, isa => "noarg" },
-  config_group   => { alias => ["config-group"], default => "yt-collect" },
+  interval       => { alias   => ["interval", "i", "sleep"],
+                      default => 600 },
+  iteration      => { alias   => ["iteration", "count", "c"],
+                      default => 1 },
+  output         => { alias   => ["output", "o"],
+                      default => "tsv",
+                      isa     => [qw{tsv csv json sql}] },
+  record_path    => { alias   => ["record-path", "r"],
+                      default => undef },
+  no_header      => { alias   => ["no-header", "n"],
+                      default => 0,
+                      noarg   => 1 },
+  config_group   => { alias => ["config-group"],
+                      default => "yt-collect" },
 };
 $default_option= { %$default_option, %$Ytkit::Config::CONNECT_OPTION, %$Ytkit::Config::COMMON_OPTION };
 
@@ -63,37 +71,16 @@ sub new
   my ($opt, @argv)= options($default_option, @orig_argv);
   return -255 if $opt->{help};
   return -254 if $opt->{version};
+  return -253 if @argv;
   load_config($opt, $opt->{config_file}, $opt->{config_group}) if $opt->{config_file};
 
   my $self=
   {
     instance       => {}, ### Reserve for Ytkit::MySQLServer
-    output         => $opt->{output},
-    interval       => $opt->{interval},
-    iteration      => $opt->{iteration},
-    record_path    => $opt->{record_path},
-    table_size     => { enable      => $opt->{table_size_enable},
-                        limit       => $opt->{table_size_limit},
-                        output_name => $opt->{table_size_output_name} },
-    table_latency  => { enable      => $opt->{table_latency_enable},
-                        limit       => $opt->{table_latency_limit},
-                        output_name => $opt->{table_latency_output_name} },
-    innodb_metrics => { enable      => $opt->{innodb_metrics_enable},
-                        output_name => $opt->{innodb_metrics_output_name} },
-    query_latency  => { enable      => $opt->{query_latency_enable},
-                        limit       => $opt->{query_latency_limit},
-                        output_name => $opt->{query_latency_output_name} },
-    show_status    => { enable      => $opt->{show_status_enable},
-                        output_name => $opt->{show_status_output_name} },
-    show_grants    => { enable      => $opt->{show_grants_enable},
-                        output_name => $opt->{show_grants_output_name} },
-    show_slave     => { enable      => $opt->{show_slave_enable},
-                        output_name => $opt->{show_slave_output_name} },
-    show_variables => { enable      => $opt->{show_variables_enable},
-                        output_name => $opt->{show_variables_output_name} },
     print_header   => !($opt->{no_header}),
     enable_list    => [],
   };
+  $self= { %$self, %$opt };
   bless $self => $class;
   eval
   {

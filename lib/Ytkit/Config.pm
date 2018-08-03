@@ -24,7 +24,7 @@ use utf8;
 
 use Exporter qw{import};
 our @EXPORT= qw{options load_config version};
-our $VERSION= '0.0.19';
+our $VERSION= '0.1.0';
 our $CONNECT_OPTION=
 {
   user     => { alias => ["u", "user"] },
@@ -43,51 +43,59 @@ our $COMMON_OPTION=
 
 sub options
 {
-  my ($option_struct, @argv)= @_;
-  my ($ret, @left_argv);
-  $ret->{orig_argv}= [@argv];
+  my ($definition, @argv)= @_;
+  my ($buffer, $dict, @left_argv);
+  #$buffer->{orig_argv}= [@argv];
 
+$DB::single= 1 if grep { $_ =~ /parent-child1/ } @argv;
   ### Normalize { parent => { child => { option_hash } } } style
   ###  to { parent_child => { option_hash } style.
-  while (my ($parent_key, $child)= each(%$option_struct))
+  while (my ($parent_key, $child)= each(%$definition))
   {
-    ### if already { parent => [alias1, alias2] } style, next.
-    next if !(ref($child) eq "HASH");
-
-    while (my ($child_key, $child_value)= each(%$child))
+    my $option;
+    if (ref($child) eq "HASH")
     {
-      ### decide { parent => { child => { .. } } } style or { parent => { default => .., } } style.
-      next if !(ref($child_value) eq "HASH");
-      my $new_option= sprintf("%s_%s", $parent_key, $child_key);
-      $option_struct->{$new_option}= $option_struct->{$parent_key}->{$child_key};
-      delete($option_struct->{$parent_key}->{$child_key});
+      ### Empty-hash "{ parent_key => {} }" comes here.
+      $child->{alias}= [$parent_key] if !(%$child);
 
-      ### Delete parent if all children are normalized.
-      delete($option_struct->{$parent_key}) unless %{$option_struct->{$parent_key}};
+      while (my ($child_key, $child_value)= each(%$child))
+      {
+        if (ref($child_value) eq "HASH")
+        {
+          ### { parent_key => { child_key => { default => .., } } } style.
+          my $option_name= sprintf("%s_%s", $parent_key, $child_key);
+
+          ### If alias is not set, its name set to alias
+          $child_value->{alias} ||= [$option_name];
+          $option= Ytkit::Config::Option->new($child_value);
+          $buffer->{$parent_key}->{$child_key}= $option;
+        }
+        else
+        {
+          ### { parent_key => { default => .., } } style.
+          ### If alias is not set, its name set to alias
+          $child->{alias} ||= [$parent_key];
+          $option= Ytkit::Config::Option->new($child);
+          $buffer->{$parent_key}= $option;
+        }
+
+        ### Making dict should be in loop.
+        foreach my $alias (@{$option->{alias}})
+        {
+          $dict->{$alias}= $option;
+        }
+      }
     }
-  }
-
-  ### Change struct from { variable => [expression1, expression2] }
-  ###   to { expression1 => variable, expression2 => variable, }
-  my $alias_dict;
-  foreach my $opt (keys(%$option_struct))
-  {
-    ### use option-name as variable-name if alias is not set.
-    if (ref($option_struct->{$opt}) eq "ARRAY")
+    else
     {
-      my $save= $option_struct->{$opt};
-      delete($option_struct->{$opt});
-      $option_struct->{$opt}->{alias}= $save;
+      ### Maybe { parent => ["aliases"] } style.
+      $option= Ytkit::Config::Option->new({ alias => [@$child] });
+      $buffer->{$parent_key}= $option;
     }
-    $option_struct->{$opt}->{alias} ||= [$opt];
-    foreach (@{$option_struct->{$opt}->{alias}})
-    {
-      ### Normalize "-" to "_" in key.
-      s/-/_/g;
-      $alias_dict->{$_}= $opt;
 
-      ### Set default value.
-      $ret->{$opt}= $option_struct->{$opt}->{default} if exists($option_struct->{$opt}->{default});
+    foreach my $alias (@{$option->{alias}})
+    {
+      $dict->{$alias}= $option;
     }
   }
 
@@ -95,140 +103,87 @@ sub options
   while(@argv)
   {
     last unless defined($argv[0]);
-    my ($key, $value);
     my $arg= shift(@argv);
 
-    if ($arg =~ /^--([^=]+)=(.*)$/)
+    my ($key, $value)= _simple_parse($arg);
+
+    if (defined($value))
     {
-      ### "--option=value" style.
-      ($key, $value)= ($1, $2);
+      ### ok
     }
-    elsif ($arg =~ /^--([^\s]+)$/)
+    else
     {
-      ### only "--option"(bool style) or first element in "--option value" style
-      $key= $1;
-
-      ### Decide bool style or "--option value" style.
-      my $next= shift(@argv);
-
-      ### Next element doesn't exists(last part of argv is evaluating now) or
-      ### next element starts with "-", current part is bool style option.
-      ###   TODO: How about a negative number?
-      if (!($next) || $next =~ /^-/)
+      if ($arg =~ /^--([^\s]+)$/)
       {
-        ### bool style.
-        $value= 1;
+        ### only "--option"(bool style) or first element in "--option value" style
+        $key= $1;
 
-        ### Write back next element.
-        unshift(@argv, $next);
-      }
-      else
-      {
-        ### "--option value" style.
-        $value= $next;
-      }
-    }
-    elsif ($arg =~ /^-([^=-])=(.*)$/)
-    {
-      ### "-o=value" style
-      ($key, $value)= ($1, $2);
-    }
-    elsif ($arg =~ /^-([^-])$/)
-    {
-      ### only "-o"(bool style) or first element in "-o value" style
-      $key= $1;
+        ### Decide bool style or "--option value" style.
+        my $next= shift(@argv);
 
-      ### Decide bool style or "-o value" style.
-      my $next= shift(@argv);
-
-      ### Next element doesn't exists(last part of argv is evaluating now) or
-      ### next element starts with "-", current part is bool style option.
-      ###   TODO: How about a negative number?
-      if (!($next) || $next =~ /^-/)
-      {
-        ### bool style.
-        $value= 1;
-
-        ### Write back next element.
-        unshift(@argv, $next);
-      }
-      else
-      {
-        ### "-o value" style.
-        $value= $next;
-      }
-    }
-    elsif ($arg =~ /^-([^-])(.+)$/)
-    {
-      ### -oValue style.
-      ($key, $value)= ($1, $2);
-    }
-
-    ### if any $key and $value is set, treated as argument and push into left_argv later.
-
-    ### Normalize "-" to "_" in $key.
-    $key =~ s/-/_/g if $key;
-
-    ### Is known option?
-    if ($key && $alias_dict->{$key})
-    {
-      if ($value =~ /^"([^"]*)/)
-      {
-        ### Start with doublequote should be ended with doublequote.
-        while (!($value =~ /"$/))
+        ### Next element doesn't exists(last part of argv is evaluating now) or
+        ### next element starts with "-", current part is bool style option.
+        ###   TODO: How about a negative number?
+        if (!($next) || $next =~ /^-/)
         {
-          $value .= " " . shift(@argv);
-        }
-        ### Trim doublequote.
-        $value =~ s/^"([^"]*)"$/$1/;
-      }
-      elsif ($value =~ /^'([^']*)/)
-      {
-        ### Start with singlequote should be ended with singlequote.
-        while (!($value =~ /'$/))
-        {
-          $value .= " " . shift(@argv);
-        }
-        ### Trim singlequote
-        $value =~ s/^'([^']*)'$/$1/;
-      }
+          ### bool style.
+          $value= 1;
 
-      ### isa is set?
-      if (my $isa= $option_struct->{$alias_dict->{$key}}->{isa})
-      {
-        ### Validation.
-        if (ref($isa) eq "ARRAY")
-        {
-          ### Array-style isa, grep
-          $ret->{$alias_dict->{$key}}= ((grep {$value eq $_} @$isa) ? $value : undef);
-        }
-        elsif (ref($isa) eq "Regexp")
-        {
-          ### Evaluate regexp
-          $ret->{$alias_dict->{$key}}= (($value =~ $isa) ? $value : undef);
-        }
-        elsif ($isa eq "noarg" || $isa eq "NOARG")
-        {
-          ### Force set 1 and return $value into @argv if isa eq "bool"
-          $ret->{$alias_dict->{$key}}= 1;
-          unshift(@argv, $value);
-        }
-        elsif ($isa eq "multi" || $isa eq "MULTI" || $isa eq "multiple" || $isa eq "MULTIPLE")
-        {
-          ### Multiple choise (store into array) option.
-          ###  TODO: How to validate each value?
-          push(@{$ret->{$alias_dict->{$key}}}, $value);
+          ### Write back next element.
+          unshift(@argv, $next);
         }
         else
         {
-          ### isa is non-supported type.
-          $ret->{$alias_dict->{$key}}= undef;
+          ### "--option value" style.
+          $value= $next;
         }
+      }
+      elsif ($arg =~ /^-([^-])$/)
+      {
+        ### only "-o"(bool style) or first element in "-o value" style
+        $key= $1;
+
+        ### Decide bool style or "-o value" style.
+        my $next= shift(@argv);
+
+        ### Next element doesn't exists(last part of argv is evaluating now) or
+        ### next element starts with "-", current part is bool style option.
+        ###   TODO: How about a negative number?
+        if (!($next) || $next =~ /^-/)
+        {
+          ### bool style.
+          $value= 1;
+
+          ### Write back next element.
+          unshift(@argv, $next);
+        }
+        else
+        {
+          ### "-o value" style.
+          $value= $next;
+        }
+      }
+      $key =~ s/-/_/g if $key;
+    }
+
+    ### if any $key and $value is not set, treated as argument and push into left_argv later.
+
+    ### Is known option?
+    if ($key && $dict->{$key})
+    {
+      if ($dict->{$key}->{noarg})
+      {
+        $dict->{$key}->set_value(1);
+        ### Force set 1 and return $value into @argv if isa eq "bool"
+        unshift(@argv, $value);
       }
       else
       {
-        ### Don't need to validate.
-        $ret->{$alias_dict->{$key}}= $value;
+        while ($dict->{$key}->set_value($value) == 0)
+        {
+          ### if $value was quoted and include space, need more argument.
+          $value .= " " . shift(@argv);
+        }
       }
     }
     else
@@ -238,9 +193,68 @@ sub options
     }
     ($key, $value)= ();
   } ### End while parsing argument.
-  $ret->{left_argv}= [@left_argv];
+  #$buffer->{left_argv}= [@left_argv];
+
+  my $ret;
+  while (my ($key, $value)= each(%$buffer))
+  {
+    if (ref($value) eq "Ytkit::Config::Option")
+    {
+      $ret->{$key}= $value->{value};
+    }
+    else
+    {
+      ### Recursive
+      while (my ($child_key, $child_value)= each(%$value))
+      {
+        $ret->{$key}->{$child_key}= $child_value->{value};
+      }
+    }
+  }
 
   return $ret, @left_argv;
+}
+
+sub _simple_parse
+{
+  my ($arg)= @_;
+  my ($key, $value);
+
+  if ($arg =~ /^--([^=]+)=(.*)$/)
+  {
+    ### "--option=value" style.
+    ($key, $value)= ($1, $2);
+  }
+  elsif ($arg =~ /^--([^\s]+)$/)
+  {
+    ### Can't decide simply.
+    ### Should decide bool style or "--option value" style.
+    return undef;
+  }
+  elsif ($arg =~ /^-([^-])$/)
+  {
+    ### Can't decide simply.
+    ### Should decide bool style or "-o value" style.
+    return undef;
+  }
+  elsif ($arg =~ /^-([^=-])=(.*)$/)
+  {
+    ### "-o=value" style
+    ($key, $value)= ($1, $2);
+  }
+  elsif ($arg =~ /^-([^-])(.+)$/)
+  {
+    ### -oValue style.
+    ($key, $value)= ($1, $2);
+  }
+  else
+  {
+    return undef;
+  }
+
+  ### Normalize "-" to "_"
+  $key =~ s/-/_/g;
+  return ($key, $value);
 }
 
 sub load_config
@@ -301,6 +315,120 @@ sub load_config
 sub version
 {
   return $VERSION;
+}
+
+
+package Ytkit::Config::Option;
+
+use strict;
+use warnings;
+use utf8;
+use Carp qw{carp};
+
+sub new
+{
+  my ($class, $opt)= @_;
+  my $self;
+
+  if (ref($opt) eq "ARRAY")
+  {
+    ### { param_name => ["aliases"] } style.
+    $self->{alias}= $opt;
+  }
+  elsif (ref($opt) eq "HASH")
+  {
+    $self=
+    {
+      multi   => $opt->{multi} // undef,
+      noarg   => $opt->{noarg} // undef,
+      isa     => $opt->{isa} // undef,
+      value   => $opt->{multi} ? 
+                   $opt->{default} ? [$opt->{default}] : [] :
+                   $opt->{default} // undef,
+      alias   => _normalize_hyphen($opt->{alias}) // undef,
+    }
+  }
+
+  bless $self => $class;
+  return $self;
+}
+
+sub _normalize_hyphen
+{
+  my ($array)= @_;
+  return undef if !($array);
+  my @ret;
+
+  foreach (@$array)
+  {
+    s/-/_/g;
+    push(@ret, $_);
+  }
+  return \@ret;
+}
+
+sub set_value
+{
+  my ($self, $value)= @_;
+
+  ### Return 0 means 
+  ###   "Need next argument, please call me again with next argument"
+  if ($value =~ /^"([^"]*)/)
+  {
+    ### Start with doublequote should be ended with doublequote.
+    return 0 if !($value =~ /"$/);
+
+    ### Trim doublequote.
+    $value =~ s/^"([^"]*)"$/$1/;
+  }
+  elsif ($value =~ /^'([^']*)/)
+  {
+    ### Start with singlequote should be ended with singlequote.
+    return 0 if !($value =~ /'$/);
+
+    ### Trim singlequote
+    $value =~ s/^'([^']*)'$/$1/;
+  }
+
+  if ($self->{multi})
+  {
+    push(@{$self->{value}}, $value);
+  }
+  else
+  {
+    if (_check_isa($value, $self->{isa}))
+    {
+      $self->{value}= $value;
+    }
+    else
+    {
+      my $msg= sprintf("%s is not satisfied %s", $value,
+                       ref($self->{isa}) eq "ARRAY" ?
+                         "[" . join(", ", @{$self->{isa}}) . "]" :
+                         $self->{isa});
+
+      carp($msg);
+    }
+  }
+  return 1;
+}
+
+sub _check_isa
+{
+  my ($value, $isa)= @_;
+  return 1 if !(defined($isa));
+
+  ### Validation.
+  if (ref($isa) eq "ARRAY")
+  {
+    ### Array-style isa, grep
+    return grep {$value eq $_} @$isa;
+  }
+  elsif (ref($isa) eq "Regexp")
+  {
+    ### Evaluate regexp
+    return $value =~ $isa;
+  }
 }
 
 return 1;

@@ -20,15 +20,18 @@ package Ytkit::WaitReplication;
 
 use strict;
 use warnings;
-use v5.10;
+use utf8;
+use Carp qw{carp croak};
 
 use Ytkit::Config;
 use Ytkit::HealthCheck;
 
 my $default_option=
 {
-  silent => { alias => ["silent", "s", "quiet", "q"], default => 1},
-  sleep  => { alias => ["sleep", "interval", "i"], default => 3 },
+  silent => { alias => ["silent", "s", "quiet", "q"],
+              default => 1},
+  sleep  => { alias => ["sleep", "interval", "i"],
+              default => 3 },
   seconds_behind_master => { default => 5 },
 };
 $default_option= { %$default_option, %$Ytkit::Config::CONNECT_OPTION, %$Ytkit::Config::COMMON_OPTION };
@@ -42,19 +45,22 @@ sub new
   my ($opt, @argv)= options($default_option, @orig_argv);
   return -255 if $opt->{help};
   return -254 if $opt->{version};
+  return -253 if @argv;
 
   my $self=
   {
-    user                  => $opt->{user},
-    host                  => $opt->{host},
-    port                  => $opt->{port},
-    socket                => $opt->{socket},
-    password              => $opt->{password},
-    sleep                 => $opt->{sleep},
-    silent                => $opt->{silent},
     timeout               => $opt->{timeout},
-    seconds_behind_master => $opt->{seconds_behind_master},
+    healthcheck_opt       => ["--role", "none",
+                              "--slave_status_warning", $opt->{seconds_behind_master},
+                              "--slave_status_critical", 4294967295,
+                              "--user", $opt->{user} // "", 
+                              "--host", $opt->{host} // "",
+                              "--port", $opt->{port} // 3306,
+                              "--socket", $opt->{socket} // "",
+                              "--password", $opt->{password} // ""],
+ 
   };
+  $self= { %$self, %$opt };
   bless $self => $class;
 
   return $self;
@@ -69,15 +75,8 @@ sub wait_slave
   while ()
   {
     ### Report CRITICAL only when I/O and/or SQL threads have stopped.
-    my $healthcheck= Ytkit::HealthCheck->new("--role", "none",
-                                             "--slave_status_warning", $self->{seconds_behind_master},
-                                             "--slave_status_critical", 4294967295,
-                                             "--user", $self->{user} ? $self->{user} : "",
-                                             "--host", $self->{host} ? $self->{host} : "",
-                                             "--port", $self->{port} ? $self->{port} : 3306,
-                                             "--socket", $self->{socket} ? $self->{socket} : "",
-                                             "--password", $self->{password} ? $self->{password} : "");
-    die($healthcheck->{status}->{output}) 
+    my $healthcheck= Ytkit::HealthCheck->new(@{$self->{healthcheck_opt}});
+    croak($healthcheck->{status}->{output}) 
       if $healthcheck->{status}->{exit_code} eq Ytkit::HealthCheck::NAGIOS_CRITICAL->{exit_code};
 
     $healthcheck->check_slave_status;
@@ -95,7 +94,9 @@ sub wait_slave
       if (($wait_count * $self->{sleep}) > $self->{timeout})
       {
         ### Retry out.
-        die("Retrying $wait_count times each $self->{sleep} seconds but Seconds_Behind_Master still exceeds $self->{seconds_behind_master}!");
+        my $msg= sprintf("Retrying %d times each %d seconds but Seconds_Behind_Master still exceeds %d.",
+                         $wait_count, $self->{sleep}, $self->{seconds_behind_master});
+        croak($msg);
       }
       else
       {
@@ -106,7 +107,7 @@ sub wait_slave
     {
       ### yt-healthcheck can't connect server or I/O and/or SQL thread has stopped.
       print("yt-healthcheck returns Unexpected return-code. aborting.\n") if !($self->{silent});
-      die($healthcheck->print_status);
+      croak($healthcheck->print_status);
     }
   }
 }

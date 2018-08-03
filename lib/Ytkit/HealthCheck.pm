@@ -235,7 +235,9 @@ sub print_status
   printf("%s on %s: %s (%s)\n%s",
          $self->{status}->{str}, $self->hostname,
          $self->{output}, $self->{role},
-         $self->{dump_detail} ? "-  Details in " . $self->{dump_detail} : "");
+         $self->{dump_detail} && $self->{status}->{exit_code} ne NAGIOS_OK->{exit_code} ? 
+           "-  Details in " . $self->{dump_detail} : 
+           "");
 }
 
 sub check_long_query

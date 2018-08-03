@@ -557,6 +557,9 @@ sub dump_detail
   ### Don't dump information when status is OK.
   return 0 if $self->{status}->{exit_code} eq NAGIOS_OK->{exit_code};
 
+  ### mikasafabric could not dump information.
+  return 0 if $self->{role} eq "fabric";
+
   my $fh;
   eval
   {

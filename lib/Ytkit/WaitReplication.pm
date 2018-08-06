@@ -53,11 +53,11 @@ sub new
     healthcheck_opt       => ["--role", "none",
                               "--slave_status_warning", $opt->{seconds_behind_master},
                               "--slave_status_critical", 4294967295,
-                              "--user", $opt->{user} // "", 
-                              "--host", $opt->{host} // "",
+                              "--user", $opt->{user} // "''", 
+                              "--host", $opt->{host} // "''",
                               "--port", $opt->{port} // 3306,
-                              "--socket", $opt->{socket} // "",
-                              "--password", $opt->{password} // ""],
+                              "--socket", $opt->{socket} // "''",
+                              "--password", $opt->{password} // "''"],
  
   };
   $self= { %$self, %$opt };
@@ -83,7 +83,7 @@ sub wait_slave
 
     if ($healthcheck->{status}->{exit_code} eq Ytkit::HealthCheck::NAGIOS_OK->{exit_code})
     {
-      ### return.
+      ### Seconds_behind_master < threshold, return.
       return 0;
     }
     elsif ($healthcheck->{status}->{exit_code} eq Ytkit::HealthCheck::NAGIOS_WARNING->{exit_code})

@@ -40,6 +40,14 @@ elsif ($prog == -254)
   printf("%s - %s\n", $0, Ytkit::Config::version());
   exit 0;
 }
+elsif ($prog == -253)
+{
+  ### Error.
+  pod2usage({ -message => "Unknown option was specified.",
+              -verbose => 1 });
+  exit 1;
+}
+
 
 exit $prog->wait_slave;
 

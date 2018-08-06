@@ -40,11 +40,19 @@ elsif ($prog == -254)
   printf("%s - %s\n", $0, Ytkit::Config::version());
   exit 0;
 }
+elsif ($prog == -253)
+{
+  ### Error.
+  pod2usage({ -message => "Unknown option was specified.",
+              -verbose => 1 });
+  exit 1;
+}
 elsif ($prog == 0)
 {
   ### Error.
   pod2usage({ -message => "--cell value is invalid.",
               -verbose => 1 });
+  exit 1;
 }
 
 ### read from stdin.

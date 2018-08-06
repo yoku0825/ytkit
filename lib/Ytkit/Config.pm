@@ -45,9 +45,7 @@ sub options
 {
   my ($definition, @argv)= @_;
   my ($buffer, $dict, @left_argv);
-  #$buffer->{orig_argv}= [@argv];
 
-$DB::single= 1 if grep { $_ =~ /parent-child1/ } @argv;
   ### Normalize { parent => { child => { option_hash } } } style
   ###  to { parent_child => { option_hash } style.
   while (my ($parent_key, $child)= each(%$definition))
@@ -193,7 +191,6 @@ $DB::single= 1 if grep { $_ =~ /parent-child1/ } @argv;
     }
     ($key, $value)= ();
   } ### End while parsing argument.
-  #$buffer->{left_argv}= [@left_argv];
 
   my $ret;
   while (my ($key, $value)= each(%$buffer))

@@ -404,7 +404,7 @@ sub set_value
                          "[" . join(", ", @{$self->{isa}}) . "]" :
                          $self->{isa});
 
-      carp($msg);
+      carp($msg) if !($ENV{HARNESS_ACTIVE});
     }
   }
   return 1;

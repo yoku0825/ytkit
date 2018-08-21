@@ -21,6 +21,7 @@ package Ytkit::Config;
 use strict;
 use warnings;
 use utf8;
+use Carp qw{carp};
 
 use Exporter qw{import};
 our @EXPORT= qw{options load_config version};
@@ -37,17 +38,19 @@ our $CONNECT_OPTION=
 our $COMMON_OPTION=
 {
   help        => { alias => ["help", "usage"] },
+  verbose     => { alias => ["verbose", "v"] },
+  silent      => { alias => ["silent", "quiet", "s"] },
   version     => { alias => ["version", "V"], default => 0 },
   config_file => { alias => ["c", "config-file"] },
 };
 
-sub options
+sub new
 {
-  my ($definition, @argv)= @_;
-  my ($buffer, $dict, @left_argv);
+  my ($class, $definition)= @_;
+  my ($buffer, $dict);
 
   ### Normalize { parent => { child => { option_hash } } } style
-  ###  to { parent_child => { option_hash } style.
+  ###  to { parent_child => { option_hash } } style.
   while (my ($parent_key, $child)= each(%$definition))
   {
     my $option;
@@ -96,6 +99,29 @@ sub options
       $dict->{$alias}= $option;
     }
   }
+  my $self=
+  {
+    dict   => $dict,
+    buffer => $buffer,
+  };
+
+  bless $self => $class;
+  return $self;
+}
+
+sub options
+{
+  ### Deprecated, left for compatibility
+  my ($definition, @argv)= @_;
+  my $config= Ytkit::Config->new($definition);
+  return $config->parse_argv(@argv);
+}
+
+
+sub parse_argv
+{
+  my ($self, @argv)= @_;
+  my @left_argv;
 
   ### Evaluate arguments
   while(@argv)
@@ -111,12 +137,13 @@ sub options
     }
     else
     {
-      if ($arg =~ /^--([^\s]+)$/)
+      if ($arg =~ /^--([^\s]+)$/ || $arg =~ /^-([^-])$/)
       {
-        ### only "--option"(bool style) or first element in "--option value" style
+        ### "--option"(bool style) or first element in "--option value" style
+        ###   or "-o"(bool style) or first element in "-o value" style
         $key= $1;
 
-        ### Decide bool style or "--option value" style.
+        ### Decide bool style or "--option value", "-o value" style.
         my $next= shift(@argv);
 
         ### Next element doesn't exists(last part of argv is evaluating now) or
@@ -136,48 +163,24 @@ sub options
           $value= $next;
         }
       }
-      elsif ($arg =~ /^-([^-])$/)
-      {
-        ### only "-o"(bool style) or first element in "-o value" style
-        $key= $1;
-
-        ### Decide bool style or "-o value" style.
-        my $next= shift(@argv);
-
-        ### Next element doesn't exists(last part of argv is evaluating now) or
-        ### next element starts with "-", current part is bool style option.
-        ###   TODO: How about a negative number?
-        if (!($next) || $next =~ /^-/)
-        {
-          ### bool style.
-          $value= 1;
-
-          ### Write back next element.
-          unshift(@argv, $next);
-        }
-        else
-        {
-          ### "-o value" style.
-          $value= $next;
-        }
-      }
       $key =~ s/-/_/g if $key;
     }
 
     ### if any $key and $value is not set, treated as argument and push into left_argv later.
 
     ### Is known option?
-    if ($key && $dict->{$key})
+    my $opt= $key ? $self->{dict}->{$key} // undef : undef;
+    if ($opt)
     {
-      if ($dict->{$key}->{noarg})
+      if ($opt->{noarg})
       {
-        $dict->{$key}->set_value(1);
+        $opt->set_value(1);
         ### Force set 1 and return $value into @argv if isa eq "bool"
         unshift(@argv, $value);
       }
       else
       {
-        while ($dict->{$key}->set_value($value) == 0)
+        while ($opt->set_value($value) == 0)
         {
           ### if $value was quoted and include space, need more argument.
           $value .= " " . shift(@argv);
@@ -193,7 +196,7 @@ sub options
   } ### End while parsing argument.
 
   my $ret;
-  while (my ($key, $value)= each(%$buffer))
+  while (my ($key, $value)= each(%{$self->{buffer}}))
   {
     if (ref($value) eq "Ytkit::Config::Option")
     {
@@ -208,6 +211,8 @@ sub options
       }
     }
   }
+  $self->{result}= $ret;
+  $self->{left_argv}= \@left_argv;
 
   return $ret, @left_argv;
 }
@@ -258,12 +263,15 @@ sub load_config
 {
   my ($opt, $config_file, $config_section)= @_;
 
-  ### return as is.
-  return $opt unless -r $config_file;
+  if (!(-r $config_file))
+  {
+    carp("$config_file isn't readable or not found");
+    return $opt;
+  }
 
   open(my $fh, "<", $config_file);
 
-  my $current_section= "";
+  my $current_section= 1; ### MAGIC_NUMBER for unknown section
   while (my $line= <$fh>)
   {
     chomp($line);
@@ -295,12 +303,11 @@ sub load_config
       $value =~ s/^"([^"]*)"$/$1/;
       $value =~ s/^'([^']*)'$/$1/;
       
-      ### Add $original_opt(options from command-line) only that doesn't exist.
       $opt->{$key} ||= $value;
     }
     else
     {
-      ### Add $original_opt(options from command-line) only that doesn't exist.
+      ### Only key.
       $opt->{$line} ||= 1;
     }
   }

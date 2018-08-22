@@ -200,7 +200,12 @@ subtest "SHOW SLAVE STATUS" => sub
   done_testing;
 };
 
-
+subtest "config description" => sub
+{
+  my $prog2= Ytkit::Collect->new;
+  unlike($prog2->help, qr/FIXME/, "config description shouldn't have FIXME");
+  done_testing;
+};
 
 done_testing;
 

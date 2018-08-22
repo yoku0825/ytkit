@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+package Ytkit;
 
 ########################################################################
 # Copyright (C) 2018  yoku0825
@@ -21,18 +21,53 @@
 use strict;
 use warnings;
 use utf8;
-binmode STDOUT, ":utf8";
 
-use FindBin qw/$Bin/;
-use lib "$Bin/../lib";
-use Ytkit::Collect;
+use Ytkit::Config;
 
-if (my $prog= Ytkit::Collect->new(@ARGV))
+sub help
 {
-  $prog->collect;
-}
-else
-{
-  return 1;
+  my ($self)= @_;
+  return sprintf("%s\n%s\n\n%s",
+                 $self->{_config}->help,
+                 $self->version,
+                 $self->usage);
 }
 
+sub usage
+{
+  my ($self)= @_;
+  return $self->{_config}->usage;
+}
+
+sub version
+{
+  my ($self)= @_;
+  return $self->{_config}->version;
+}
+
+sub handle_help
+{
+  my ($self)= @_;
+
+  if ($self->{help})
+  {
+    print $self->help;
+    exit 0;
+  }
+  elsif ($self->{version})
+  {
+    print $self->version;
+    exit 0;
+  }
+  elsif (@{$self->{_config}->{left_argv}} && $self->{_config}->{_allow_extra_argv} == 0)
+  {
+    ### script doesn't allow bare argument.
+    my $msg= sprintf("You give unknown argument(s) [%s]\n\n",
+                     join(" ", @{$self->{_config}->{left_argv}}));
+    warn($msg);
+    print STDERR $self->usage;
+    exit 3;
+  }
+}
+
+return 1;

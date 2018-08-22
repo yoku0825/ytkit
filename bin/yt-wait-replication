@@ -22,92 +22,16 @@ use strict;
 use warnings;
 use utf8;
 binmode STDOUT, ":utf8";
-use Pod::Usage;
 
 use FindBin qw/$Bin/;
 use lib "$Bin/../lib";
 use Ytkit::WaitReplication;
 
-my $prog= Ytkit::WaitReplication->new(@ARGV);
-
-if ($prog == -255)
+if (my $prog= Ytkit::WaitReplication->new(@ARGV))
 {
-  pod2usage({ -verbose => 2 });
-  exit 0;
+  exit $prog->wait_slave;
 }
-elsif ($prog == -254)
+else
 {
-  printf("%s - %s\n", $0, Ytkit::Config::version());
-  exit 0;
+  return 1;
 }
-elsif ($prog == -253)
-{
-  ### Error.
-  pod2usage({ -message => "Unknown option was specified.",
-              -verbose => 1 });
-  exit 1;
-}
-
-
-exit $prog->wait_slave;
-
-
-__END__
-
-=encoding utf8
-
-=head1 SCRIPT NAME
-
-yt-wait-replication - Script that waiting for Seconds_Behind_Master is less than specified value
-
-=head1 SYNOPSIS
-
-  $ yt-wait-replication --host=your_mysql_host --port=your_mysql_port --user=your_mysql_account --password=your_password --seconds-behind-master=5 --sleep=3 --timeout=180
-
-=head1 DESCRIPTION
-
-yt-wait-replication only waits for Seconds_Behind_Master is less than --seconds-behind-master
-
-  yt-wait-replication returns 0 if Seconds_Behind_Master < --seconds-behind-master during --timeout seconds.
-  yt-wait-replication dies when mysqld dies or replication thread(s) not running, or Seconds_Behind_Master > --seconds-behind-master after --timeout seconds.
-
-=head1 OPTIONS
-
-=head2 --host=string, -h string
-
-MySQL host.
-
-=head2 --port=integer, -P integer
-
-MySQL port number.
-
-=head2 --socket=string, -S string
-
-Path to mysql.sock (this parameter is used when --host=localhost)
-
-=head2 --user=string, -u string
-
-MySQL account using for connection and checking
-(need REPLICATION CLIENT and PROCESSLIST and global SELECT priv)
-
-=head2 --password=string, -p string
-
-Password for the user specified by --user
-
-=head2 --seconds-behind-master=integer (default: 5)
-
-Wait until Seconds_Behind_Master get to be less than this value.
- 
-=head2 --timeout=int(default: 1800)
-
-Seconds for scripts running(timeout when --timeout < retry_count * sleep_interval)
-
-=head2 --silent (default: 1)
-
-Print nothing during retry-loop.
-
-=head2 --sleep=int (default: 3)
-
-Interval seconds in each retry-loop iteration.
-
-=cut

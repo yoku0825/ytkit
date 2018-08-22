@@ -302,7 +302,16 @@ subtest "--role=fabric" => sub
     my $uuid= grep {$row->{uuid} eq $_} qw{bb48b5d4-f1d9-11e7-b79f-40a8f0226cd8 0604c90e-4b59-11e7-b7fb-525400101084 f9536993-4b55-11e7-8791-525400101085};
     is($uuid, 1, "Getting fabric-uuid ");
   }
+  done_testing;
 };
+
+subtest "config description" => sub
+{
+  unlike($prog->help, qr/FIXME/, "config description shouldn't have FIXME");
+  done_testing;
+};
+
+
 
 done_testing;
 

@@ -29,4 +29,10 @@ use Ytkit::WaitReplication;
 no warnings "once";
 ok(my $prog= Ytkit::WaitReplication->new, "Create instance");
 
+subtest "config description" => sub
+{
+  unlike($prog->help, qr/FIXME/, "config description shouldn't have FIXME");
+  done_testing;
+};
+
 done_testing;

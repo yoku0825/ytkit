@@ -45,6 +45,13 @@ subtest "--group-by=all,exec" => sub
   run_test("mysqlbinlog_sbr_80.txt", "mysqlbinlog_sbr_80_allexec_1m_tsv.r", @option);
 };
 
+subtest "config description" => sub
+{
+  my $prog= Ytkit::BinlogGroupby->new();
+  unlike($prog->help, qr/FIXME/, "config description shouldn't have FIXME");
+  done_testing;
+};
+
 done_testing;
 
 

@@ -21,57 +21,37 @@ package Ytkit::BinlogGroupby;
 use strict;
 use warnings;
 use utf8;
+use base "Ytkit";
 
-use Ytkit::Config;
-
-my $default_option=
+use constant
 {
-  cell     => { alias => ["cell", "c"],
-                isa   => [qw{s second 1s 10s m minute 1m 10m h hour 1h}],
-                default => "10m" },
-  group_by => { alias => ["group-by", "g"],
-                default => "time" },
-  output   => { alias => ["output", "o"],
-                default => "tsv" },
-  print_header => ["print_header"],
-  help     => { alias => ["help", "usage", "h"] },
-  verbose  => { alias => ["verbose", "v"], default => 0 },
-  version  => { alias => ["version", "V"], default => 0 },
+  SBR_REGEX => qr/^(insert|update|delete|replace)\s+(?:ignore\s+)?(?:(?:into|from)?\s+)?(\S+?)\s+/i,
+  RBR_REGEX => qr/^\#\#\#\s+(INSERT|UPDATE|DELETE)\s+(?:(?:INTO|FROM)?\s+)?(\S+)/,
 };
-$default_option= { %$default_option, %$Ytkit::Config::COMMON_OPTION };
+
+my $synopsis= q{ $ mysqlbinlog -vv /path/to/binlog | yt-binlog-groupby [options] };
+my $script= sprintf("%s - MySQL binlog aggregator cli", $0);
+my $description= << "EOS";
+yt-binlog-groupby aggregates stdout of mysqlbinlog.
+EOS
+my $allow_extra_arvg= 0;
+my $config= _config();
+
 
 sub new
 {
   my ($class, @orig_argv)= @_;
-  my ($opt, @argv)= options($default_option, @orig_argv);
-  return -255 if $opt->{help};
-  return -254 if $opt->{version};
-  return -253 if @argv;
+  $config->parse_argv(@orig_argv);
 
-  my ($header_parser, $print_format)= set_parser($opt->{cell});
-  return 0 unless $header_parser;
-
-  my $self=
-  {
-    cell            => $opt->{cell},
-    output          => $opt->{output},
-    print_header    => $opt->{print_header},
-    group_by        => sort_csv($opt->{group_by}),
-    print_format    => $print_format,
-    time_string     => undef,
-    first_seen      => undef,
-    last_seen       => undef,
-    exec_time       => undef,
-    current_schema  => undef,
-    header_parser   => $header_parser,
-    count_hash      => undef,
-    exec_time_hash  => undef,
-    verbose         => $opt->{verbose},
-    sbr_regex       => qr/^(insert|update|delete|replace)\s+(?:ignore\s+)?(?:(?:into|from)?\s+)?(\S+?)\s+/i,
-    rbr_regex       => qr/^\#\#\#\s+(INSERT|UPDATE|DELETE)\s+(?:(?:INTO|FROM)?\s+)?(\S+)/,
-  };
-
+  my $self= { _config => $config,
+              %{$config->{result}} };
   bless $self => $class;
+  $self->handle_help;
+
+  $self->{group_by}= sort_csv($self->{group_by});
+  $self->set_parser;
+  return 0 if !($self->{header_parser}) || !($self->{print_format});
+
   return $self;
 }
 
@@ -95,8 +75,7 @@ sub parse
     $self->{current_schema} =~ s/`//g;
   }
   ### parsing dml-line (only parse simple INSERT, UPDATE, DELETE, REPLACE)
-  elsif ($line =~ $self->{sbr_regex} ||
-         $line =~ $self->{rbr_regex})
+  elsif ($line =~ SBR_REGEX || $line =~ RBR_REGEX)
   {
     my ($dml, $table)= (uc($1), lc($2));
     $table =~ s/`//g;
@@ -165,7 +144,7 @@ sub output
 
   printf("binlog entries between %s and %s\n",
          sprintf($self->{print_format}, $self->{first_seen}),
-         sprintf($self->{print_format}, $self->{last_seen})) if $self->{print_header};
+         sprintf($self->{print_format}, $self->{last_seen})) if $self->{verbose};
 
   my $count_hash    = $self->{count_hash};
   my $exec_time_hash= $self->{exec_time_hash};
@@ -271,8 +250,9 @@ sub build_line
 ### set regexp for parsing datetime.
 sub set_parser
 {
-  my ($cell)= @_;
+  my ($self)= @_;
   my ($parse, $format);
+  my $cell= $self->{cell};
 
   if (grep { $cell eq $_ } qw{d day 1d})
   {
@@ -309,8 +289,8 @@ sub set_parser
     $parse = undef;
     $format= undef;
   }
-
-  return ($parse, $format);
+  $self->{header_parser}= $parse;
+  $self->{print_format} = $format;
 }
 
 sub compare_csv
@@ -333,5 +313,33 @@ sub compare_groupby
   }
   return 0;
 }
+
+sub _config
+{
+  my $yt_binloggroupby_option=
+  {
+    cell     => { alias => ["cell", "c"],
+                  isa   => [qw{s second 1s 10s m minute 1m 10m h hour 1h}],
+                  default => "10m",
+                  text  => "Unit of aggregation." },
+    group_by => { alias => ["group-by", "g"],
+                  default => "time",
+                  text  => qq{Part of aggregation.\n} .
+                           qq{  "time" [default], "table", "statement", "time,table", "time,statement",\n} .
+                           qq{  "table,statement", "all", "time,table,statement" (same as "all")\n} .
+                           qq{  "all,exec", "exec,time,table,statement" (same as "all,exec")} },
+    output   => { alias => ["output", "o"],
+                  isa   => ["csv", "tsv"],
+                  default => "tsv",
+                  text  => "Output type" },
+  };
+  my $config= Ytkit::Config->new({ %$yt_binloggroupby_option, 
+                                   %$Ytkit::Config::COMMON_OPTION });
+  $config->{_synopsis}= $synopsis;
+  $config->{_description}= $description;
+  $config->{_script}= $script;
+  $config->{_allow_extra_argv}= $allow_extra_arvg;
+  return $config;
+} 
 
 return 1;

@@ -22,45 +22,46 @@ use strict;
 use warnings;
 use utf8;
 use Carp qw{carp croak};
+use base "Ytkit";
 
-use Ytkit::Config;
 use Ytkit::HealthCheck;
 
-my $default_option=
-{
-  silent => { alias => ["silent", "s", "quiet", "q"],
-              default => 1},
-  sleep  => { alias => ["sleep", "interval", "i"],
-              default => 3 },
-  seconds_behind_master => { default => 5 },
-};
-$default_option= { %$default_option, %$Ytkit::Config::CONNECT_OPTION, %$Ytkit::Config::COMMON_OPTION };
+my $script= sprintf("%s - Script that waiting for Seconds_Behind_Master is less than specified value", $0);
+my $description= << "EOS";
+yt-wait-replication only waits for Seconds_Behind_Master is less than --seconds-behind-master
 
-### Fix
-$default_option->{timeout}->{default}= 1800;
+  yt-wait-replication returns 0 if Seconds_Behind_Master < --seconds-behind-master during --timeout seconds.
+  yt-wait-replication dies when mysqld dies or replication thread(s) not running,
+  or Seconds_Behind_Master > --seconds-behind-master after --timeout seconds.
+EOS
+my $synopsis= q{  $ yt-wait-replication --host=your_mysql_host --port=your_mysql_port } .
+              q{--user=your_mysql_account --password=your_password } .
+              q{--seconds-behind-master=5 --sleep=3 --timeout=180};
+my $allow_extra_arvg= 0;
+my $config= _config();
+
 
 sub new
 {
   my ($class, @orig_argv)= @_;
-  my ($opt, @argv)= options($default_option, @orig_argv);
-  return -255 if $opt->{help};
-  return -254 if $opt->{version};
-  return -253 if @argv;
+  $config->parse_argv(@orig_argv);
+  my $self= { _config => $config,
+              %{$config->{result}} };
+  bless $self => $class;
+  $self->handle_help;
 
-  my $self=
+  $self=
   {
-    timeout               => $opt->{timeout},
-    healthcheck_opt       => ["--role", "none",
-                              "--slave_status_warning", $opt->{seconds_behind_master},
-                              "--slave_status_critical", 4294967295,
-                              "--user", $opt->{user} // "''", 
-                              "--host", $opt->{host} // "''",
-                              "--port", $opt->{port} // 3306,
-                              "--socket", $opt->{socket} // "''",
-                              "--password", $opt->{password} // "''"],
- 
+    %$self,
+    healthcheck_opt => ["--role", "none",
+                        "--slave_status_warning", $self->{seconds_behind_master},
+                        "--slave_status_critical", 4294967295,
+                        "--user", $self->{user} // "''", 
+                        "--host", $self->{host} // "''",
+                        "--port", $self->{port} // 3306,
+                        "--socket", $self->{socket} // "''",
+                        "--password", $self->{password} // "''"],
   };
-  $self= { %$self, %$opt };
   bless $self => $class;
 
   return $self;
@@ -89,7 +90,7 @@ sub wait_slave
     elsif ($healthcheck->{status}->{exit_code} eq Ytkit::HealthCheck::NAGIOS_WARNING->{exit_code})
     {
       $wait_count++;
-      $healthcheck->print_status if !($self->{silent});
+      $healthcheck->print_status if $self->{verbose};
 
       if (($wait_count * $self->{sleep}) > $self->{timeout})
       {
@@ -106,10 +107,34 @@ sub wait_slave
     else
     {
       ### yt-healthcheck can't connect server or I/O and/or SQL thread has stopped.
-      print("yt-healthcheck returns Unexpected return-code. aborting.\n") if !($self->{silent});
+      print("yt-healthcheck returns Unexpected return-code. aborting.\n") if $self->{verbose};
       croak($healthcheck->print_status);
     }
   }
 }
+
+sub _config
+{
+  my $yt_wait_replication_option=
+  {
+    seconds_behind_master => { alias => ["seconds_behind_master"],
+                               default => 5,
+                               text => "Wait until Seconds_Behind_Master get to be less than this value." },
+    sleep => { alias => ["sleep", "interval", "i"],
+               default => 3,
+               text => "Interval seconds in each retry-loop iteration." },
+    timeout => { alias => ["timeout"],
+                 default => 1800,
+                 text => "Seconds for scripts running(timeout when --timeout < retry_count * sleep_interval)" },
+  };
+  my $config= Ytkit::Config->new({ %$yt_wait_replication_option,
+                                   %$Ytkit::Config::CONNECT_OPTION,
+                                   %$Ytkit::Config::COMMON_OPTION });
+  $config->{_synopsis}= $synopsis;
+  $config->{_description}= $description;
+  $config->{_script}= $script;
+  $config->{_allow_extra_argv}= $allow_extra_arvg;
+  return $config;
+} 
 
 return 1;

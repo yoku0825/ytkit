@@ -22,10 +22,10 @@ use strict;
 use warnings;
 use utf8;
 use POSIX;
+use base "Ytkit";
 
 use IO::File;
 use Time::Piece qw{localtime};
-use Ytkit::Config qw{options load_config};
 use Ytkit::MySQLServer;
 
 ### return code for Nagios-compats.
@@ -44,74 +44,45 @@ use constant BYTES =>
   bigint    => 8,
 };
 
-my $default_option=
-{
-  role =>
-  {
-    alias   => ["role"],
-    isa     => ["auto", "master", "slave", "backup", "fabric", "none", "intermidiate"],
-    default => "auto"
-  },
-  long_query =>
-  {
-    enable        => { default => 1, },
-    warning       => { default => 5, },
-    critical      => { default => 100, },
-    exclude_host  => { multi   => 1, },
-    exclude_query => { multi   => 1, },
-  },
-  connection_count =>
-  {
-    enable   => { default => 1, },
-    warning  => { default => 70, },
-    critical => { default => 95, },
-  },
-  autoinc_usage =>
-  {
-    enable   => { default => 1, },
-    warning  => { default => 50, },
-    critical => { default => 90, },
-  },
-  slave_status =>
-  {
-    enable   => { default => 1, },
-    warning  => { default => 5, },
-    critical => { default => 30, },
-  },
-  fabric_fd  =>
-  {
-    enable   => { default => 1, },
-    warning  => { default => 50, },
-    critical => { default => 70, },
-  },
-  dump_detail      => { alias   => ["dump-detail"],
-                        default => undef, },
-  config_group     => { alias => ["config-group"],
-                        default => "yt-healthcheck" },
-};
-$default_option= { %$default_option, %$Ytkit::Config::CONNECT_OPTION, %$Ytkit::Config::COMMON_OPTION };
+
+my $synopsis= q{  $ yt-healthcheck --host=mysql_host --port=mysql_port } .
+              q{--user=mysql_account --password=mysql_password --role=auto};
+my $script= sprintf("%s - MySQL healthcheck script", $0);
+my $description= << "EOS";
+yt-health-check checks following MySQL status,
+
+  Able to connect.
+  Running replication threads.
+  Replication delay.
+  Too long query in processlist.
+  Connection count.
+  AUTO_INCREMENT column usage.
+  read_only variable is set or not.
+
+and returns Nagios compatible result code,
+
+  0 OK
+  1 WARNING
+  2 CRITICAL
+  3 UNKNOWN
+EOS
+my $allow_extra_arvg= 0;
+my $config= _config();
+
 
 sub new
 {
   my ($class, @orig_argv)= @_;
-  my ($opt, @argv)= options($default_option, @orig_argv);
-  return -255 if $opt->{help};
-  return -254 if $opt->{version};
-  return -253 if @argv;
-  load_config($opt, $opt->{config_file}, $opt->{config_group}) if $opt->{config_file};
+  $config->parse_argv(@orig_argv);
 
-  my $self=
-  {
-    status           => NAGIOS_OK,  ### default.
-    output           => "",
-    read_only        => { should_be => undef },
-  };
-  $self= { %$self, %$opt };
+  my $self= { _config => $config,
+              %{$config->{result}} };
   bless $self => $class;
+  $self->handle_help;
 
   eval
   {
-    $self->{instance}= Ytkit::MySQLServer->new($opt);
+    $self->{instance}= Ytkit::MySQLServer->new($self);
   };
 
   if ($@)
@@ -121,13 +92,17 @@ sub new
     bless $self->{instance} => "Ytkit::MySQLServer";
     $self->{status}= NAGIOS_CRITICAL;
     $self->{output}= "Can't connect to MySQL Server($@)";
-    $self->{role}= $opt->{role} eq "auto" ? "unknown" : $opt->{role};
+    $self->{role}= $self->{role} eq "auto" ? "unknown" : $self->{role};
     return $self;
   }
 
   ### Set role for check items.
-  $self->{role}= $opt->{role} eq "auto" ? $self->decide_role : $opt->{role};
+  $self->{role}= $self->{role} eq "auto" ? $self->decide_role : $self->{role};
   my $role= $self->{role};
+
+  ### Initial value
+  $self->{status}= NAGIOS_OK;
+  $self->{output}= "";
 
   if ($role eq "master")
   {
@@ -172,7 +147,7 @@ sub new
   elsif ($role eq "fabric")
   {
     ### mikasafabric couldn't return its hostname.
-    $self->{instance}->{_hostname}= $opt->{host};
+    $self->{instance}->{_hostname}= $self->{host};
     ### mikasafabric for MySQL specific checks.
     $self->check_fabric;
   }
@@ -658,5 +633,112 @@ sub print_vtable_one_row
     printf($fh $format, $key, $value);
   }
 }
+
+sub _config
+{
+  my $role_text= << "EOS";
+Switching check-item as below,
+    - "master"
+      - Long query
+      - Connection count
+      - AUTO_INCREMENT usage
+      - read_only should be OFF
+    - "slave"
+      - Long query
+      - Replication threads
+      - Replication delay
+      - Connection count
+      - read_only should be ON
+    - "intermidiate"
+      - Long query
+      - Connection count
+      - AUTO_INCREMENT usage
+      - Replication threads
+      - Replication delay
+      - read_only should be OFF
+    - "backup"
+      - Replication threads
+      - read_only should be ON
+    - "auto"
+      - Script determines MySQL is "master", "slave" or "intermidiate" automatically 
+        by using SHOW SLAVE STATUS and SHOW SLAVE HOSTS(Result is empty or not)
+    - "none"
+      - Check only connectivity. For calling as library.
+    - "fabric"
+      - Checking for mikasafabric for MySQL.
+EOS
+
+  my $yt_healthcheck_option=
+  {
+    role => { alias => ["role"],
+              isa  => ["auto", "master", "slave", "backup", "fabric", "none", "intermidiate"],
+              default => "auto",
+              text => $role_text },
+    long_query =>
+    {
+      enable        => { default => 1,
+                         text    => qq{When set to 0, turn off SHOW PROCESSLIST's check.} },
+      warning       => { default => 5,
+                         text    => qq{Warning threshold for "SHOW PROCESSLIST"'s "Time"(seconds)} },
+      critical      => { default => 100,
+                         text    => qq{Critical threshold for "SHOW PROCESSLIST"'s "Time"(seconds)} },
+      exclude_host  => { multi   => 1,
+                         text    => qq{Specify to ignore values for "SHOW PROCESSLIST"'s "Host".\n} .
+                                    qq{  When first-match them, doesn't raise WARNING or CRITICAL(always OK)} },
+      exclude_query => { multi   => 1,
+                         text    => qq{Specify to ignore values for "SHOW PROCESSLIST"'s "Info"(SQL statement)\n} .
+                                    qq{  When first-match them, doesn't raise WARNING or CRITICAL(always OK)} },
+    },
+    connection_count =>
+    {
+      enable   => { default => 1,
+                    text    => qq{When set to 0, turn off connection count check.} },
+      warning  => { default => 70,
+                    text    => qq{Warning threshold for "Threads_connected / max_connections"(percentage)} },
+      critical => { default => 95,
+                    text    => qq{Critical threshold for "Threads_connected / max_connections"(percentage)} },
+    },
+    autoinc_usage =>
+    {
+      enable   => { default => 1,
+                    text    => qq{When set to 0, turn off auto_increment usage calculation.} },
+      warning  => { default => 50,
+                    text    => qq{Warning threshold for "current_auto_increment_value / datatype_max"(percentage)} },
+      critical => { default => 90,
+                    text    => qq{Critical threshold for "current_auto_increment_value / datatype_max"(percentage)} },
+    },
+    slave_status =>
+    {
+      enable   => { default => 1,
+                    text    => qq{When set to 0, turn off "SHOW SLAVE STATUS"'s "Seconds_Behind_Master" check.} },
+      warning  => { default => 5,
+                    text    => qq{Warning threshold for "Seconds_Behind_Master"(seconds)} },
+      critical => { default => 30,
+                    text    => qq{Critical threshold for "Seconds_Behind_Master"(seconds)} },
+    },
+    fabric_fd  =>
+    {
+      enable   => { default => 1,
+                    text    => qq{When set to 0, turn off "CALL manage.openfds()" check.(mikasafabric only)} },
+      warning  => { default => 50,
+                    text    => qq{Warning threshold for "current_fd / max_fd"(percentage)} },
+      critical => { default => 70,
+                    text    => qq{Critical threshold for "current_fd / max_fd"(percentage)} },
+    },
+    dump_detail      => { alias   => ["dump-detail"],
+                          text    => qq{When result is NOT NAGIOS_OK,\n} .
+                                     qq{  output results of "SHOW PROCESSLIST" and } .
+                                     qq{"SHOW SLAVE STATUS" into specified file}, }
+  };
+
+  my $config= Ytkit::Config->new({ %$yt_healthcheck_option, 
+                                   %$Ytkit::Config::CONNECT_OPTION,
+                                   %$Ytkit::Config::COMMON_OPTION });
+  $config->{_synopsis}= $synopsis;
+  $config->{_description}= $description;
+  $config->{_script}= $script;
+  $config->{_allow_extra_argv}= $allow_extra_arvg;
+  return $config;
+} 
 
 return 1;

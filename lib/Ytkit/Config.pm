@@ -23,25 +23,42 @@ use warnings;
 use utf8;
 use Carp qw{carp};
 
-use Exporter qw{import};
-our @EXPORT= qw{options load_config version};
-our $VERSION= '0.1.0';
+use Ytkit::Config::Option;
+
+my $_version= "0.1.1";
+
 our $CONNECT_OPTION=
 {
-  user     => { alias => ["u", "user"] },
-  host     => { alias => ["h", "host"] },
-  port     => { alias => ["P", "port"] },
-  socket   => { alias => ["S", "socket"] },
-  password => { alias => ["p", "password"] },
-  timeout  => { alias => ["timeout"], default => 1 },
+  user => { alias => ["u", "user"],
+            text  => "MySQL account using for connection and checking\n" .
+            "  (need REPLICATION CLIENT, PROCESSLIST and global SELECT priv)" },
+  host => { alias => ["h", "host"],
+            text  => "MySQL host" },
+  port => { alias => ["P", "port"],
+            text  => "MySQL port number" },
+  socket => { alias => ["S", "socket"],
+              text  => "Path to mysql.sock\n" .
+                       "  (this parameter is used when --host=localhost)" },
+  password => { alias => ["p", "password"],
+                text  => "Password for the user specified by --user" },
+  timeout  => { alias => ["timeout"], default => 1,
+                text  => "Seconds before timeout\n" .
+                         "  (Set into read_timeout, write_timeout, connect_timeout)" },
 };
+
 our $COMMON_OPTION=
 {
-  help        => { alias => ["help", "usage"] },
-  verbose     => { alias => ["verbose", "v"] },
-  version     => { alias => ["version", "V"], default => 0 },
-  config_file => { alias => ["c", "config-file"] },
+  help => { alias => ["help", "usage"],
+            text  => "Show this message",
+            noarg => 1 },
+  verbose => { alias => ["verbose", "v"],
+               text  => "Verbose output mode",
+               noarg => 1 },
+  version => { alias => ["version", "V"],
+               text  => "Show ytkit version",
+               noarg => 1 },
 };
+
 
 sub new
 {
@@ -100,8 +117,11 @@ sub new
   }
   my $self=
   {
-    dict   => $dict,
-    buffer => $buffer,
+    dict     => $dict,
+    buffer   => $buffer,
+    script   => $0,
+    synopsis => undef,
+    description => undef,
   };
 
   bless $self => $class;
@@ -113,9 +133,9 @@ sub options
   ### Deprecated, left for compatibility
   my ($definition, @argv)= @_;
   my $config= Ytkit::Config->new($definition);
-  return $config->parse_argv(@argv);
+  $config->parse_argv(@argv);
+  return ($config->{result}, @{$config->{left_argv}});
 }
-
 
 sub parse_argv
 {
@@ -150,10 +170,9 @@ sub parse_argv
         ###   TODO: How about a negative number?
         if (!($next) || $next =~ /^-/)
         {
-          ### bool style.
+          ### bool style
           $value= 1;
-
-          ### Write back next element.
+          ### write back next element.
           unshift(@argv, $next);
         }
         else
@@ -162,6 +181,8 @@ sub parse_argv
           $value= $next;
         }
       }
+
+      ### Normalize
       $key =~ s/-/_/g if $key;
     }
 
@@ -174,8 +195,7 @@ sub parse_argv
       if ($opt->{noarg})
       {
         $opt->set_value(1);
-        ### Force set 1 and return $value into @argv if isa eq "bool"
-        unshift(@argv, $value);
+        unshift(@argv, $value) if $value ne "1";
       }
       else
       {
@@ -213,7 +233,79 @@ sub parse_argv
   $self->{result}= $ret;
   $self->{left_argv}= \@left_argv;
 
-  return $ret, @left_argv;
+  return 1;
+}
+
+sub show_option_text
+{
+  my ($self)= @_;
+  my @ret;
+
+  while (my ($key, $value)= each(%{$self->{buffer}}))
+  {
+    if (ref($value) eq "Ytkit::Config::Option")
+    {
+      push(@ret, _extract_for_usage($value));
+    }
+    else
+    {
+      ### Recursive
+      while (my ($child_key, $child_value)= each(%$value))
+      {
+        push(@ret, _extract_for_usage($child_value));
+      }
+    }
+  }
+  @ret= sort(@ret);
+  return \@ret;
+}
+
+sub _extract_for_usage
+{
+  my ($opt)= @_;
+
+  ### Decide to print "-s=value" or "-s"
+  my $arg;
+  if ($opt->{noarg})
+  {
+    $arg= "";
+  }
+  else
+  {
+    if ($opt->{isa})
+    {
+      $arg= sprintf("=%s", ref($opt->{isa}) eq "ARRAY" ? 
+                             "[" . join(", ", @{$opt->{isa}}) . "]" :
+                             $opt->{isa});
+    }
+    else
+    {
+      $arg= "=value";
+    }
+  }
+
+  ### If multi => 1, add "(multiple)" after aliases.
+  my $multi= $opt->{multi} ? " (multiple)" : "";
+
+  ### Add default information.
+  my $default= $opt->{default} ? sprintf(" { Default: %s }", $opt->{default}) : "";
+
+  ### Expand each aliases
+  my @aliases;
+  foreach my $alias (@{$opt->{alias}})
+  {
+    if (length($alias) == 1)
+    {
+      ### 1 character alias must specified with single-hyphen.
+      push(@aliases, sprintf("-%s%s", $alias, $arg));
+    }
+    else
+    {
+      ### 2 or more characters must specified with double-hypen.
+      push(@aliases, sprintf("--%s%s", $alias, $arg));
+    }
+  }
+  return sprintf("* %s%s%s\n  %s\n", join(", ", sort(@aliases)), $multi, $default, $opt->{text});
 }
 
 sub _simple_parse
@@ -317,121 +409,31 @@ sub load_config
 
 sub version
 {
-  return $VERSION;
+  my ($self)= @_;
+  my $prefix= $self->{_script} ? sprintf("%s - ", $self->{_script}) : "";
+  return sprintf("%sytkit Ver. %s\n", $prefix, $_version);
 }
 
-
-package Ytkit::Config::Option;
-
-use strict;
-use warnings;
-use utf8;
-use Carp qw{carp};
-
-sub new
+sub usage
 {
-  my ($class, $opt)= @_;
-  my $self;
+  my ($self)= @_;
 
-  if (ref($opt) eq "ARRAY")
-  {
-    ### { param_name => ["aliases"] } style.
-    $self->{alias}= $opt;
-  }
-  elsif (ref($opt) eq "HASH")
-  {
-    $self=
-    {
-      multi   => $opt->{multi} // undef,
-      noarg   => $opt->{noarg} // undef,
-      isa     => $opt->{isa} // undef,
-      value   => $opt->{multi} ? 
-                   $opt->{default} ? [$opt->{default}] : [] :
-                   $opt->{default} // undef,
-      alias   => _normalize_hyphen($opt->{alias}) // undef,
-    }
-  }
-
-  bless $self => $class;
-  return $self;
+  return sprintf("%s\n%s\n%s\n",
+                 $self->{_synopsis},
+                 "-" x 20,
+                 join("\n", @{$self->show_option_text}));
 }
 
-sub _normalize_hyphen
+sub help
 {
-  my ($array)= @_;
-  return undef if !($array);
-  my @ret;
+  my ($self)= @_;
 
-  foreach (@$array)
-  {
-    s/-/_/g;
-    push(@ret, $_);
-  }
-  return \@ret;
+  return sprintf("%s\n%s\n%s\n%s\n",
+                 $self->{_script},
+                 "=" x 20,
+                 $self->{_description},
+                 "=" x 20);
 }
 
-sub set_value
-{
-  my ($self, $value)= @_;
-
-  ### Return 0 means 
-  ###   "Need next argument, please call me again with next argument"
-  if ($value =~ /^"([^"]*)/)
-  {
-    ### Start with doublequote should be ended with doublequote.
-    return 0 if !($value =~ /"$/);
-
-    ### Trim doublequote.
-    $value =~ s/^"([^"]*)"$/$1/;
-  }
-  elsif ($value =~ /^'([^']*)/)
-  {
-    ### Start with singlequote should be ended with singlequote.
-    return 0 if !($value =~ /'$/);
-
-    ### Trim singlequote
-    $value =~ s/^'([^']*)'$/$1/;
-  }
-
-  if ($self->{multi})
-  {
-    push(@{$self->{value}}, $value);
-  }
-  else
-  {
-    if (_check_isa($value, $self->{isa}))
-    {
-      $self->{value}= $value;
-    }
-    else
-    {
-      my $msg= sprintf("%s is not satisfied %s", $value,
-                       ref($self->{isa}) eq "ARRAY" ?
-                         "[" . join(", ", @{$self->{isa}}) . "]" :
-                         $self->{isa});
-
-      carp($msg) if !($ENV{HARNESS_ACTIVE});
-    }
-  }
-  return 1;
-}
-
-sub _check_isa
-{
-  my ($value, $isa)= @_;
-  return 1 if !(defined($isa));
-
-  ### Validation.
-  if (ref($isa) eq "ARRAY")
-  {
-    ### Array-style isa, grep
-    return grep {$value eq $_} @$isa;
-  }
-  elsif (ref($isa) eq "Regexp")
-  {
-    ### Evaluate regexp
-    return $value =~ $isa;
-  }
-}
 
 return 1;

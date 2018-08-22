@@ -22,111 +22,26 @@ use strict;
 use warnings;
 use utf8;
 binmode STDOUT, ":utf8";
-use Pod::Usage;
 
 use FindBin qw/$Bin/;
 use lib "$Bin/../lib";
 use Ytkit::BinlogGroupby;
 
-my $prog= Ytkit::BinlogGroupby->new(@ARGV, "--print_header");
-
-if ($prog == -255)
+if (my $prog= Ytkit::BinlogGroupby->new(@ARGV))
 {
-  pod2usage({ -verbose => 2});
-  exit 0;
+
+  ### read from stdin.
+  while (<STDIN>)
+  {
+    $prog->parse($_);
+  }
+  
+  foreach (@{$prog->output})
+  {
+    print $_;
+  }
 }
-elsif ($prog == -254)
+else
 {
-  printf("%s - %s\n", $0, Ytkit::Config::version());
-  exit 0;
+  return 1;
 }
-elsif ($prog == -253)
-{
-  ### Error.
-  pod2usage({ -message => "Unknown option was specified.",
-              -verbose => 1 });
-  exit 1;
-}
-elsif ($prog == 0)
-{
-  ### Error.
-  pod2usage({ -message => "--cell value is invalid.",
-              -verbose => 1 });
-  exit 1;
-}
-
-### read from stdin.
-while (<STDIN>)
-{
-  $prog->parse($_);
-}
-
-foreach (@{$prog->output})
-{
-  print $_;
-}
-
-exit 0;
-
-
-__END__
-
-=encoding utf8
-
-=head1 SCRIPT NAME
-
-yt-binlog-groupby - MySQL binlog aggregator cli
-
-=head1 SYNOPSIS
-
-  $ mysqlbinlog -vv /path/to/binlog | yt-binlog-groupby [options]
-
-=head1 DESCRIPTION
-
-yt-binlog-groupby aggregates stdout of B<mysqlbinlog>
-
-=head1 OPTIONS
-
-=head2 --cell=string, -c string
-
-Unit of aggregation. Currentry supported are,
-
-=over 8
-
-=item "s", "second", "1s"
-
-=item "10s"
-
-=item "m", "minute", "1m"
-
-=item "10m" [default]
-
-=item "h", "hour", "1h"
-
-=back
-
-=head2  --group-by=string, -g string
-
-Part of aggregation. 
-
-=over 8
-
-=item "time" [default], "table", "statement"
-
-=item "time,table", "time,statement", "table,statement"
-
-=item "all", "time,table,statement" (same as "all")
-
-=item "all,exec", "exec,time,table,statement" (same as "all,exec")
-
-=back
-
-=head2  --output=string, -o string
-
-Output type.  "tsv" [default], "csv"
-
-=head2 --help, --usage, -h
-
-Show this text.
-
-=cut

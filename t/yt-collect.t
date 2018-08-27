@@ -22,7 +22,7 @@ use strict;
 use warnings;
 use utf8;
 use Test::More;
-use Test::More::Color qw{foreground};
+
 use Test::MockTime;
 Test::MockTime::set_fixed_time("2018-06-06 12:27:34 +0900", "%Y-%m-%d %H:%M:%S %z");
 

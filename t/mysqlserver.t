@@ -22,7 +22,6 @@ use strict;
 use warnings;
 use utf8;
 use Test::More;
-use Test::More::Color qw{foreground};
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";

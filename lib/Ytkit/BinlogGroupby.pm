@@ -33,6 +33,7 @@ my $default_option=
                 default => "time" },
   output   => { alias => ["output", "o"],
                 default => "tsv" },
+  print_header => ["print_header"],
   help     => { alias => ["help", "usage", "h"] },
   verbose  => { alias => ["verbose", "v"], default => 0 },
   version  => { alias => ["version", "V"], default => 0 },

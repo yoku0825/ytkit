@@ -39,7 +39,6 @@ our $COMMON_OPTION=
 {
   help        => { alias => ["help", "usage"] },
   verbose     => { alias => ["verbose", "v"] },
-  silent      => { alias => ["silent", "quiet", "s"] },
   version     => { alias => ["version", "V"], default => 0 },
   config_file => { alias => ["c", "config-file"] },
 };

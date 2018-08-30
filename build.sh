@@ -1,5 +1,6 @@
 #!/bin/bash
 
+[[ -d ~/rpmbuild/SOURCES/ ]] || mkdir -p ~/rpmbuild/SOURCES/
 package="ytkit"
 version=$(grep "^Version:" ${package}.spec | awk '{print $2}')
 dirname="${package}-${version}"

@@ -1,0 +1,24 @@
+version: 2
+jobs:
+  test:
+    docker:
+      - image: centos
+    working_directory: ~/ytkit
+    steps:
+      - checkout
+      - restore_cache:
+          key: v0.1.1
+      - run: yum install -y perl-App-cpanminus gcc mysql-devel perl-homedir make rpm-build perl-DBD-MySQL perl-Time-Piece epel-release
+      - run: yum install -y perl-Test-MockTime
+      - run: cpanm App::cpanminus
+      - run: /usr/local/bin/cpanm --installdeps .
+      - save_cache:
+          key: v0.1.1
+          paths: ~/perl5
+      - run: make test
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test

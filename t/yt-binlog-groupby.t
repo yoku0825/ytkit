@@ -45,6 +45,58 @@ subtest "--group-by=all,exec" => sub
   run_test("mysqlbinlog_sbr_80.txt", "mysqlbinlog_sbr_80_allexec_1m_tsv.r", @option);
 };
 
+subtest "parse all group-by" => sub
+{
+  my @elements= qw{time statement table};
+
+  subtest "1 element" => sub
+  {
+    foreach (@elements)
+    {
+      my $optstr= $_;
+      my $prog= Ytkit::BinlogGroupby->new("--group-by", $optstr);
+      eval
+      {
+        $prog->output();
+      };
+      ok(!($@), "group_by $optstr handles without error");
+    }
+    done_testing;
+  };
+
+  subtest "2 elements" => sub
+  {
+    foreach my $first (@elements)
+    {
+      foreach my $second (@elements)
+      {
+        next if $first eq $second;
+        my $optstr= sprintf("%s,%s", $first, $second);
+        my $prog= Ytkit::BinlogGroupby->new("--group-by", $optstr);
+        eval
+        {
+          $prog->output();
+        };
+        ok(!($@), "group_by $optstr handles without error");
+      }
+    }
+    done_testing;
+  };
+
+  subtest "3 elements" => sub
+  {
+    my $optstr= join(",", @elements);
+    my $prog= Ytkit::BinlogGroupby->new("--group-by", $optstr);
+    eval
+    {
+      $prog->output();
+    };
+    ok(!($@), "group_by $optstr handles without error");
+
+    done_testing;
+  };
+};
+
 subtest "config description" => sub
 {
   my $prog= Ytkit::BinlogGroupby->new();

@@ -33,13 +33,15 @@ if (my $prog= Ytkit::BinlogGroupby->new(@ARGV))
   ### read from stdin.
   while (<STDIN>)
   {
-    $prog->parse($_);
+    my $ret= $prog->parse($_);
+
+    if (!($prog->{sort}) && $ret)
+    {
+      print @$ret;
+    }
   }
   
-  foreach (@{$prog->output})
-  {
-    print $_;
-  }
+  print @{$prog->output};
 }
 else
 {

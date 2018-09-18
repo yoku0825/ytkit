@@ -43,16 +43,62 @@ sub new
   my ($class, @orig_argv)= @_;
   $config->parse_argv(@orig_argv);
 
-  my $self= { _config => $config,
-              %{$config->{result}} };
+  my $self=
+  {
+    _config => $config,
+    %{$config->{result}},
+    _counter => _decide_counter($config->{result}->{group_by}),
+  };
   bless $self => $class;
   $self->handle_help;
 
-  $self->{group_by}= sort_csv($self->{group_by});
   $self->set_parser;
   return 0 if !($self->{header_parser}) || !($self->{print_format});
 
   return $self;
+}
+
+sub _decide_counter
+{
+  my ($group_by)= @_;
+  $group_by= sort_csv($group_by);
+
+  if ($group_by eq "table")
+  {
+    return Ytkit::BinlogGroupby::Groupby_Table->new;
+  }
+  elsif ($group_by eq "statement")
+  {
+    return Ytkit::BinlogGroupby::Groupby_Statement->new;
+  }
+  elsif ($group_by eq "time")
+  {
+    return Ytkit::BinlogGroupby::Groupby_Time->new;
+  }
+  elsif ($group_by eq "statement,time")
+  {
+    return Ytkit::BinlogGroupby::Groupby_TimeStatement->new;
+  }
+  elsif ($group_by eq "statement,table")
+  {
+    return Ytkit::BinlogGroupby::Groupby_TableStatement->new;
+  }
+  elsif ($group_by eq "table,time")
+  {
+    return Ytkit::BinlogGroupby::Groupby_TimeTable->new;
+  }
+  elsif ($group_by eq "all" || $group_by eq "statement,table,time")
+  {
+    return Ytkit::BinlogGroupby::Groupby_TimeTableStatement->new;
+  }
+  elsif ($group_by eq "all,exec" || $group_by eq "exec,statement,table,time")
+  {
+    return Ytkit::BinlogGroupby::Groupby_TimeTableStatementExec->new;
+  }
+  else
+  {
+    return undef;
+  }
 }
 
 sub parse
@@ -63,10 +109,10 @@ sub parse
   if ($line =~ /$self->{header_parser}/)
   {
     ### This is header-comment of each event.
-    $self->{time_string}  = $1;
+    $self->{time_string}  = sprintf($self->{print_format}, $1);
     $self->{first_seen} ||= $1;
     $self->{last_seen}    = $1;
-    $self->{exec_time}    = $2;
+    $self->{exec_time}    = sprintf("exec_time:%d", $2);
   }
   ### USE statement
   elsif ($line =~ /^use\s([^\/]+)/)
@@ -89,52 +135,33 @@ sub parse
     {
       $table= sprintf("%s.%s", $self->{current_schema}, $table) if $self->{current_schema};
     }
+    my $event= { time_string => $self->{time_string},
+                 table       => $table,
+                 statement   => $dml,
+                 exec_time   => $self->{exec_time} };
 
     if ($self->{time_string} && $dml && $table)
     {
-      if ($self->compare_groupby("exec,statement,table,time", "all,exec"))
+      if (!($self->{sort}) && $self->{previous_time})
       {
-        $self->{count_hash}->{$self->{time_string}}->{$table}->{$dml}->{$self->{exec_time}}++;
+        if ($self->{previous_time} ne $self->{time_string})
+        {
+          my $buff= $self->{_counter}->result;
+          $self->{_counter}->clear;
+          $self->{previous_time}= $self->{time_string};
+          return $buff;
+        }
       }
-      elsif ($self->compare_groupby("all", "statement,table,time"))
+      else
       {
-        $self->{count_hash}->{$self->{time_string}}->{$table}->{$dml}++;
-        push(@{$self->{exec_time_hash}->{$self->{time_string}}->{$table}->{$dml}}, $self->{exec_time});
+        $self->{previous_time}= $self->{time_string};
       }
-      elsif ($self->compare_groupby("table,time"))
-      {
-        $self->{count_hash}->{$self->{time_string}}->{$table}++;
-        push(@{$self->{exec_time_hash}->{$self->{time_string}}->{$table}}, $self->{exec_time});
-      }
-      elsif ($self->compare_groupby("time"))
-      {
-        $self->{count_hash}->{$self->{time_string}}++;
-        push(@{$self->{exec_time_hash}->{$self->{time_string}}}, $self->{exec_time});
-      }
-      elsif ($self->compare_groupby("table"))
-      {
-        $self->{count_hash}->{$table}++;
-        push(@{$self->{exec_time_hash}->{$table}}, $self->{exec_time});
-      }
-      elsif ($self->compare_groupby("statement"))
-      {
-        $self->{count_hash}->{$dml}++;
-        push(@{$self->{exec_time_hash}->{$dml}}, $self->{exec_time});
-      }
-      elsif ($self->compare_groupby("statement,time"))
-      {
-        $self->{count_hash}->{$self->{time_string}}->{$dml}++;
-        push(@{$self->{exec_time_hash}->{$self->{time_string}}->{$dml}}, $self->{exec_time});
-      }
-      elsif ($self->compare_groupby("statement,table"))
-      {
-        $self->{count_hash}->{$table}->{$dml}++;
-        push(@{$self->{exec_time_hash}->{$table}->{$dml}}, $self->{exec_time});
-      }
+      $self->{_counter}->increment($event);
 
       $self->{time_string}= $self->{exec_time}= $dml= $table= "";
     }
   }
+  return 0;
 }
 
 sub output
@@ -146,83 +173,8 @@ sub output
          sprintf($self->{print_format}, $self->{first_seen}),
          sprintf($self->{print_format}, $self->{last_seen})) if $self->{verbose};
 
-  my $count_hash    = $self->{count_hash};
-  my $exec_time_hash= $self->{exec_time_hash};
-
-  if ($self->compare_groupby("table", "statement"))
-  {
-    ### Only have 1 element.
-    foreach my $element (sort(keys(%$count_hash)))
-    {
-      push(@ret, $self->build_line($element, $count_hash->{$element},
-                                   $exec_time_hash->{$element}));
-    }
-  }
-  elsif ($self->compare_groupby("statement,table"))
-  {
-    ### Have 2 elements without "time"
-    foreach my $table (sort(keys(%$count_hash)))
-    {
-      foreach my $dml (sort(keys(%{$count_hash->{$table}})))
-      {
-        push(@ret, $self->build_line($table, $dml, $count_hash->{$table}->{$dml},
-                                     $exec_time_hash->{$table}->{$dml}));
-      }
-    }
-  }
-  else
-  {
-    ### starting with "time"
-    foreach my $time (sort(keys(%$count_hash)))
-    {
-      my $time_printable= sprintf($self->{print_format}, $time);
-  
-      if ($self->compare_groupby("time"))
-      {
-        push(@ret, $self->build_line($time_printable, $count_hash->{$time},
-                                     $exec_time_hash->{$time}));
-      }
-      elsif ($self->compare_groupby("table,time", "statement,time"))
-      {
-        foreach my $element (sort(keys(%{$count_hash->{$time}})))
-        {
-          push(@ret, $self->build_line($time_printable, $element,
-                                       $count_hash->{$time}->{$element},
-                                       $exec_time_hash->{$time}->{$element}));
-        }
-      }
-      elsif ($self->compare_groupby("all", "statement,table,time"))
-      {
-        foreach my $table (sort(keys(%{$count_hash->{$time}})))
-        {
-          foreach my $dml (sort(keys(%{$count_hash->{$time}->{$table}})))
-          {
-            push(@ret, $self->build_line($time_printable, $table, $dml,
-                                         $count_hash->{$time}->{$table}->{$dml},
-                                         $exec_time_hash->{$time}->{$table}->{$dml}));
-          }
-        }
-      }
-      elsif ($self->compare_groupby("all,exec", "exec,statement,table,time"))
-      {
-        foreach my $table (sort(keys(%{$count_hash->{$time}})))
-        {
-          foreach my $dml (sort(keys(%{$count_hash->{$time}->{$table}})))
-          {
-            foreach my $exec (sort(keys(%{$count_hash->{$time}->{$table}->{$dml}})))
-            {
-              push(@ret, $self->build_line($time_printable, $table, $dml,
-                                           "exec_time:" . $exec,
-                                           $count_hash->{$time}->{$table}->{$dml}->{$exec}, {}));
-            }
-          }
-        }
-      }
-    }
-  }
-
-  return \@ret;
-}  
+  return $self->{_counter}->result;
+}
 
 sub sort_csv
 {
@@ -332,6 +284,10 @@ sub _config
                   isa   => ["csv", "tsv"],
                   default => "tsv",
                   text  => "Output type" },
+    sort     => { alias => ["sort", "full-sort", "complete-sort"],
+                  noarg => 1,
+                  text => "When set this, yt-binlog-groupby sorts *after* calculate group_by(it's slow)\n" .
+                          "This should be on if STDIN(mysqlbinlog) has *NOT* been queued up." },
   };
   my $config= Ytkit::Config->new({ %$yt_binloggroupby_option, 
                                    %$Ytkit::Config::COMMON_OPTION });
@@ -341,5 +297,186 @@ sub _config
   $config->{_allow_extra_argv}= $allow_extra_arvg;
   return $config;
 } 
+
+package Ytkit::BinlogGroupby::Groupby_Base;
+
+use strict;
+use warnings;
+use utf8;
+
+sub new
+{
+  my ($class)= @_;
+  return bless {} => $class;
+}
+
+sub clear
+{
+  my ($self)= @_;
+  foreach (keys(%$self))
+  {
+    delete($self->{$_})
+  }
+}
+
+sub increment
+{
+  ### This should be implemented in each class.
+  ...;
+}
+
+sub _print_n_element
+{
+  my ($hash, $n)= @_;
+  my @ret;
+
+  if ($n == 1)
+  {
+    foreach (sort(keys(%$hash)))
+    {
+      push(@ret, sprintf("%s\t%d\n", $_, $hash->{$_}));
+    }
+  }
+  else
+  {
+    foreach (sort(keys(%$hash)))
+    {
+      foreach my $buff (@{_print_n_element($hash->{$_}, $n - 1)})
+      {
+        push(@ret, sprintf("%s\t%s", $_, $buff));
+      }
+    }
+  }
+  return \@ret;
+}
+
+package Ytkit::BinlogGroupby::Groupby_Time;
+
+use base "Ytkit::BinlogGroupby::Groupby_Base";
+
+sub increment
+{
+  my ($self, $event)= @_;
+  $self->{$event->{time_string}}++;
+}
+
+sub result
+{
+  my ($self)= @_;
+  $self->_print_n_element(1);
+}
+ 
+package Ytkit::BinlogGroupby::Groupby_Table;
+
+use base "Ytkit::BinlogGroupby::Groupby_Base";
+
+sub increment
+{
+  my ($self, $event)= @_;
+  $self->{$event->{table}}++;
+}
+
+sub result
+{
+  my ($self)= @_;
+  $self->_print_n_element(1);
+}
+ 
+package Ytkit::BinlogGroupby::Groupby_Statement;
+
+use base "Ytkit::BinlogGroupby::Groupby_Base";
+
+sub increment
+{
+  my ($self, $event)= @_;
+  $self->{$event->{statement}}++;
+}
+
+sub result
+{
+  my ($self)= @_;
+  $self->_print_n_element(1);
+}
+ 
+package Ytkit::BinlogGroupby::Groupby_TimeStatement;
+
+use base "Ytkit::BinlogGroupby::Groupby_Base";
+
+sub increment
+{
+  my ($self, $event)= @_;
+  $self->{$event->{time_string}}->{$event->{statement}}++;
+}
+
+sub result
+{
+  my ($self)= @_;
+  $self->_print_n_element(2);
+}
+
+package Ytkit::BinlogGroupby::Groupby_TimeTable;
+
+use base "Ytkit::BinlogGroupby::Groupby_Base";
+
+sub increment
+{
+  my ($self, $event)= @_;
+  $self->{$event->{time_string}}->{$event->{table}}++;
+}
+
+sub result
+{
+  my ($self)= @_;
+  $self->_print_n_element(2);
+}
+
+package Ytkit::BinlogGroupby::Groupby_TableStatement;
+
+use base "Ytkit::BinlogGroupby::Groupby_Base";
+
+sub increment
+{
+  my ($self, $event)= @_;
+  $self->{$event->{table}}->{$event->{statement}}++;
+}
+
+sub result
+{
+  my ($self)= @_;
+  $self->_print_n_element(2);
+}
+
+package Ytkit::BinlogGroupby::Groupby_TimeTableStatement;
+
+use base "Ytkit::BinlogGroupby::Groupby_Base";
+
+sub increment
+{
+  my ($self, $event)= @_;
+  $self->{$event->{time_string}}->{$event->{table}}->{$event->{statement}}++;
+}
+
+sub result
+{
+  my ($self)= @_;
+  $self->_print_n_element(3);
+}
+ 
+package Ytkit::BinlogGroupby::Groupby_TimeTableStatementExec;
+
+use base "Ytkit::BinlogGroupby::Groupby_Base";
+
+sub increment
+{
+  my ($self, $event)= @_;
+  $self->{$event->{time_string}}->{$event->{table}}->{$event->{statement}}->{$event->{exec_time}}++;
+}
+
+sub result
+{
+  my ($self)= @_;
+  $self->_print_n_element(4);
+}
+ 
 
 return 1;

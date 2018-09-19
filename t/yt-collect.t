@@ -25,6 +25,7 @@ use Test::More;
 
 use Test::MockTime;
 Test::MockTime::set_fixed_time("2018-06-06 12:27:34 +0900", "%Y-%m-%d %H:%M:%S %z");
+$ENV{TZ}= "Asia/Tokyo";
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";

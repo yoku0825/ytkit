@@ -100,6 +100,15 @@ subtest "check_long_query" => sub
   is($prog->{status}->{str}, "OK", "Time was exceeded but excluded by host");
   &reset_param;
 
+  ### Excluded by user.
+  $prog->{long_query}->{warning}= 100;
+  $prog->{long_query}->{critical}= 100;
+  $prog->{long_query}->{enable}= 1;
+  $prog->{long_query}->{exclude_user}= ["examin"];
+  $prog->check_long_query;
+  is($prog->{status}->{str}, "OK", "Time was exceeded but excluded by user");
+  &reset_param;
+
   ### Excluded by SQL
   $prog->{long_query}->{warning}= 100;
   $prog->{long_query}->{critical}= 100;

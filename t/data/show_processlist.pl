@@ -50,6 +50,16 @@ $VAR1 = [
             'Command' => 'Query',
             'Info' => 'SELECT SLEEP(100000)',
             'Host' => '192.168.0.1:32275'
+          },
+          {
+            'Time' => '6000',
+            'Id' => '11',
+            'db' => undef,
+            'User' => 'userexclude',
+            'State' => 'init',
+            'Command' => 'Query',
+            'Info' => 'SELECT SLEEP(100000)',
+            'Host' => '192.168.0.1:32275'
           }
         ];
 

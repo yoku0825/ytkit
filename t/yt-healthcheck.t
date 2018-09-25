@@ -2,6 +2,7 @@
 
 #########################################################################
 # Copyright (C) 2017, 2018  yoku0825
+# Copyright (C) 2018        hacchuu0119
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -98,6 +99,15 @@ subtest "check_long_query" => sub
   $prog->{long_query}->{exclude_host}= ["192.168.0.1"];
   $prog->check_long_query;
   is($prog->{status}->{str}, "OK", "Time was exceeded but excluded by host");
+  &reset_param;
+
+  ### Excluded by user.
+  $prog->{long_query}->{warning}= 5000;
+  $prog->{long_query}->{critical}= 5000;
+  $prog->{long_query}->{enable}= 1;
+  $prog->{long_query}->{exclude_user}= ["userexclude"];
+  $prog->check_long_query;
+  is($prog->{status}->{str}, "OK", "Time was exceeded but excluded by user");
   &reset_param;
 
   ### Excluded by SQL

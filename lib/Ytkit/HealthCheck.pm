@@ -2,6 +2,7 @@ package Ytkit::HealthCheck;
 
 ########################################################################
 # Copyright (C) 2017, 2018  yoku0825
+# Copyright (C) 2018        hacchuu0119
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -228,7 +229,13 @@ sub check_long_query
     if (grep {/^$user$/} ("system user", "event_scheduler"))
     {
       ### Ignore replication threads and daemon plugin
-      next;
+	next;
+    }
+
+    ### Exclude by user in optional.
+    if (grep { $user eq $_ } @{$self->{long_query}->{exclude_user}})
+    {
+	next;
     }
 
     ### Exclude by command.
@@ -682,6 +689,9 @@ EOS
                          text    => qq{Warning threshold for "SHOW PROCESSLIST"'s "Time"(seconds)} },
       critical      => { default => 100,
                          text    => qq{Critical threshold for "SHOW PROCESSLIST"'s "Time"(seconds)} },
+      exclude_user  => { multi   => 1,
+                         text    => qq{Specify to ignore values for "SHOW PROCESSLIST"'s "User".\n} .
+                                    qq{  When first-match them, doesn't raise WARNING or CRITICAL(always OK)} },
       exclude_host  => { multi   => 1,
                          text    => qq{Specify to ignore values for "SHOW PROCESSLIST"'s "Host".\n} .
                                     qq{  When first-match them, doesn't raise WARNING or CRITICAL(always OK)} },

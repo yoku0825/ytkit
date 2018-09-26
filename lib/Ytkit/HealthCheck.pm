@@ -113,6 +113,7 @@ sub new
     $self->check_autoinc_usage;
     $self->{read_only}->{should_be}= 0;
     $self->check_read_only;
+    $self->check_gtid_hole;
   }
   elsif ($role eq "slave")
   {
@@ -122,6 +123,7 @@ sub new
     $self->check_slave_status;
     $self->{read_only}->{should_be}= 1;
     $self->check_read_only;
+    $self->check_gtid_hole;
   }
   elsif ($role eq "intermidiate")
   {
@@ -132,6 +134,7 @@ sub new
     $self->check_slave_status;
     $self->{read_only}->{should_be}= 0;
     $self->check_read_only;
+    $self->check_gtid_hole;
   }
   elsif ($role eq "backup")
   {
@@ -139,6 +142,7 @@ sub new
     $self->check_slave_status;
     $self->{read_only}->{should_be}= 1;
     $self->check_read_only;
+    $self->check_gtid_hole;
   }
   elsif ($role eq "none")
   {
@@ -524,6 +528,26 @@ sub query_fabric
   return $ret;
 }
 
+sub check_gtid_hole
+{
+  my ($self)= @_;
+  return 0 unless $self->{gtid_hole}->{enable};
+
+  my ($status, $output);
+
+  ### Split for each server_uuid's gtid.
+  ### gtid_executed= 'server_uuid1:gtid-range1:gtid-range2:..,server_uuid2:gtid-range3,..'
+  foreach my $one_server_gtid (split(/,/, $self->{instance}->gtid))
+  {
+    my ($server_uuid, @gtid_range)= split(/:/, $one_server_gtid);
+    $DB::single= 1;
+
+    ### If 1-server_uuid has more than 2-gtid_range, there's gtid_hole.
+    $self->update_status(NAGIOS_WARNING, sprintf("gitd_executed hole detected(%s) ", $one_server_gtid))
+      if $#gtid_range > 0;
+  }
+}
+
 sub clear_cache
 {
   my ($self)= @_;
@@ -734,6 +758,13 @@ EOS
                     text    => qq{Warning threshold for "current_fd / max_fd"(percentage)} },
       critical => { default => 70,
                     text    => qq{Critical threshold for "current_fd / max_fd"(percentage)} },
+    },
+    gtid_hole =>
+    {
+      enable => { default => 0,
+                  text    => qq{When set to 1, check does gtid_hole exist.\n} .
+                             qq{  When gtid_executed is like "server_uuid:1-2:4-5", server_uuid:3 is gtid_hole.\n} .
+                             qq{  This option default will be 1 in future release.} },
     },
     dump_detail      => { alias   => ["dump-detail"],
                           text    => qq{When result is NOT NAGIOS_OK,\n} .

@@ -300,6 +300,32 @@ subtest "slave_status" => sub
   $prog->clear_cache;
 };
 
+subtest "--gtid-hole" => sub
+{
+  $prog->{gtid_hole}->{enable}= 1;
+  $prog->{instance}->{_show_master_status}= $Ytkit::Test::SHOW_MASTER_STATUS::VAR1;
+  $prog->check_gtid_hole;
+  is($prog->{status}->{str}, "OK", "There's no gtid_hole");
+  &reset_param;
+  $prog->clear_cache;
+
+  $prog->{gtid_hole}->{enable}= 1;
+  $prog->{instance}->{_show_master_status}= $Ytkit::Test::GTID_EXECUTED_HOLE::VAR1;
+  $prog->check_gtid_hole;
+  is($prog->{status}->{str}, "WARNING", "There's gtid_hole");
+  &reset_param;
+  $prog->clear_cache;
+
+  $prog->{gtid_hole}->{enable}= 0;
+  $prog->{instance}->{_show_master_status}= $Ytkit::Test::GTID_EXECUTED_HOLE::VAR1;
+  $prog->check_gtid_hole;
+  is($prog->{status}->{str}, "OK", "--gtid-hole-enable=0");
+  &reset_param;
+  $prog->clear_cache;
+
+  done_testing;
+};
+
 subtest "--role=fabric" => sub
 {
   $prog->{_query_fabric}= $Ytkit::TEST::Lookup_Groups::VAR1;
@@ -321,8 +347,6 @@ subtest "config description" => sub
   done_testing;
 };
 
-
-
 done_testing;
 
 
@@ -333,7 +357,7 @@ sub reset_param
   $prog->{status}= Ytkit::HealthCheck::NAGIOS_OK;
   $prog->{output}= "";
 
-  foreach (qw{long_query connection_count autoinc_usage read_only slave_status})
+  foreach (qw{long_query connection_count autoinc_usage read_only slave_status gtid_hole})
   {
     delete($prog->{$_});
   }

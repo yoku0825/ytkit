@@ -325,7 +325,6 @@ sub show_master_status
 sub gtid
 {
   my ($self)= @_;
-  return "Can't fetch gtid_executed" if !($self->{conn});
 
   if (!($self->{_gtid}))
   {

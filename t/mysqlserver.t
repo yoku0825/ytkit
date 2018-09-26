@@ -138,5 +138,14 @@ subtest "show_grants" => sub
   $server->clear_cache;
 };
 
+subtest "show_master_status" => sub
+{
+  $server->{_show_master_status}= $Ytkit::Test::SHOW_MASTER_STATUS::VAR1;
+  is_deeply($server->show_master_status, $Ytkit::Test::SHOW_MASTER_STATUS::VAR1, "SHOW MASTER STATUS");
+  is($server->gtid, "539b5027-9474-11e8-a213-0201a32caf75:1-121590", "Get GTID");
+  $server->clear_cache;
+};
+
+
 
 done_testing;

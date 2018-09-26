@@ -316,5 +316,24 @@ sub quote
   }
 }
 
+sub show_master_status
+{
+  my ($self)= @_;
+  return $self->query_arrayref("SHOW MASTER STATUS");
+}
+
+sub gtid
+{
+  my ($self)= @_;
+  return "Can't fetch gtid_executed" if !($self->{conn});
+
+  if (!($self->{_gtid}))
+  {
+    $self->{_gtid}= $self->show_master_status->[0]->{Executed_Gtid_Set} // "empty";
+  }
+  return $self->{_gtid};
+}
+
+
 return 1;
 

@@ -330,7 +330,10 @@ sub gtid
   if (!($self->{_gtid}))
   {
     $self->{_gtid}= $self->show_master_status->[0]->{Executed_Gtid_Set} // "empty";
+    ### format gtid_string.
+    $self->{_gtid} =~ s/\n//g;
   }
+
   return $self->{_gtid};
 }
 

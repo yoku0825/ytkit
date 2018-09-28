@@ -23,8 +23,8 @@ use warnings;
 use utf8;
 use POSIX;
 use IO::File;
-use Carp qw{croak};
 use base "Ytkit";
+use Carp qw{carp croak};
 
 use Ytkit::MySQLServer;
 
@@ -134,7 +134,7 @@ sub clear_cache
 sub print_query_latency
 {
   my ($self)= @_;
-  die("--query_latency_enable=1 needs MySQL >= 5.6.8 and performance_schema = ON, please check requirements are satisfied.") 
+  croak("--query_latency_enable=1 needs MySQL >= 5.6.8 and performance_schema = ON, please check requirements are satisfied.") 
     if !($self->is_satisfied_requirement);
   my $ps_digest= $self->{instance}->select_ps_digest($self->{query_latency}->{limit});
   return $self->print_low($ps_digest, $self->{query_latency}->{output_name});
@@ -143,7 +143,7 @@ sub print_query_latency
 sub print_table_latency
 {
   my ($self)= @_;
-  die("--table_latency_enable=1 needs MySQL >= 5.6.8 and performance_schema = ON, please check requirements are satisfied.") 
+  croak("--table_latency_enable=1 needs MySQL >= 5.6.8 and performance_schema = ON, please check requirements are satisfied.") 
     if !($self->is_satisfied_requirement);
   my $ps_table= $self->{instance}->select_ps_table($self->{table_latency}->{limit});
   return $self->print_low($ps_table, $self->{table_latency}->{output_name});
@@ -159,7 +159,7 @@ sub print_table_size
 sub print_innodb_metrics
 {
   my ($self)= @_;
-  die("--innodb_metrics_enable=1 needs MySQL >= 5.6.8, please check requirements are satisfied.") 
+  croak("--innodb_metrics_enable=1 needs MySQL >= 5.6.8, please check requirements are satisfied.") 
     if $self->{instance}->mysqld_version < 50608;
   my $is_metrics= $self->{instance}->select_is_metrics;
   return $self->print_low($is_metrics, $self->{innodb_metrics}->{output_name});
@@ -297,7 +297,7 @@ sub print_low
   else
   {
     ### Unknown output-type
-    die(sprintf("Unknown --output = %s", $self->{output}));
+    croak(sprintf("Unknown --output = %s", $self->{output}));
   }
 }
 

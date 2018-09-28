@@ -21,6 +21,8 @@ package Ytkit;
 use strict;
 use warnings;
 use utf8;
+use Carp qw{carp croak};
+use Carp::Always;
 
 use Ytkit::Config;
 
@@ -64,7 +66,7 @@ sub handle_help
     ### script doesn't allow bare argument.
     my $msg= sprintf("You give unknown argument(s) [%s]\n\n",
                      join(" ", @{$self->{_config}->{left_argv}}));
-    warn($msg);
+    carp($msg);
     print STDERR $self->usage;
     exit 3;
   }

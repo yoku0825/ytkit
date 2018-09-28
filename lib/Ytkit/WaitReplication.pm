@@ -21,8 +21,8 @@ package Ytkit::WaitReplication;
 use strict;
 use warnings;
 use utf8;
-use Carp qw{carp croak};
 use base "Ytkit";
+use Carp qw{carp croak};
 
 use Ytkit::HealthCheck;
 

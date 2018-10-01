@@ -541,7 +541,6 @@ sub check_gtid_hole
   foreach my $one_server_gtid (split(/,/, $self->{instance}->gtid))
   {
     my ($server_uuid, @gtid_range)= split(/:/, $one_server_gtid);
-    $DB::single= 1;
 
     ### If 1-server_uuid has more than 2-gtid_range, there's gtid_hole.
     $self->update_status(NAGIOS_WARNING, sprintf("gitd_executed hole detected(%s) ", $one_server_gtid))

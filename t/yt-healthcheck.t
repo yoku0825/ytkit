@@ -328,17 +328,19 @@ subtest "--gtid-hole" => sub
 
 subtest "--role=fabric" => sub
 {
-  $prog->{_query_fabric}= $Ytkit::TEST::Lookup_Groups::VAR1;
-  is($prog->query_fabric("lookup_groups", "")->[0]->{group_id}, "myfabric", "Parse group.lookup_groups");
+  $prog->{"_group.lookup_groups"}= $Ytkit::TEST::Lookup_Groups::VAR1;
+  is($prog->query_fabric("group.lookup_groups", "")->[0]->{group_id}, "myfabric", "Parse group.lookup_groups");
 
-  $prog->{_query_fabric}= $Ytkit::TEST::Group_Health::VAR1;
+  $prog->{"_group.health"}= $Ytkit::TEST::Group_Health::VAR1;
 
-  foreach my $row (@{$prog->query_fabric("group_health", "myfabric")})
+  foreach my $row (@{$prog->query_fabric("group.health", "myfabric")})
   {
     my $uuid= grep {$row->{uuid} eq $_} qw{bb48b5d4-f1d9-11e7-b79f-40a8f0226cd8 0604c90e-4b59-11e7-b7fb-525400101084 f9536993-4b55-11e7-8791-525400101085};
     is($uuid, 1, "Getting fabric-uuid ");
   }
   done_testing;
+  &reset_param;
+  $prog->clear_cache;
 };
 
 subtest "config description" => sub

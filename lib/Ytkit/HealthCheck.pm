@@ -509,7 +509,9 @@ sub query_fabric
   my ($self, $function, $arg)= @_;
 
   ### Query for mikasafabric doesn't cache but this for unit-test.
-  if (!(defined($self->{_query_fabric})))
+  my $cache_name= sprintf("_%s", $function);
+
+  if (!(defined($self->{$cache_name})))
   {
     my $sql = sprintf("CALL %s(%s)", $function, $arg ? "'" . $arg . "'" : "");
     my $stmt= $self->{instance}->{conn}->prepare($sql, {Slice => {}});
@@ -519,13 +521,13 @@ sub query_fabric
     $stmt->fetchall_arrayref();
     $stmt->more_results;        ### Go ahead to next Result set.
 
-    $self->{_query_fabric}= $stmt->fetchall_arrayref({});
+    $self->{$cache_name}= $stmt->fetchall_arrayref({});
   }
 
-  my $ret= $self->{_query_fabric};
+  my $ret= $self->{$cache_name};
 
   ### Clear buffer each time.
-  delete($self->{_query_fabric});
+  delete($self->{$cache_name});
   return $ret;
 }
 

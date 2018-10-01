@@ -378,34 +378,76 @@ sub check_fabric
   my $status;
   my $output= "";
 
-  ### Healthcheck for each group.
-  foreach my $group (@{$self->query_fabric("group.lookup_groups", "")})
+  ### mikasafabric >= 0.6.10 had implemented "dump.health" command.
+  if (my $try= $self->query_fabric("dump.health"))
   {
-    my $group_id= $group->{group_id};
-    my $primary_server= "";
-    my $secondary     = 0;
-
-    foreach my $server (@{$self->query_fabric("group.health", $group_id)})
+    foreach my $group (@$try)
     {
-      $primary_server= $server->{uuid} if $server->{status} eq "PRIMARY";
-      $secondary += 1 if $server->{status} eq "SECONDARY";
-    }
+      my $group_id= $group->{group_id};
 
-    if (!($primary_server))
-    {
-      $status= NAGIOS_CRITICAL;
-      $output= sprintf("group %s does not have Master Server", $group_id);
-      $self->update_status($status, $output) if $status;
-    }
+      if ($group->{primary} < 1)
+      {
+        $status= NAGIOS_CRITICAL;
+        $output= sprintf("group %s does not have Master Server", $group_id);
+        $self->update_status($status, $output);
+      }
 
-    if (!($secondary))
-    {
-      $status= NAGIOS_CRITICAL;
-      $output= sprintf("group %s does not have Candidate-Slave Server", $group_id);
-      $self->update_status($status, $output) if $status;
+      if ($group->{secondary} < 1)
+      {
+        $status= NAGIOS_CRITICAL;
+        $output= sprintf("group %s does not have Candidate-Slave Server", $group_id);
+        $self->update_status($status, $output);
+      }
+
+      if ($group->{faulty} > 0)
+      {
+        $output= sprintf("group %s has Faulty state server.", $group_id);
+        if ($self->{fabric_faulty} eq "critical")
+        {
+          $status= NAGIOS_CRITICAL;
+          $self->update_status($status, $output);
+        }
+        elsif ($self->{fabric_faulty} eq "warning")
+        {
+          $status= NAGIOS_WARNING;
+          $self->update_status($status, $output);
+        }
+      }
     }
   }
+  else
+  {
+    ### "dump.health" cannot use, using old-way to check.
 
+    ### Healthcheck for each group.
+    foreach my $group (@{$self->query_fabric("group.lookup_groups", "")})
+    {
+      my $group_id= $group->{group_id};
+      my $primary_server= "";
+      my $secondary     = 0;
+  
+      foreach my $server (@{$self->query_fabric("group.health", $group_id)})
+      {
+        $primary_server= $server->{uuid} if $server->{status} eq "PRIMARY";
+        $secondary += 1 if $server->{status} eq "SECONDARY";
+      }
+  
+      if (!($primary_server))
+      {
+        $status= NAGIOS_CRITICAL;
+        $output= sprintf("group %s does not have Master Server", $group_id);
+        $self->update_status($status, $output) if $status;
+      }
+  
+      if (!($secondary))
+      {
+        $status= NAGIOS_CRITICAL;
+        $output= sprintf("group %s does not have Candidate-Slave Server", $group_id);
+        $self->update_status($status, $output) if $status;
+      }
+    }
+  }
+  
   ### File-Descriptor count.
   my $openfds= $self->query_fabric("manage.openfds", "");
 
@@ -515,13 +557,25 @@ sub query_fabric
   {
     my $sql = sprintf("CALL %s(%s)", $function, $arg ? "'" . $arg . "'" : "");
     my $stmt= $self->{instance}->{conn}->prepare($sql, {Slice => {}});
-    $stmt->execute;
 
-    ### Skip, 1st Result set is metadata.
-    $stmt->fetchall_arrayref();
-    $stmt->more_results;        ### Go ahead to next Result set.
+    eval
+    {
+      $stmt->execute;
+    };
 
-    $self->{$cache_name}= $stmt->fetchall_arrayref({});
+    if ($self->{instance}->{conn}->{mysql_errno} == 1106)
+    {
+      ### Got error 1106, its unknown command. (ex. dump.health in < 0.6.10)
+      return undef;
+    }
+    else
+    {
+      ### Skip, 1st Result set is metadata.
+      $stmt->fetchall_arrayref();
+      $stmt->more_results;        ### Go ahead to next Result set.
+
+      $self->{$cache_name}= $stmt->fetchall_arrayref({});
+    }
   }
 
   my $ret= $self->{$cache_name};
@@ -760,6 +814,12 @@ EOS
                     text    => qq{Warning threshold for "current_fd / max_fd"(percentage)} },
       critical => { default => 70,
                     text    => qq{Critical threshold for "current_fd / max_fd"(percentage)} },
+    },
+    fabric_faulty =>
+    {
+      isa     => ["ignore", "warning", "critical"],
+      default => "ignore",
+      text    => q{Reporting level when mikasafabric has faulty-state managed server.}
     },
     gtid_hole =>
     {

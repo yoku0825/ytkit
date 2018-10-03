@@ -218,6 +218,18 @@ subtest "autoinc_usage" => sub
   &reset_param;
 
   $prog->clear_cache;
+
+  ### Max autoinc is 10001 on signed smallint(32767), about 30.5% used but innodb_stats_on_metadata = ON
+  $prog->{instance}->{_show_variables}      = $Ytkit::Test::SHOW_VARIABLES::STATS_ON_METADATA_IS_ON;
+  $prog->{instance}->{_select_autoinc_usage}   = $Ytkit::Test::AUTOINC_USAGE_SIGNED::VAR1;
+  $prog->{autoinc_usage}->{warning}= 50;
+  $prog->{autoinc_usage}->{critical}= 90;
+  $prog->{autoinc_usage}->{enable}= 1;
+  $prog->check_autoinc_usage;
+  is($prog->{status}->{str}, "WARNING", "innodb_stats_on_metadata = ON");
+
+  &reset_param;
+  $prog->clear_cache;
 };
 
 subtest "read_only" => sub

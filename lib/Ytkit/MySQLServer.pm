@@ -355,4 +355,19 @@ sub gtid
   return $self->{_gtid};
 }
 
+sub stats_on_metadata
+{
+  my ($self)= @_;
+
+  if ($self->show_variables)
+  {
+    return ($self->show_variables->{innodb_stats_on_metadata}->{Value} eq "ON");
+  }
+  else
+  {
+    return undef;
+  }
+}
+
+
 return 1;

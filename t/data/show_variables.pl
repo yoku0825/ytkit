@@ -1991,4 +1991,7 @@ $VAR1 = {
                                         }
         };
 
+$STATS_ON_METADATA_IS_ON= \%VAR1;
+$STATS_ON_METADATA_IS_ON->{innodb_stats_on_metadata}= { Variable_name => "innodb_stats_on_metadata",
+                                                        Value => "ON" };
 return 1;

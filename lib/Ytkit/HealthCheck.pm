@@ -295,6 +295,15 @@ sub check_autoinc_usage
   my ($self)= @_;
   return 0 unless $self->{autoinc_usage}->{enable};
 
+  ### Treat as WARNING if innodb_stats_on_metadata = ON
+  if ($self->{instance}->stats_on_metadata)
+  {
+    $self->update_status(NAGIOS_WARNING, "--autoinc-usage-enable was falling-back to 0 " .
+                                         "because innodb_stats_on_metadata = ON could cause performance problem " .
+                                         "when accessing information_schema.tables and etc.");
+    return 0;
+  }
+
   foreach my $row (@{$self->select_autoinc_usage})
   {
     ### Calculate max value of autoinc from datatype.

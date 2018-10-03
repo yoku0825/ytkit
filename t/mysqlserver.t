@@ -147,6 +147,19 @@ subtest "show_master_status" => sub
   $server->clear_cache;
 };
 
+subtest "innodb_stats_on_metadata" => sub
+{
+  $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
+  ok(!($server->stats_on_metadata), "innodb_stats_on_metadata = OFF");
+  $server->clear_cache;
+
+  $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::STATS_ON_METADATA_IS_ON;
+  ok($server->stats_on_metadata, "innodb_stats_on_metadata = ON");
+  $server->clear_cache;
+
+  done_testing;
+};
+
 
 
 done_testing;

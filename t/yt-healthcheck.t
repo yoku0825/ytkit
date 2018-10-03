@@ -31,12 +31,12 @@ require "$Bin/Test.pl";
 
 no warnings "once";
 
-my @argv= qw{--role=auto};
+my @argv= qw{--role=auto --host=127.0.0.1};
 
 ### Connection failed.
 my $prog= Ytkit::HealthCheck->new(@argv);
 is($prog->{status}->{str}, "CRITICAL", "Connection Failed");
-is($prog->hostname, "Can't fetch hostname", "Default hostname when connection has failed.");
+is($prog->hostname, "127.0.0.1", "Default hostname when connection has failed.");
 
 &reset_param;
 
@@ -170,7 +170,8 @@ subtest "connection_count" => sub
 
 subtest "autoinc_usage" => sub
 {
-  $prog->{instance}->{_select_autoinc_usage}   = $Ytkit::Test::AUTOINC_USAGE::VAR1;
+  $prog->{instance}->{_show_variables}      = $Ytkit::Test::SHOW_VARIABLES::VAR1;
+  $prog->{instance}->{_select_autoinc_usage}= $Ytkit::Test::AUTOINC_USAGE::VAR1;
  
   ### Max autoinc is 10001 on unsigned smallint(65535), about 15.2% used.
   
@@ -204,6 +205,7 @@ subtest "autoinc_usage" => sub
 
   $prog->clear_cache;
 
+  $prog->{instance}->{_show_variables}      = $Ytkit::Test::SHOW_VARIABLES::VAR1;
   $prog->{instance}->{_select_autoinc_usage}   = $Ytkit::Test::AUTOINC_USAGE_SIGNED::VAR1;
  
   ### Max autoinc is 10001 on signed smallint(32767), about 30.5% used.

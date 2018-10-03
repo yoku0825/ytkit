@@ -92,6 +92,7 @@ sub new
     ### Early return if can't connect to MySQL.
     $self->{instance}= {};
     bless $self->{instance} => "Ytkit::MySQLServer";
+    $self->{instance}->{opt}= $self;
     $self->{status}= NAGIOS_CRITICAL;
     $self->{output}= "Can't connect to MySQL Server($@)";
     $self->{role}= $self->{role} eq "auto" ? "unknown" : $self->{role};

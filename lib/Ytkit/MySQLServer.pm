@@ -39,6 +39,7 @@ sub new
     _hostname => undef,
     _version  => undef,
     timeout   => $opt->{timeout},
+    opt       => $opt,
   };
   bless $self => $class;
 
@@ -78,29 +79,46 @@ sub exec_sql
 sub hostname
 {
   my ($self)= @_;
-  return "Can't fetch hostname" if !($self->{conn});
-  $self->{_hostname} ||= $self->show_variables->{hostname}->{Value};
+  if ($self->show_variables)
+  {
+    $self->{_hostname} ||= $self->show_variables->{hostname}->{Value};
+  }
+  else
+  {
+    $self->{_hostname} ||= $self->{opt}->{host};
+  }
   return $self->{_hostname};
 }
 
 sub port
 {
   my ($self)= @_;
-  return undef if !($self->{conn});
-  $self->{_port} ||= $self->show_variables->{port}->{Value};
+  if ($self->show_variables)
+  {
+    $self->{_port} ||= $self->show_variables->{port}->{Value};
+  }
+  else
+  {
+    $self->{_port} ||= 0;
+  }
   return $self->{_port};
 }
 
 sub mysqld_version
 {
   my ($self)= @_;
-  return "Can't fetch version" if !($self->{conn});
 
   if (!($self->{_version}))
   {
-    my $version_raw= $self->show_variables->{version}->{Value};
-    $version_raw =~ /^(\d+)\.(\d+)\.(\d+)/;
-    $self->{_version}= sprintf("%d%02d%02d", $1, $2, $3);
+    if (my $version_raw= $self->show_variables->{version}->{Value})
+    {
+      $version_raw =~ /^(\d+)\.(\d+)\.(\d+)/;
+      $self->{_version}= sprintf("%d%02d%02d", $1, $2, $3);
+    }
+    else
+    {
+      $self->{_version}= 0;
+    }
   }
   return $self->{_version};
 }
@@ -337,6 +355,4 @@ sub gtid
   return $self->{_gtid};
 }
 
-
 return 1;
-

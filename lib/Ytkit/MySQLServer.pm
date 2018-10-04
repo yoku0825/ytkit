@@ -369,7 +369,9 @@ sub stats_on_metadata
 
   if ($self->show_variables)
   {
-    return ($self->show_variables->{innodb_stats_on_metadata}->{Value} eq "ON");
+    ### 5.0 and earlier doesn't have innodb_stats_on_metadata.
+    ### They should be falling back as "innodb_stats_on_metadata = ON"
+    return !($self->show_variables->{innodb_stats_on_metadata}->{Value} eq "OFF");
   }
   else
   {

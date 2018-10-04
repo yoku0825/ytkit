@@ -302,6 +302,8 @@ sub _extract_for_usage
     else
     {
       ### 2 or more characters must specified with double-hypen.
+      ### Normalize to print "_" to "-".
+      $alias =~ s/_/-/g;
       push(@aliases, sprintf("--%s%s", $alias, $arg));
     }
   }

@@ -221,7 +221,6 @@ ORDER BY
   count_star DESC
 EOS
   $sql .= sprintf(" LIMIT %d", $limit) if $limit;
-  $sql =~ s/\n/ /g;
  
   return $self->query_arrayref($sql);
 }
@@ -244,7 +243,6 @@ ORDER BY
   data_length + index_length DESC
 EOS
   $sql .= sprintf(" LIMIT %d", $limit) if $limit;
-  $sql =~ s/\n/ /g;
 
   return $self->query_arrayref($sql);
 }
@@ -299,7 +297,7 @@ sub query_arrayref
 
   if (!(defined($self->{"_" . ${caller_name}})))
   {
-    return 0 if !($self->{conn});
+    return undef if !($self->{conn});
     $self->{"_" . ${caller_name}}= $self->{conn}->selectall_arrayref($sql, {Slice => {}}, @argv);
   }
   return $self->{"_" . ${caller_name}};
@@ -316,7 +314,7 @@ sub query_hashref
 
   if (!(defined($self->{"_" . ${caller_name}})))
   {
-    return 0 if !($self->{conn});
+    return undef if !($self->{conn});
     $self->{"_" . ${caller_name}}= $self->{conn}->selectall_hashref($sql, [$key], @argv);
   }
   return $self->{"_" . ${caller_name}};

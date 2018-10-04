@@ -132,6 +132,12 @@ sub is_satisfied_requirement
 sub print_query_latency
 {
   my ($self)= @_;
+  return $self->print_low($self->get_query_latency, $self->{query_latency}->{output_name});
+}
+
+sub get_query_latency
+{
+  my ($self)= @_;
 
   if (!($self->is_satisfied_requirement))
   {
@@ -141,12 +147,17 @@ sub print_query_latency
   }
   else
   {
-    my $ps_digest= $self->{instance}->select_ps_digest($self->{query_latency}->{limit});
-    return $self->print_low($ps_digest, $self->{query_latency}->{output_name});
+    return $self->{instance}->select_ps_digest($self->{query_latency}->{limit});
   }
 }
 
 sub print_table_latency
+{
+  my ($self)= @_;
+  return $self->print_low($self->get_table_latency, $self->{table_latency}->{output_name});
+}
+
+sub get_table_latency
 {
   my ($self)= @_;
 
@@ -158,12 +169,17 @@ sub print_table_latency
   }
   else
   {
-    my $ps_table= $self->{instance}->select_ps_table($self->{table_latency}->{limit});
-    return $self->print_low($ps_table, $self->{table_latency}->{output_name});
+    return $self->{instance}->select_ps_table($self->{table_latency}->{limit});
   }
 }
 
 sub print_table_size
+{
+  my ($self)= @_;
+  return $self->print_low($self->get_table_size, $self->{table_size}->{output_name});
+}
+
+sub get_table_size
 {
   my ($self)= @_;
 
@@ -174,11 +190,16 @@ sub print_table_size
          "when accessing information_schema.tables and etc.") if !($ENV{HARNESS_ACTIVE});
     return undef;
   }
-  my $is_table= $self->{instance}->select_is_table_by_size($self->{table_size}->{limit});
-  return $self->print_low($is_table, $self->{table_size}->{output_name});
+  return $self->{instance}->select_is_table_by_size($self->{table_size}->{limit});
 }
 
 sub print_innodb_metrics
+{
+  my ($self)= @_;
+  return $self->print_low($self->get_innodb_metrics, $self->{innodb_metrics}->{output_name});
+}
+
+sub get_innodb_metrics
 {
   my ($self)= @_;
 
@@ -188,71 +209,95 @@ sub print_innodb_metrics
          "please check requirements are satisfied.") if !($ENV{HARNESS_ACTIVE});
     return undef;
   }
-  my $is_metrics= $self->{instance}->select_is_metrics;
-  return $self->print_low($is_metrics, $self->{innodb_metrics}->{output_name});
+  return $self->{instance}->select_is_metrics;
 }
 
 sub print_show_status
+{
+  my ($self)= @_;
+  return $self->print_low($self->get_show_status, $self->{show_status}->{output_name});
+}
+
+sub get_show_status
 {
   my ($self)= @_;
 
   ### Ytkit::MySQLServer::show_status returns hashref(not arrayref),
   ### should be fixed to arrayref.
   my $global_status= $self->{instance}->show_status;
-  my @rs= map { +{ variable_name => $global_status->{$_}->{Variable_name},
-                   value => $global_status->{$_}->{Value},
-                   now   => strftime("%Y-%m-%d %H:%M:%S", localtime) }
-              } keys(%$global_status);
-  return $self->print_low(\@rs, $self->{show_status}->{output_name});
+  my @ret= map { +{ variable_name => $global_status->{$_}->{Variable_name},
+                    value => $global_status->{$_}->{Value},
+                    last_update => strftime("%Y-%m-%d %H:%M:%S", localtime) }
+               } keys(%$global_status);
+  return \@ret;
 }
 
 sub print_show_variables
+{
+  my ($self)= @_;
+  return $self->print_low($self->get_show_variables, $self->{show_variables}->{output_name});
+}
+
+sub get_show_variables
 {
   my ($self)= @_;
 
   ### Ytkit::MySQLServer::show_variables returns hashref(not arrayref),
   ### should be fixed to arrayref.
   my $global_variables= $self->{instance}->show_variables;
-  my @rs= map { +{ variable_name => $global_variables->{$_}->{Variable_name},
-                   value => $global_variables->{$_}->{Value},
-                   now   => strftime("%Y-%m-%d %H:%M:%S", localtime) }
-              } keys(%$global_variables);
-  return $self->print_low(\@rs, $self->{show_variables}->{output_name});
+  my @ret= map { +{ variable_name => $global_variables->{$_}->{Variable_name},
+                    value => $global_variables->{$_}->{Value},
+                    last_update   => strftime("%Y-%m-%d %H:%M:%S", localtime) }
+               } keys(%$global_variables);
+  return \@ret;
 }
 
 sub print_show_grants
 {
   my ($self)= @_;
-  my @rs;
+  return $self->print_low($self->get_show_grants, $self->{show_grants}->{output_name});
+}
+
+sub get_show_grants
+{
+  my ($self)= @_;
+  my @ret;
 
   foreach my $user (@{$self->{instance}->select_user_list})
   {
     my @grants= map { $_->{grants} } @{$self->{instance}->show_grants($user->{user}, $user->{host})};
-    push(@rs, +{ user_name => $user->{user}, user_host => $user->{host}, grants => join("; ", @grants) });
+    push(@ret, +{ user_name => $user->{user}, user_host => $user->{host}, grants => join("; ", @grants) });
   }
-  return $self->print_low(\@rs, $self->{show_grants}->{output_name});
+  return \@ret;
 }
 
 sub print_show_slave
 {
   my ($self)= @_;
+  return $self->print_low($self->get_show_slave, $self->{show_slave}->{output_name});
+}
+
+sub get_show_slave
+{
+  my ($self)= @_;
+  my @ret;
 
   foreach my $channel (@{$self->{instance}->show_slave_status})
   {
     ### Ignore named-channel(for Multi-Source Replication)
     next if exists($channel->{Channel_name}) && $channel->{Channel_name} ne "";
 
-    return $self->print_low([{ master_host => $channel->{Master_Host},
-                               master_port => $channel->{Master_Port},
-                               now         => strftime("%Y-%m-%d %H:%M:%S", localtime),
-                            }], $self->{show_slave}->{output_name});
+    push(@ret, { master_host => $channel->{Master_Host},
+                 master_port => $channel->{Master_Port},
+                 last_update => strftime("%Y-%m-%d %H:%M:%S", localtime), });
   }
+  return \@ret;
 }
 
 sub print_low
 {
   my ($self, $rs, $table)= @_;
-  return 0 if !($rs->[0]);
+  return undef if !($rs->[0]);
 
   my @buff;
   my @column= sort(keys(%{$rs->[0]}));
@@ -286,13 +331,13 @@ sub print_low
   }
   elsif ($self->{output} eq "json")
   {
-    return 0 if !($table);
+    return undef if !($table);
     foreach my $row (@$rs)
     {
       ### Add host/port information
       my $info= sprintf(q|{"host":"%s","port":"%s",%s}|,
-                        $self->{instance}->hostname,
-                        $self->{instance}->port,
+                        $self->{host} || "localhost",
+                        $self->{port} || 3306,
                         join(",", map { sprintf(q|"%s":"%s"|,
                                                 $_, defined($row->{$_}) ? 
                                                       escape_backslash($row->{$_}) :
@@ -304,13 +349,13 @@ sub print_low
   }
   elsif ($self->{output} eq "sql")
   {
-    return 0 if !($table);
+    return undef if !($table);
     foreach my $row (@$rs)
     {
       ### Add host/port information
       my $info= sprintf(q|('%s', '%s', %s)|,
-                        $self->{instance}->hostname,
-                        $self->{instance}->port,
+                        $self->{host} || "localhost",
+                        $self->{port} || 3306,
                         join(", ", map { defined($row->{$_}) ? 
                                            $self->{instance}->quote($row->{$_}) :
                                            "''"

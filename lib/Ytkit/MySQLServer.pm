@@ -282,6 +282,10 @@ sub query_arrayref
   my ($self, $sql, @argv)= @_;
   my ($caller_name)= (caller 1)[3] =~ /::([^:]+)$/;
 
+  ### Normalize SQL
+  $sql =~ s/\s+/ /g;
+  $sql = "/* ytkit $caller_name */ " . $sql;
+
   if (!(defined($self->{"_" . ${caller_name}})))
   {
     return 0 if !($self->{conn});
@@ -294,6 +298,10 @@ sub query_hashref
 {
   my ($self, $sql, $key, @argv)= @_;
   my ($caller_name)= (caller 1)[3] =~ /::([^:]+)$/;
+
+  ### Normalize SQL
+  $sql =~ s/\s+/ /g;
+  $sql = "/* ytkit $caller_name */ " . $sql;
 
   if (!(defined($self->{"_" . ${caller_name}})))
   {

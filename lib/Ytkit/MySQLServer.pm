@@ -369,5 +369,17 @@ sub stats_on_metadata
   }
 }
 
+sub p_s_on
+{
+  my ($self)= @_;
+
+  if ($self->mysqld_version >= 50608 &&
+      $self->show_variables->{performance_schema}->{Value} eq "ON")
+  {
+    return 1;
+  }
+  return 0;
+}
+
 
 return 1;

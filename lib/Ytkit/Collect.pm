@@ -117,41 +117,63 @@ sub collect
   }
 }
 
-sub is_satisfied_requirement
-{
-  my ($self)= @_;
-  return 1 if ($self->{instance}->mysqld_version >= 50608 && 
-               $self->{instance}->show_variables->{performance_schema}->{Value} eq "ON");
-  return 0;
-}
-
 sub clear_cache
 {
   my ($self)= @_;
   return $self->{instance}->clear_cache;
 }
 
+sub is_satisfied_requirement
+{
+  my ($self)= @_;
+  return $self->{instance}->p_s_on;
+}
+
 sub print_query_latency
 {
   my ($self)= @_;
-  croak("--query_latency_enable=1 needs MySQL >= 5.6.8 and performance_schema = ON, please check requirements are satisfied.") 
-    if !($self->is_satisfied_requirement);
-  my $ps_digest= $self->{instance}->select_ps_digest($self->{query_latency}->{limit});
-  return $self->print_low($ps_digest, $self->{query_latency}->{output_name});
+
+  if (!($self->is_satisfied_requirement))
+  {
+    carp("--query_latency_enable=1 needs MySQL >= 5.6.8 and performance_schema = ON, " .
+         "please check requirements are satisfied.") if !($ENV{HARNESS_ACTIVE});
+    return undef;
+  }
+  else
+  {
+    my $ps_digest= $self->{instance}->select_ps_digest($self->{query_latency}->{limit});
+    return $self->print_low($ps_digest, $self->{query_latency}->{output_name});
+  }
 }
 
 sub print_table_latency
 {
   my ($self)= @_;
-  croak("--table_latency_enable=1 needs MySQL >= 5.6.8 and performance_schema = ON, please check requirements are satisfied.") 
-    if !($self->is_satisfied_requirement);
-  my $ps_table= $self->{instance}->select_ps_table($self->{table_latency}->{limit});
-  return $self->print_low($ps_table, $self->{table_latency}->{output_name});
+
+  if (!($self->is_satisfied_requirement))
+  {
+    carp("--table_latency_enable=1 needs MySQL >= 5.6.8 and performance_schema = ON, " .
+         "please check requirements are satisfied.") if !($ENV{HARNESS_ACTIVE});
+    return undef;
+  }
+  else
+  {
+    my $ps_table= $self->{instance}->select_ps_table($self->{table_latency}->{limit});
+    return $self->print_low($ps_table, $self->{table_latency}->{output_name});
+  }
 }
 
 sub print_table_size
 {
   my ($self)= @_;
+
+  if ($self->{instance}->stats_on_metadata)
+  {
+    carp("--table-size-enable was falling-back to 0 ".
+         "because innodb_stats_on_metadata = ON could cause performance problem " .
+         "when accessing information_schema.tables and etc.") if !($ENV{HARNESS_ACTIVE});
+    return undef;
+  }
   my $is_table= $self->{instance}->select_is_table_by_size($self->{table_size}->{limit});
   return $self->print_low($is_table, $self->{table_size}->{output_name});
 }
@@ -159,8 +181,13 @@ sub print_table_size
 sub print_innodb_metrics
 {
   my ($self)= @_;
-  croak("--innodb_metrics_enable=1 needs MySQL >= 5.6.8, please check requirements are satisfied.") 
-    if $self->{instance}->mysqld_version < 50608;
+
+  if ($self->{instance}->mysqld_version < 50608)
+  {
+    carp("--innodb_metrics_enable=1 needs MySQL >= 5.6.8, " .
+         "please check requirements are satisfied.") if !($ENV{HARNESS_ACTIVE});
+    return undef;
+  }
   my $is_metrics= $self->{instance}->select_is_metrics;
   return $self->print_low($is_metrics, $self->{innodb_metrics}->{output_name});
 }

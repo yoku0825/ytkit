@@ -85,6 +85,10 @@ subtest "events_statements_summary_by_digest" => sub
   $prog->{output}= "sql";
   is($prog->print_query_latency, read_file("$Bin/data/select_from_ps_digest_into_sql.r"), "Print SQL style");
 
+  ### Turn off performance_schema.
+  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES_57_PS_OFF::VAR1;
+  is($prog->print_query_latency, undef, "No output when performance_schema = 0");
+
   $prog->clear_cache;
   done_testing;
 };
@@ -105,6 +109,10 @@ subtest "table_io_waits_summary_by_table" => sub
 
   $prog->{output}= "sql";
   is($prog->print_table_latency, read_file("$Bin/data/select_from_ps_table_into_sql.r"), "Print SQL style");
+
+  ### Turn off performance_schema.
+  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES_57_PS_OFF::VAR1;
+  is($prog->print_table_latency, undef, "No output when performance_schema = 0");
 
   $prog->clear_cache;
   done_testing;
@@ -127,6 +135,9 @@ subtest "i_s.tables" => sub
   $prog->{output}= "sql";
   is($prog->print_table_size, read_file("$Bin/data/select_from_is_table_into_sql.r"), "Print SQL style");
 
+  ### innodb_stats_on_metadata = ON
+  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::STATS_ON_METADATA_IS_ON;
+  is($prog->print_table_size, undef, "No output when innodb_stats_on_metadata = 1");
   $prog->clear_cache;
   done_testing;
 };

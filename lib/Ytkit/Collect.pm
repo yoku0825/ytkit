@@ -245,7 +245,7 @@ sub print_show_slave
     return $self->print_low([{ master_host => $channel->{Master_Host},
                                master_port => $channel->{Master_Port},
                                now         => strftime("%Y-%m-%d %H:%M:%S", localtime),
-                            }], $self->{slave_status}->{output_name});
+                            }], $self->{show_slave}->{output_name});
   }
 }
 

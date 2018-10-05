@@ -48,7 +48,7 @@ $prog->{query_latency}->{output_name}= "ps_digest_info";
 $prog->{table_latency}->{output_name}= "ps_table_info";
 $prog->{table_size}->{output_name}   = "is_table_info";
 $prog->{show_grants}->{output_name}  = "user_grants";
-$prog->{slave_status}->{output_name} = "slave_status";
+$prog->{show_slave}->{output_name} = "slave_status";
 
 
 subtest "checking requirements" => sub

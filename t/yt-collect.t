@@ -49,6 +49,8 @@ $prog->{table_latency}->{output_name}= "ps_table_info";
 $prog->{table_size}->{output_name}   = "is_table_info";
 $prog->{show_grants}->{output_name}  = "user_grants";
 $prog->{show_slave}->{output_name} = "slave_status";
+$prog->{host}= "163-44-175-117";
+$prog->{port}= 64057;
 
 
 subtest "checking requirements" => sub

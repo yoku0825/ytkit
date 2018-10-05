@@ -1,6 +1,6 @@
 Name:		ytkit
 Version:	0.1.4
-Release:	6
+Release:	7
 Summary:	ytkit is Yoku-san no Tool KIT scripts.
 
 #Group:		

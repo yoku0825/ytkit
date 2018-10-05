@@ -272,8 +272,8 @@ sub print_low
     {
       ### Add host/port information
       my $info= sprintf(q|"%s"%s"%s"%s%s|,
-                        $self->{instance}->hostname, $seperator,
-                        $self->{instance}->port, $seperator,
+                        $self->{host} || "localhost", $seperator,
+                        $self->{port} || 3306, $seperator,
                         join($seperator, map { sprintf(q|"%s"|,
                                                        defined($row->{$_}) ? 
                                                          escape_backslash($row->{$_}) :

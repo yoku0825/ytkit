@@ -288,7 +288,9 @@ sub _extract_for_usage
   my $multi= $opt->{multi} ? " (multiple)" : "";
 
   ### Add default information.
-  my $default= $opt->{default} ? sprintf(" { Default: %s }", $opt->{default}) : "";
+  my $default= (exists($opt->{default}) && length($opt->{default} // "") > 0 && !($opt->{noarg})) ? 
+                 sprintf(" { Default: %s }", $opt->{default}) : 
+                 "";
 
   ### Expand each aliases
   my @aliases;

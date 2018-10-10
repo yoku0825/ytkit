@@ -77,7 +77,7 @@ sub wait_slave
   {
     ### Report CRITICAL only when I/O and/or SQL threads have stopped.
     my $healthcheck= Ytkit::HealthCheck->new(@{$self->{healthcheck_opt}});
-    croak($healthcheck->{status}->{output}) 
+    croak($healthcheck->{output}) 
       if $healthcheck->{status}->{exit_code} eq Ytkit::HealthCheck::NAGIOS_CRITICAL->{exit_code};
 
     $healthcheck->check_slave_status;

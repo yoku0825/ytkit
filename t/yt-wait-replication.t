@@ -29,6 +29,12 @@ use Ytkit::WaitReplication;
 no warnings "once";
 ok(my $prog= Ytkit::WaitReplication->new, "Create instance");
 
+### Should not describe bogus error.
+eval
+{
+  $prog->wait_slave;
+};
+
 subtest "config description" => sub
 {
   unlike($prog->help, qr/FIXME/, "config description shouldn't have FIXME");

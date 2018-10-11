@@ -101,6 +101,7 @@ sub wait_slave
       }
       else
       {
+        $healthcheck->DESTROY;
         sleep $self->{sleep};
       }
     }

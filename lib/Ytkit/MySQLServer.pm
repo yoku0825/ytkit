@@ -47,6 +47,15 @@ sub new
   return $self;
 }
 
+sub DESTROY
+{
+  my ($self)= @_;
+  eval
+  {
+    $self->{conn}->disconnect;
+  };
+}
+
 sub connect_to_mysql
 {
   my ($dsn, $user, $password, $timeout)= @_;

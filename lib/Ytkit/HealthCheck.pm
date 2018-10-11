@@ -169,6 +169,12 @@ sub new
   return $self;
 }
 
+sub DESTROY
+{
+  my ($self)= @_;
+  $self->{instance}->DESTROY;
+}
+
 sub decide_role
 {
   my ($self)= @_;

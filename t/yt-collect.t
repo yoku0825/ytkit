@@ -216,6 +216,7 @@ subtest "SHOW SLAVE STATUS" => sub
 
 subtest "config description" => sub
 {
+  $ENV{HARNESS_ACTIVE}= 1;
   my $prog2= Ytkit::Collect->new;
   unlike($prog2->help, qr/FIXME/, "config description shouldn't have FIXME");
   done_testing;

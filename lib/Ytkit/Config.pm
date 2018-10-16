@@ -25,7 +25,7 @@ use Carp qw{carp croak};
 
 use Ytkit::Config::Option;
 
-my $_version= "0.1.5";
+my $_version= "0.1.6";
 
 our $CONNECT_OPTION=
 {

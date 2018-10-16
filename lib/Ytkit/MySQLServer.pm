@@ -403,5 +403,83 @@ sub p_s_on
   return 0;
 }
 
+sub fetch_p_s_stage_innodb_alter_table
+{
+  my ($self)= @_;
+  my $sql= << "EOS";
+SELECT
+  name AS name,
+  enabled AS enabled,
+  timed AS timed
+FROM
+  performance_schema.setup_instruments
+WHERE
+  name LIKE 'stage/innodb/alter table%'
+EOS
+
+  return $self->query_arrayref($sql);
+}
+
+sub fetch_p_s_events_stages
+{
+  my ($self)= @_;
+
+  my $sql= << "EOS";
+SELECT
+  name AS name,
+  enabled AS enabled
+FROM
+  performance_schema.setup_consumers
+WHERE
+  name LIKE 'events\_stages\_%'
+EOS
+
+  return $self->query_arrayref($sql);
+}
+
+sub alter_table_progress
+{
+  my ($self)= @_;
+
+  my $sql= << 'EOS';
+SELECT
+  thread_id AS thread_id,
+  processlist_id AS processlist_id,
+  event_name AS event_name,
+  sql_text AS sql_text,
+  @progress:= (work_completed / work_estimated) * 100 AS progress,
+  @elapsed:= (timer_current - timer_start) / power(10, 12) AS elapsed,
+  @elapsed * (100 / @progress) - @elapsed AS estimated
+FROM
+  (SELECT
+     processlist_id AS processlist_id,
+     stage.thread_id AS thread_id,
+     stage.event_name AS event_name,
+     work_completed AS work_completed,
+     work_estimated AS work_estimated,
+     (SELECT
+        timer_start
+      FROM
+        performance_schema.events_statements_current
+          JOIN
+        performance_schema.threads
+          USING(thread_id)
+      WHERE
+        processlist_id = @@pseudo_thread_id
+     ) AS timer_current,
+     statement.timer_start AS timer_start,
+     sql_text AS sql_text
+   FROM
+     performance_schema.events_stages_current AS stage
+       JOIN
+     performance_schema.events_statements_current AS statement
+       USING(thread_id)
+       JOIN
+     performance_schema.threads
+       USING(thread_id)
+  ) AS dummy
+EOS
+  return $self->query_arrayref($sql);
+}
 
 return 1;

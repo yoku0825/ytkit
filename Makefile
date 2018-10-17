@@ -25,7 +25,7 @@ test:
 	prove
 
 .PHONY: fatpack
-fatpack: setup yt-binlog-groupby yt-healthcheck yt-wait-replication
+fatpack: setup yt-binlog-groupby yt-healthcheck yt-wait-replication yt-collect yt-alter-progress
 
 fatinstall:
 	cp fatpack/* $(INSTALL)/bin
@@ -35,11 +35,19 @@ rpm: rpmbuild
 rpmbuild:
 	bash build.sh
 
-yt-binlog-groupby: bin/yt-binlog-groupby lib/Ytkit/BinlogGroupby.pm lib/Ytkit/Config.pm
+MANDATORY_PACKAGE=lib/Ytkit/Config.pm lib/Ytkit/MySQLServer.pm
+
+yt-binlog-groupby: bin/yt-binlog-groupby lib/Ytkit/BinlogGroupby.pm $(MANDATORY_PACKAGE)
 	fatpack-simple bin/$@ -o fatpack/$@
 
-yt-healthcheck: bin/yt-healthcheck lib/Ytkit/HealthCheck.pm lib/Ytkit/HealthCheck.pm lib/Ytkit/MySQLServer.pm
+yt-healthcheck: bin/yt-healthcheck lib/Ytkit/HealthCheck.pm $(MANDATORY_PACKAGE)
 	fatpack-simple bin/$@ -o fatpack/$@
 
-yt-wait-replication: bin/yt-wait-replication lib/Ytkit/WaitReplication.pm lib/Ytkit/HealthCheck.pm lib/Ytkit/Config.pm
+yt-wait-replication: bin/yt-wait-replication lib/Ytkit/WaitReplication.pm lib/Ytkit/HealthCheck.pm $(MANDATORY_PACKAGE)
+	fatpack-simple bin/$@ -o fatpack/$@
+
+yt-collect: bin/yt-collect lib/Ytkit/Collect.pm $(MANDATORY_PACKAGE)
+	fatpack-simple bin/$@ -o fatpack/$@
+
+yt-alter-progress: bin/yt-alter-progress lib/Ytkit/AlterProgress.pm $(MANDATORY_PACKAGE)
 	fatpack-simple bin/$@ -o fatpack/$@

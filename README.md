@@ -43,6 +43,16 @@ $ yt-wait-replication -h 172.17.0.1 -u user_name -p'password' -P 3306 --seconds-
 $ yt-collect -h 172.17.0.1 -u user_name -p'password' -P 3306 --iteration=60 --interval=60 --table_size-enable=1 --output=sql
 ```
 
+## yt-alter-progress
+
+- Display progress InnoDB ALTER TABLE (need >= 5.7.6)
+
+```
+$ yt-alter-progress -h127.0.0.1 -uroot -p'password'
+..
+(Need Ctrl + C for exit)
+```
+
 # Installation
 
 ## Install by rpm

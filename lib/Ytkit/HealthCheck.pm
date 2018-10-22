@@ -46,7 +46,6 @@ use constant BYTES =>
   bigint    => 8,
 };
 
-
 my $synopsis= q{  $ yt-healthcheck --host=mysql_host --port=mysql_port } .
               q{--user=mysql_account --password=mysql_password --role=auto};
 my $script= sprintf("%s - MySQL healthcheck script", $0);
@@ -172,7 +171,7 @@ sub new
 sub DESTROY
 {
   my ($self)= @_;
-  $self->{instance}->DESTROY;
+  $self->{instance} && $self->{instance}->DESTROY;
 }
 
 sub decide_role

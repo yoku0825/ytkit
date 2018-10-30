@@ -30,13 +30,13 @@ my $script= sprintf("%s - Script that waiting for Seconds_Behind_Master is less 
 my $description= << "EOS";
 yt-wait-replication only waits for Seconds_Behind_Master is less than --seconds-behind-master
 
-  yt-wait-replication returns 0 if Seconds_Behind_Master < --seconds-behind-master during --timeout seconds.
+  yt-wait-replication returns 0 if Seconds_Behind_Master < --seconds-behind-master during --retry-timeout seconds.
   yt-wait-replication dies when mysqld dies or replication thread(s) not running,
-  or Seconds_Behind_Master > --seconds-behind-master after --timeout seconds.
+  or Seconds_Behind_Master > --seconds-behind-master after --retry-timeout seconds.
 EOS
 my $synopsis= q{  $ yt-wait-replication --host=your_mysql_host --port=your_mysql_port } .
               q{--user=your_mysql_account --password=your_password } .
-              q{--seconds-behind-master=5 --sleep=3 --timeout=180};
+              q{--seconds-behind-master=5 --sleep=3 --retry-timeout=180};
 my $allow_extra_arvg= 0;
 my $config= _config();
 
@@ -49,6 +49,21 @@ sub new
               %{$config->{result}} };
   bless $self => $class;
   $self->handle_help;
+
+  if (grep { $_ =~ /timeout/ && $_ !~ /retry/ } @orig_argv)
+  {
+    if (grep { $_ =~ /timeout/ && $_ =~ /retry/ } @orig_argv)
+    {
+      ### Both --timeout and --retry-timeout are specified, maybe they are specified correctly.
+    }
+    else
+    {
+      ### --timeout is specified but --retry-timeout is NOT, maybe using old-param 
+      $self->{retry_timeout}= $self->{timeout};
+      carp("--timeout is deprecated (See #15), use --retry-timeout instead. (Sorry if you mean really 'timeout')\n" .
+           "Set $self->{timeout} into both of --timeout(connection timeout parameter) and --retry-timeout");
+    }
+  }
 
   $self=
   {
@@ -92,7 +107,7 @@ sub wait_slave
       $wait_count++;
       $healthcheck->print_status if $self->{verbose};
 
-      if (($wait_count * $self->{sleep}) > $self->{timeout})
+      if (($wait_count * $self->{sleep}) > $self->{retry_timeout})
       {
         ### Retry out.
         my $msg= sprintf("Retrying %d times each %d seconds but Seconds_Behind_Master still exceeds %d.",
@@ -124,9 +139,13 @@ sub _config
     sleep => { alias => ["sleep", "interval", "i"],
                default => 3,
                text => "Interval seconds in each retry-loop iteration." },
+    retry_timeout => { alias => ["retry_timeout"],
+                       default => 1800,
+                       text => "Seconds for scripts running(timeout when --retry-timeout < retry_count * sleep_interval)" },
     timeout => { alias => ["timeout"],
                  default => 1800,
-                 text => "Seconds for scripts running(timeout when --timeout < retry_count * sleep_interval)" },
+                 text => "Seconds for scripts running(timeout when --timeout < retry_count * sleep_interval)\n" .
+                         "This parameter is DEPRECATED. Use --retry-timeout instead." },
   };
   my $config= Ytkit::Config->new({ %$yt_wait_replication_option,
                                    %$Ytkit::Config::CONNECT_OPTION,

@@ -88,6 +88,9 @@ subtest "events_statements_summary_by_digest" => sub
   $prog->{output}= "sql";
   is($prog->print_query_latency, read_file("$Bin/data/select_from_ps_digest_into_sql.r"), "Print SQL style");
 
+  $prog->{output}= "short";
+  is($prog->print_query_latency, read_file("$Bin/data/select_from_ps_digest_into_short.r"), "Print Short style");
+
   ### Turn off performance_schema.
   $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES_57_PS_OFF::VAR1;
   is($prog->print_query_latency, undef, "No output when performance_schema = 0");
@@ -113,6 +116,9 @@ subtest "table_io_waits_summary_by_table" => sub
   $prog->{output}= "sql";
   is($prog->print_table_latency, read_file("$Bin/data/select_from_ps_table_into_sql.r"), "Print SQL style");
 
+  $prog->{output}= "short";
+  is($prog->print_table_latency, read_file("$Bin/data/select_from_ps_table_into_short.r"), "Print Short style");
+
   ### Turn off performance_schema.
   $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES_57_PS_OFF::VAR1;
   is($prog->print_table_latency, undef, "No output when performance_schema = 0");
@@ -137,6 +143,9 @@ subtest "i_s.tables" => sub
 
   $prog->{output}= "sql";
   is($prog->print_table_size, read_file("$Bin/data/select_from_is_table_into_sql.r"), "Print SQL style");
+
+  $prog->{output}= "short";
+  is($prog->print_table_size, undef, "Print Short style is unsupported.");
 
   ### innodb_stats_on_metadata = ON
   $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::STATS_ON_METADATA_IS_ON;
@@ -184,6 +193,10 @@ subtest "user_grants" => sub
   $prog->{instance}->{_show_grants}= $Ytkit::Test::SHOW_GRANTS::VAR1;
   $prog->{output}= "sql";
   is($prog->print_show_grants, read_file("$Bin/data/show_grants_into_sql.r"), "Print SQL style");
+
+  $prog->{instance}->{_show_grants}= $Ytkit::Test::SHOW_GRANTS::VAR1;
+  $prog->{output}= "short";
+  is($prog->print_show_grants, undef, "Print SQL style is unsupported.");
 };
 
 #subtest "SHOW GLOBAL VARIABLES" => sub
@@ -210,6 +223,9 @@ subtest "SHOW SLAVE STATUS" => sub
 
   $prog->{output}= "sql";
   is($prog->print_show_slave, read_file("$Bin/data/show_slave_status_into_sql.r"), "Print SQL style");
+
+  $prog->{output}= "short";
+  is($prog->print_show_slave, undef, "Print Short style is unsupported.");
 
   $prog->clear_cache;
   done_testing;

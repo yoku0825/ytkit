@@ -1,0 +1,9 @@
+2018-05-02 18:52:33	count_read:450/s	count_write:50/s	object_schema.object_name:tpcc.order_line	sum_timer_read:20000/s	sum_timer_write:250000000/s
+2018-05-02 18:52:33	count_read:0/s	count_write:0/s	object_schema.object_name:tpcc.stock	sum_timer_read:0/s	sum_timer_write:0/s
+2018-05-02 18:52:33	count_read:0/s	count_write:0/s	object_schema.object_name:tpcc.new_orders	sum_timer_read:0/s	sum_timer_write:0/s
+2018-05-02 18:52:33	count_read:0/s	count_write:0/s	object_schema.object_name:tpcc.item	sum_timer_read:0/s	sum_timer_write:0/s
+2018-05-02 18:52:33	count_read:0/s	count_write:0/s	object_schema.object_name:tpcc.history	sum_timer_read:0/s	sum_timer_write:0/s
+2018-05-02 18:52:33	count_read:0/s	count_write:0/s	object_schema.object_name:tpcc.warehouse	sum_timer_read:0/s	sum_timer_write:0/s
+2018-05-02 18:52:33	count_read:1/s	count_write:1/s	object_schema.object_name:tpcc.customer	sum_timer_read:1/s	sum_timer_write:3.5/s
+2018-05-02 18:52:33	count_read:0/s	count_write:0/s	object_schema.object_name:tpcc.district	sum_timer_read:0/s	sum_timer_write:0/s
+2018-05-02 18:52:33	count_read:0/s	count_write:0/s	object_schema.object_name:tpcc.orders	sum_timer_read:0/s	sum_timer_write:0/s

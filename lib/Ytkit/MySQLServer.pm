@@ -193,7 +193,7 @@ sub show_master_logs
 sub select_ps_digest
 {
   my ($self, $limit)= @_;
-  my $sql= "SELECT schema_name, digest, count_star, sum_timer_wait, NOW() AS now " .
+  my $sql= "SELECT schema_name, digest, digest_text, count_star, sum_timer_wait, NOW() AS last_update " .
            "FROM performance_schema.events_statements_summary_by_digest " .
            "ORDER BY count_star DESC";
   $sql .= sprintf(" LIMIT %d", $limit) if $limit;
@@ -212,7 +212,7 @@ SELECT
   sum_timer_read,
   count_write,
   sum_timer_write,
-  NOW() AS now
+  NOW() AS last_update
 FROM 
   performance_schema.table_io_waits_summary_by_table
 WHERE
@@ -236,7 +236,7 @@ SELECT
   data_length AS data_length,
   index_length AS index_length,
   data_free AS data_free,
-  NOW() AS now
+  NOW() AS last_update
 FROM
   information_schema.tables
 ORDER BY
@@ -252,7 +252,7 @@ sub select_is_metrics
   my ($self)= @_;
   my $sql= "SELECT name AS name, " .
                   "count AS count, " .
-                  "NOW() AS now " .
+                  "NOW() AS last_update " .
            "FROM information_schema.innodb_metrics " .
            "WHERE STATUS <> 'disabled'";
   return $self->query_arrayref($sql);

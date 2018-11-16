@@ -1,0 +1,49 @@
+#!/usr/bin/perl
+
+########################################################################
+# Copyright (C) 2018  yoku0825
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+########################################################################
+
+use strict;
+use warnings;
+use utf8;
+binmode STDOUT, ":utf8";
+
+use FindBin qw/$Bin/;
+use lib "$Bin/../lib";
+use Ytkit::Collect;
+
+my @default_opt= qw{ --iteration=0 --sleep=1 --delta=1 --delta-per-second=1 };
+my @override_opt= qw{ --innodb-metrics-enable=1
+                      --query-latency-enable=0
+                      --table-latency-enable=0
+                      --table-size-enable=0
+                      --show-grants-enable=0
+                      --show-slave-enable=0
+                      --show-status-enable=0
+                      --show-variables-enable=0
+                      --output=short };
+
+if (my $prog= Ytkit::Collect->new(@default_opt, @ARGV, @override_opt))
+{
+  $prog->collect;
+}
+else
+{
+  return 1;
+}
+

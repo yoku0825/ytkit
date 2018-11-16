@@ -45,7 +45,7 @@ sub new
   $config->parse_argv(@orig_argv);
 
   my $self= { _config => $config,
-              %{$config->{result}} };
+              %{$config->{result}}, };
   bless $self => $class;
   $self->handle_help;
 
@@ -75,7 +75,7 @@ sub make_handle
 
   foreach my $collection (@{$self->{enable_list}})
   {
-    if ($self->{record_path})
+    if ($self->{record_path} && $self->{output} ne "short")
     {
       my $filepath= sprintf("%s/%s_%s.%s", $self->{record_path}, $collection,
                                            strftime("%Y%m%d%H%M%S", localtime),
@@ -84,7 +84,7 @@ sub make_handle
     }
     else
     {
-      ### If --record_path isn't specified, set STDOUT for output channel.
+      ### If --record_path isn't specified(or --output=short), set STDOUT for output channel.
       $self->{$collection}->{fh}= IO::Handle->new_from_fd(1, "w");
     }
   }
@@ -93,28 +93,35 @@ sub make_handle
 sub collect
 {
   my ($self)= @_;
+  my $infinity= $self->{iteration} == 0;
 
-  while ()
+  while ($infinity || $self->{iteration}-- > 0)
   {
-    ### Print to output-fd, each collection
-    foreach (@{$self->{enable_list}})
-    {
-      my $method= sprintf("print_%s", $_);
-      $self->{$_}->{fh}->print($self->$method);
-      $self->{$_}->{fh}->flush;
-    }
-
-    ### Break loop when all-iterations have been finished.
-    last if --$self->{iteration} <= 0;
-
-    ### Clear cache each time.
-    $self->clear_cache;
+    $self->_collect_one_cycle;
 
     ### Don't print header again.
     $self->{verbose}= 0;
 
     sleep($self->{interval});
   }
+}
+
+sub _collect_one_cycle
+{
+  my ($self)= @_;
+
+  ### Print to output-fd, each collection
+  foreach (@{$self->{enable_list}})
+  {
+    my $method= sprintf("print_%s", $_);
+    $self->{$_}->{fh}->print($self->$method);
+    $self->{$_}->{fh}->flush;
+  }
+
+  ### Clear cache each time.
+  $self->clear_cache;
+
+  return 1;
 }
 
 sub clear_cache
@@ -132,7 +139,16 @@ sub is_satisfied_requirement
 sub print_query_latency
 {
   my ($self)= @_;
-  return $self->print_low($self->get_query_latency, $self->{query_latency}->{output_name});
+  my ($ret, $prev);
+
+  ($ret, $prev)= $self->_calc_delta(["schema_name", "digest_text"],
+                                    ["count_star", "sum_timer_wait"],
+                                    $self->get_query_latency, $self->{_previous}->{query_latency});
+
+  ### Calculate $ret or $prev is not there, override $prev by $current.
+  $self->{_previous}->{query_latency}= $prev;
+
+  return $self->print_low($ret, $self->{query_latency}->{output_name});
 }
 
 sub get_query_latency
@@ -154,7 +170,16 @@ sub get_query_latency
 sub print_table_latency
 {
   my ($self)= @_;
-  return $self->print_low($self->get_table_latency, $self->{table_latency}->{output_name});
+  my ($ret, $prev);
+
+  ($ret, $prev)= $self->_calc_delta(["object_schema", "object_name"],
+                                    ["count_read", "sum_timer_read", "count_write", "sum_timer_write"],
+                                    $self->get_table_latency, $self->{_previous}->{table_latency});
+
+  ### Calculate $ret or $prev is not there, override $prev by $current.
+  $self->{_previous}->{table_latency}= $prev;
+
+  return $self->print_low($ret, $self->{table_latency}->{output_name});
 }
 
 sub get_table_latency
@@ -182,6 +207,11 @@ sub print_table_size
 sub get_table_size
 {
   my ($self)= @_;
+  if ($self->{output} eq "short")
+  {
+    carp("--table-size-enable does not support --output=short") if !($ENV{HARNESS_ACTIVE});
+    return undef;
+  }
 
   if ($self->{instance}->stats_on_metadata)
   {
@@ -193,10 +223,92 @@ sub get_table_size
   return $self->{instance}->select_is_table_by_size($self->{table_size}->{limit});
 }
 
+sub _calc_delta
+{
+  my ($self, $key_column, $val_column, $current, $prev)= @_;
+  my @ret;
+
+  ### Just returns as is if --delta=0
+  return ($current, undef) if !($self->{delta});
+
+
+  my $unit= $self->{delta_per_second} ? "/s" : sprintf("/%ds", $self->{interval});
+  my $devide= $self->{delta_per_second} ? $self->{interval} : 1;
+  my (%current_hash, $key_column_string);
+
+  if (ref($key_column) eq "ARRAY")
+  {
+    foreach my $row (@$current)
+    {
+      $key_column_string= join(".", @$key_column);
+      my $key= join(".", map { $row->{$_} // "NULL" } @$key_column);
+      %current_hash= (%current_hash, $key => $row);
+    }
+    $key_column= $key_column_string;
+  }
+  else
+  {
+    %current_hash= map { $_->{$key_column} => $_ } @$current;
+  }
+
+  if ($prev)
+  {
+    my %prev_hash= %$prev;
+    foreach (keys(%current_hash))
+    {
+      if (ref($val_column) eq "ARRAY")
+      {
+        my %buff= ($key_column => $_, last_update => $current_hash{$_}->{last_update});
+        foreach my $val_name (@$val_column)
+        {
+          ### Is numeric value?
+          if ($current_hash{$_}->{$val_name} =~ /^\d+$/)
+          {
+            %buff= (%buff, $val_name => ($current_hash{$_}->{$val_name} - $prev_hash{$_}->{$val_name}) / $devide . $unit);
+          }
+          else
+          {
+            %buff= (%buff, $val_name => $current_hash{$_}->{$val_name});
+          }
+        }
+        push(@ret, \%buff);
+      }
+      else
+      {
+        ### Is numeric value?
+        if ($current_hash{$_}->{$val_column} =~ /^\d+$/)
+        {
+          ### Diff
+          push(@ret, { $key_column => $_,
+                       $val_column => ($current_hash{$_}->{$val_column} - $prev_hash{$_}->{$val_column}) / $devide . $unit,
+                       last_update => $current_hash{$_}->{last_update} });
+        }
+        else
+        {
+          ### Non-numeric value, push value as is.
+          push(@ret, { $key_column => $_,
+                       $val_column => $current_hash{$_}->{$val_column},
+                       last_update => $current_hash{$_}->{last_update} });
+        }
+      }
+    }
+  }
+
+  ### Calculate $ret or $prev is not there, override $prev by $current.
+  return (\@ret, \%current_hash);
+}
+
 sub print_innodb_metrics
 {
   my ($self)= @_;
-  return $self->print_low($self->get_innodb_metrics, $self->{innodb_metrics}->{output_name});
+  my ($ret, $prev);
+
+  ($ret, $prev)= $self->_calc_delta("name", "count", $self->get_innodb_metrics, $self->{_previous}->{innodb_metrics});
+
+  ### Calculate $ret or $prev is not there, override $prev by $current.
+  $self->{_previous}->{innodb_metrics}= $prev;
+
+  return $self->print_low($ret, $self->{innodb_metrics}->{output_name});
 }
 
 sub get_innodb_metrics
@@ -215,7 +327,14 @@ sub get_innodb_metrics
 sub print_show_status
 {
   my ($self)= @_;
-  return $self->print_low($self->get_show_status, $self->{show_status}->{output_name});
+  my ($ret, $prev);
+
+  ($ret, $prev)= $self->_calc_delta("variable_name", "value", $self->get_show_status, $self->{_previous}->{show_status});
+
+  ### Calculate $ret or $prev is not there, override $prev by $current.
+  $self->{_previous}->{show_status}= $prev;
+
+  return $self->print_low($ret, $self->{show_status}->{output_name});
 }
 
 sub get_show_status
@@ -261,6 +380,11 @@ sub print_show_grants
 sub get_show_grants
 {
   my ($self)= @_;
+  if ($self->{output} eq "short")
+  {
+    carp("--show-grants-enable does not support --output=short") if !($ENV{HARNESS_ACTIVE});
+    return undef;
+  }
   my @ret;
 
   foreach my $user (@{$self->{instance}->select_user_list})
@@ -280,6 +404,12 @@ sub print_show_slave
 sub get_show_slave
 {
   my ($self)= @_;
+
+  if ($self->{output} eq "short")
+  {
+    carp("--show-slave-enable does not support --output=short") if !($ENV{HARNESS_ACTIVE});
+    return undef;
+  }
   my @ret;
 
   foreach my $channel (@{$self->{instance}->show_slave_status})
@@ -327,6 +457,17 @@ sub print_low
       push(@buff, $info);
     }
 
+    return join("\n", @buff) . "\n";
+  }
+  elsif ($self->{output} eq "short")
+  {
+    foreach my $row (@$rs)
+    {
+      ### Add host/port information
+      my $info= $row->{last_update} . "\t" . 
+                  join("\t", map { sprintf("%s:%s", $_, $row->{$_} // "") } grep { $_ ne "last_update" } @column);
+      push(@buff, $info);
+    }
     return join("\n", @buff) . "\n";
   }
   elsif ($self->{output} eq "json")
@@ -472,14 +613,22 @@ sub _config
                         text => "Sleep seconds during each collecting iterations." },
     iteration      => { alias   => ["iteration", "count", "c"],
                         default => 1,
-                        text => "How many times does script collect information." },
+                        text => "How many times does script collect information. (0 means infinity)" },
     output         => { alias   => ["output", "o"],
                         default => "tsv",
-                        isa     => [qw{tsv csv json sql}],
+                        isa     => [qw{tsv csv json sql short}],
                         text => "Results output style." },
     record_path    => { alias   => ["record-path", "r"],
                         text => "When specified, each collection-methods write into the directory.\n" .
                                 "  (When not set, write into STDOUT)" },
+    delta => { alias => ["delta", "diff"],
+               default => 0,
+               isa => [0, 1],
+               text => q{Output diff-ed Numeric values compared with previous iteration.} },
+    delta_per_second => { alias => ["delta_per_second"],
+                          default => 0,
+                          isa   => [0, 1],
+                          text => q{Calculate diff-ed value to per-seconds(if not, per --interval seconds)} },
   };
   my $config= Ytkit::Config->new({ %$yt_collect_option, 
                                    %$Ytkit::Config::CONNECT_OPTION,

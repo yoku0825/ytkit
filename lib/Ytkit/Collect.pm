@@ -612,7 +612,7 @@ sub _config
                         default => 600,
                         text => "Sleep seconds during each collecting iterations." },
     iteration      => { alias   => ["iteration", "count", "c"],
-                        default => 1,
+                        default => 0,
                         text => "How many times does script collect information. (0 means infinity)" },
     output         => { alias   => ["output", "o"],
                         default => "tsv",

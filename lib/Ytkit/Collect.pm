@@ -231,7 +231,6 @@ sub _calc_delta
   ### Just returns as is if --delta=0
   return ($current, undef) if !($self->{delta});
 
-
   my $unit= $self->{delta_per_second} ? "/s" : sprintf("/%ds", $self->{interval});
   my $devide= $self->{delta_per_second} ? $self->{interval} : 1;
   my (%current_hash, $key_column_string);
@@ -259,19 +258,26 @@ sub _calc_delta
       if (ref($val_column) eq "ARRAY")
       {
         my %buff= ($key_column => $_, last_update => $current_hash{$_}->{last_update});
+        my $active= 0;
         foreach my $val_name (@$val_column)
         {
           ### Is numeric value?
           if ($current_hash{$_}->{$val_name} =~ /^\d+$/)
           {
-            %buff= (%buff, $val_name => ($current_hash{$_}->{$val_name} - $prev_hash{$_}->{$val_name}) / $devide . $unit);
+            my $diff= $current_hash{$_}->{$val_name} - $prev_hash{$_}->{$val_name};
+            $active= $active || $diff > 0;
+            if ($active || $self->{idle_print})
+            {
+              %buff= (%buff, $val_name => $diff / $devide . $unit);
+            }
           }
           else
           {
+            $active= 1;
             %buff= (%buff, $val_name => $current_hash{$_}->{$val_name});
           }
         }
-        push(@ret, \%buff);
+        push(@ret, \%buff) if $active || $self->{idle_print};
       }
       else
       {
@@ -279,9 +285,10 @@ sub _calc_delta
         if ($current_hash{$_}->{$val_column} =~ /^\d+$/)
         {
           ### Diff
+          my $diff= $current_hash{$_}->{$val_column} - $prev_hash{$_}->{$val_column};
           push(@ret, { $key_column => $_,
-                       $val_column => ($current_hash{$_}->{$val_column} - $prev_hash{$_}->{$val_column}) / $devide . $unit,
-                       last_update => $current_hash{$_}->{last_update} });
+                       $val_column => $diff / $devide . $unit,
+                       last_update => $current_hash{$_}->{last_update} }) if ($self->{idle_print} || $diff > 0);
         }
         else
         {
@@ -629,6 +636,10 @@ sub _config
                           default => 0,
                           isa   => [0, 1],
                           text => q{Calculate diff-ed value to per-seconds(if not, per --interval seconds)} },
+    idle_print => { alias => ["idle_print", "idle", "H"],
+                    default => 1,
+                    isa     => [0, 1],
+                    text    => "Print even diff-ed value is zero." },
   };
   my $config= Ytkit::Config->new({ %$yt_collect_option, 
                                    %$Ytkit::Config::CONNECT_OPTION,

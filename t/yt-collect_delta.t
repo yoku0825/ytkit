@@ -47,6 +47,7 @@ $prog->{print_header}= 0;
 $prog->{delta}= 1;
 $prog->{delta_per_second}= 1;
 $prog->{interval}= 2;
+$prog->{idle_print}= 1;
 
 ### Test only Short-style.
 $prog->{output}= "short";

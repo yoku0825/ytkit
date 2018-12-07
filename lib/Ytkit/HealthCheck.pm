@@ -619,12 +619,6 @@ sub check_gtid_hole
   }
 }
 
-sub clear_cache
-{
-  my ($self)= @_;
-  return $self->{instance}->clear_cache;
-}
-
 sub dump_detail
 {
   my ($self)= @_;

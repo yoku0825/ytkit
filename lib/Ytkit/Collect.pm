@@ -124,12 +124,6 @@ sub _collect_one_cycle
   return 1;
 }
 
-sub clear_cache
-{
-  my ($self)= @_;
-  return $self->{instance}->clear_cache;
-}
-
 sub is_satisfied_requirement
 {
   my ($self)= @_;

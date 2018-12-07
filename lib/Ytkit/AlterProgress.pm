@@ -226,12 +226,6 @@ sub alter_table_progress
                  $row->{sql_text} // "") if $row;
 }
 
-sub clear_cache
-{
-  my ($self)= @_;
-  return $self->{instance}->clear_cache;
-}
-
 sub _config
 {
   my $yt_alterprogress_option=

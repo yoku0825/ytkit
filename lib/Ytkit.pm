@@ -71,4 +71,10 @@ sub handle_help
   }
 }
 
+sub clear_cache
+{
+  my ($self)= @_;
+  return $self->{instance}->clear_cache;
+}
+
 return 1;

@@ -27,7 +27,7 @@ use FindBin qw/$Bin/;
 use lib "$Bin/../lib";
 use Ytkit::Collect;
 
-my @default_opt= qw{ --iteration=0 --sleep=1 --delta=1 --delta-per-second=1 };
+my @default_opt= qw{ --iteration=0 --sleep=1 --delta=1 --delta-per-second=1 --idle-print=0 };
 my @override_opt= qw{ --innodb-metrics-enable=0
                       --query-latency-enable=1
                       --table-latency-enable=0

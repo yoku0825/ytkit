@@ -25,7 +25,6 @@ use Test::More;
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
-use Ytkit;
 require "$Bin/Test.pl";
 
 no warnings "once";

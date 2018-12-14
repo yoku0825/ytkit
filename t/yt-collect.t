@@ -30,10 +30,11 @@ $ENV{HARNESS_ACTIVE}= 1;
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
-use Ytkit::Collect;
 require "$Bin/Test.pl";
 
 no warnings "once";
+
+use_ok("Ytkit::Collect");
 
 ### Dummy connection
 my $prog= {};

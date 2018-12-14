@@ -26,10 +26,12 @@ use Test::More;
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
-use Ytkit::HealthCheck;
 require "$Bin/Test.pl";
+use Ytkit::HealthCheck qw{ NAGIOS_OK };
 
 no warnings "once";
+
+use_ok("Ytkit::HealthCheck");
 
 my @argv= qw{--role=auto --host=127.0.0.1};
 

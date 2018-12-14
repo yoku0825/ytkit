@@ -25,7 +25,8 @@ use Test::More;
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
-use Ytkit::Config;
+
+use_ok("Ytkit::Config");
 
 open(my $spec, "<", "$Bin/../ytkit.spec");
 my ($spec_version)= join("\n", <$spec>) =~ /Version:\s+([\d\.]+)/;

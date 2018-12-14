@@ -25,10 +25,11 @@ use Test::More;
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
-use Ytkit::AlterProgress;
 require "$Bin/Test.pl";
 
 no warnings "once";
+
+use_ok("Ytkit::AlterProgress");
 
 ### Dummy connection
 my $prog= {};

@@ -24,9 +24,10 @@ use Test::More;
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
-use Ytkit::WaitReplication;
 
 no warnings "once";
+use_ok("Ytkit::WaitReplication");
+
 ok(my $prog= Ytkit::WaitReplication->new, "Create instance");
 
 ### Should not describe bogus error.

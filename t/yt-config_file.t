@@ -25,8 +25,9 @@ use Test::More;
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
-use Ytkit::Config;
-use Ytkit::Config::File;
+
+use_ok("Ytkit::Config");
+use_ok("Ytkit::Config::File");
 
 subtest "new Ytkit::Config::File interface" => sub
 {

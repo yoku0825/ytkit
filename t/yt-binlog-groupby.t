@@ -25,7 +25,8 @@ use Test::More;
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
-use Ytkit::BinlogGroupby;
+
+use_ok("Ytkit::BinlogGroupby");
 
 subtest "--sort (old-behavior compatibility)" => sub
 {

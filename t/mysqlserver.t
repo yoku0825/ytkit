@@ -25,10 +25,11 @@ use Test::More;
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
-use Ytkit::MySQLServer;
 require "$Bin/Test.pl";
 
 no warnings "once";
+
+use_ok("Ytkit::MySQLServer");
 
 ### Connection failed.
 my $server;

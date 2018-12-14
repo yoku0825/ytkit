@@ -24,6 +24,7 @@ use utf8;
 use Carp qw{carp croak};
 
 use Ytkit::Config;
+use Ytkit::Config::File;
 
 sub help
 {

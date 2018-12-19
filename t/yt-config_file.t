@@ -127,4 +127,35 @@ subtest "new Ytkit::Config::File interface" => sub
   done_testing;
 };
 
+subtest "with [global] section" => sub
+{
+  my $file= Ytkit::Config::File->new("$Bin/data/yt-config_file_global.conf", { use_global => 1 });
+
+  subtest "server1" => sub
+  {
+    my $config= Ytkit::Config->new($Ytkit::Config::CONNECT_OPTION);
+    $config->parse_argv(@{$file->{server1}});
+    is_deeply($config->{result}, { host => "123.456.789.10",
+                                   port => 3306,
+                                   user => "abcdef",
+                                   password => "hogehoge",
+                                   socket => undef,
+                                   timeout => 1}, "[global] should be overrided");
+    done_testing;
+  };
+
+  subtest "server2" => sub
+  {
+    my $config= Ytkit::Config->new($Ytkit::Config::CONNECT_OPTION);
+    $config->parse_argv(@{$file->{server2}});
+    is_deeply($config->{result}, { host => "localhost",
+                                   port => undef,
+                                   user => "global_user",
+                                   password => undef,
+                                   socket => undef,
+                                   timeout => 1 }, "[global] should be applied");
+    done_testing; 
+  };
+};
+
 done_testing;

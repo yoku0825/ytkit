@@ -25,7 +25,7 @@ use Carp qw{ carp croak };
 
 sub new
 {
-  my ($class, $file)= @_;
+  my ($class, $file, $opt)= @_;
 
   if (!(-r $file))
   {
@@ -33,10 +33,34 @@ sub new
     return undef;
   }
 
+  my $self= _read_file($file);
+
+  if ($opt && $opt->{use_global} == 1 && $self->{global})
+  {
+    ### Insert [global] secion values by `unshift`,
+    ### Parsing option goes the first argument to last and override new-value for same option,
+    ### So, implementing week-option(like a default) by inserting a head of array.
+    foreach (sort(keys(%{$self})))
+    {
+      next if $_ eq "global";
+      unshift(@{$self->{$_}}, @{$self->{global}});
+    }
+    delete($self->{global});
+  }
+
+  bless $self => $class;
+  return $self;
+}
+
+sub _read_file
+{
+  my ($file)= @_;
+
   open(my $fh, "<", $file);
   my @buff= <$fh>;
   close($fh);
-  my $self= {};
+
+  my $ret= {};
   my $section;
 
   foreach (@buff)
@@ -56,12 +80,10 @@ sub new
     if (/^(?<name>[^-][^=\s]*)\s*=\s*(?<value>\S.+)$/)
     {
       ### long[-_]name=value style.
-      push(@{$self->{$section}}, sprintf("--%s=%s", $+{name}, $+{value}));
+      push(@{$ret->{$section}}, sprintf("--%s=%s", $+{name}, $+{value}));
     }
   }
-
-  bless $self => $class;
-  return $self;
+  return $ret;
 }
 
 

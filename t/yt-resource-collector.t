@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-########################################################################
+#########################################################################
 # Copyright (C) 2018  yoku0825
 #
 # This program is free software; you can redistribute it and/or
@@ -21,18 +21,32 @@
 use strict;
 use warnings;
 use utf8;
-binmode STDOUT, ":utf8";
+use Test::More;
 
-use FindBin qw/$Bin/;
+$ENV{HARNESS_ACTIVE}= 1;
+
+use FindBin qw{$Bin};
 use lib "$Bin/../lib";
-use Ytkit::ResourceCollector;
+require "$Bin/Test.pl";
 
-if (my $prog= Ytkit::ResourceCollector->new(@ARGV))
-{
-  $prog->collect;
-}
-else
-{
-  exit 1;
-}
+no warnings "once";
 
+use_ok("Ytkit::ResourceCollector");
+my $prog= Ytkit::ResourceCollector->new("--config-file", "$Bin/data/test_yt-resource-collector.conf");
+is(ref($prog), "Ytkit::ResourceCollector", "Make instance");
+
+### TODO: How to test?
+
+done_testing;
+
+exit 0;
+
+
+sub read_file
+{
+  my ($filename)= @_;
+  open(my $fh, "<", $filename);
+  my @buff= <$fh>;
+  close($fh);
+  return join("", @buff);
+}

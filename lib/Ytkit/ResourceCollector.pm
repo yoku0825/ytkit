@@ -117,7 +117,7 @@ sub _config
     config_file =>
     {
       alias   => ["config_file", "c", "config"],
-      default => "/etc/ytkit/yt-resource-collector.conf",
+      default => "/usr/local/etc/ytkit/yt-resource-collector.conf",
       text    => "Path to config file",
     },
     record_path =>

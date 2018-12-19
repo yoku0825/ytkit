@@ -42,6 +42,6 @@ if (my $prog= Ytkit::AlterProgress->new(@ARGV))
 }
 else
 {
-  return 1;
+  exit 1;
 }
 

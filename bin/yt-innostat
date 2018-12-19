@@ -44,6 +44,6 @@ if (my $prog= Ytkit::Collect->new(@default_opt, @ARGV, @override_opt))
 }
 else
 {
-  return 1;
+  exit 1;
 }
 

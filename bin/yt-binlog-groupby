@@ -45,5 +45,5 @@ if (my $prog= Ytkit::BinlogGroupby->new(@ARGV))
 }
 else
 {
-  return 1;
+  exit 1;
 }

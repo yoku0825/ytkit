@@ -106,7 +106,7 @@ sub new
   $self->{status}= NAGIOS_OK;
   $self->{output}= "";
 
-  return $self if $self->check_offline_mode;
+  return $self if $self->{role} ne "fabric" && $self->check_offline_mode;
 
   if ($role eq "master")
   {

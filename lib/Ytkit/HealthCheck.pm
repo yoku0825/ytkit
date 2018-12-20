@@ -626,7 +626,8 @@ sub check_offline_mode
   my ($self)= @_;
 
   ### Check offline_mode (treat as same as failed to connect when offline_mode=1)
-  if ($self->{instance}->show_variables->{offline_mode}->{Value} eq "ON")
+  if ($self->{instance}->show_variables->{offline_mode} &&
+      $self->{instance}->show_variables->{offline_mode}->{Value} eq "ON")
   {
     $self->{status}= NAGIOS_CRITICAL;
     $self->{output}= "MySQL Server is now offline mode.";

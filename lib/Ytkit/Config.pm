@@ -33,6 +33,7 @@ our $CONNECT_OPTION=
             text  => "MySQL account using for connection and checking\n" .
             "  (need REPLICATION CLIENT, PROCESSLIST and global SELECT priv)" },
   host => { alias => ["h", "host"],
+            default => "localhost",
             text  => "MySQL host" },
   port => { alias => ["P", "port"],
             text  => "MySQL port number" },

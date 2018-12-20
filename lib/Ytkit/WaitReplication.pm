@@ -75,7 +75,7 @@ sub new
                         "--host", $self->{host} // "''",
                         "--port", $self->{port} // 3306,
                         "--socket", $self->{socket} // "''",
-                        "--password", $self->{password} // "''"],
+                        "--password", $self->{password} || "''"],
   };
   bless $self => $class;
 

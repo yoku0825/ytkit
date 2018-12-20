@@ -40,6 +40,7 @@ our $CONNECT_OPTION=
               text  => "Path to mysql.sock\n" .
                        "  (this parameter is used when --host=localhost)" },
   password => { alias => ["p", "password"],
+                default => $ENV{MYSQL_PWD} // "",
                 text  => "Password for the user specified by --user" },
   timeout  => { alias => ["timeout"], default => 1,
                 text  => "Seconds before timeout\n" .

@@ -106,6 +106,8 @@ sub new
   $self->{status}= NAGIOS_OK;
   $self->{output}= "";
 
+  return $self if $self->check_offline_mode;
+
   if ($role eq "master")
   {
     ### Check too long query, connection count, AUTO_INCREMENT usage, read_only should be OFF.
@@ -617,6 +619,20 @@ sub check_gtid_hole
     $self->update_status(NAGIOS_WARNING, sprintf("gitd_executed hole detected(%s) ", $one_server_gtid))
       if $#gtid_range > 0;
   }
+}
+
+sub check_offline_mode
+{
+  my ($self)= @_;
+
+  ### Check offline_mode (treat as same as failed to connect when offline_mode=1)
+  if ($self->{instance}->show_variables->{offline_mode}->{Value} eq "ON")
+  {
+    $self->{status}= NAGIOS_CRITICAL;
+    $self->{output}= "MySQL Server is now offline mode.";
+    return 1;
+  }
+  return 0;
 }
 
 sub dump_detail

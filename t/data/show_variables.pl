@@ -1994,4 +1994,9 @@ $VAR1 = {
 $STATS_ON_METADATA_IS_ON= \%VAR1;
 $STATS_ON_METADATA_IS_ON->{innodb_stats_on_metadata}= { Variable_name => "innodb_stats_on_metadata",
                                                         Value => "ON" };
+
+$OFFLINE_MODE= \%VAR1;
+$OFFLINE_MODE->{offline_mode}= { Variable_name => "offline_mode",
+                                 Value => "ON" };
+
 return 1;

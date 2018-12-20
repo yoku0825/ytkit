@@ -429,6 +429,19 @@ subtest "--role=fabric" => sub
   };
 };
 
+subtest "checking offline_mode" => sub
+{
+  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
+  ok(!($prog->check_offline_mode), "offline_mode = 0");
+
+  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::OFFLINE_MODE;
+  ok($prog->check_offline_mode, "offline_mode = 1");
+  &reset_param;
+  $prog->clear_cache;
+
+  done_testing;
+};
+
 subtest "config description" => sub
 {
   unlike($prog->help, qr/FIXME/, "config description shouldn't have FIXME");

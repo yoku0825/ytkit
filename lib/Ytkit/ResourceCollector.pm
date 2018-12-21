@@ -124,8 +124,7 @@ sub _config
     {
       alias   => ["record-path", "r"],
       default => "/tmp/yt-resource-collector",
-      text => "When specified, each collection-methods write into the directory.\n" .
-              "  (When not set, write into STDOUT)",
+      text => "When specified, each collection-methods write into the directory." .
     },
     auto_restart =>
     {

@@ -85,7 +85,7 @@ sub collect
 
           eval
           {
-            my $prog= Ytkit::Collect->new(@$conf, "--record-path=$dirname");
+            my $prog= Ytkit::Collect->new(@$conf, "--record-path=$dirname", "--verbose=1");
             $prog->collect;
           };
 
@@ -124,7 +124,7 @@ sub _config
     {
       alias   => ["record-path", "r"],
       default => "/tmp/yt-resource-collector",
-      text => "When specified, each collection-methods write into the directory." .
+      text => "When specified, each collection-methods write into the directory.",
     },
     auto_restart =>
     {

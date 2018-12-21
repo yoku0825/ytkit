@@ -89,7 +89,7 @@ sub collect
             $prog->collect;
           };
 
-          carp("$instance has been disconnected") if !($ENV{HARNESS_ACTIVE});
+          carp("$instance has been disconnected. ($@)") if !($ENV{HARNESS_ACTIVE});
 
           ### --auto-restart=0, break loop to exit.
           last if !($self->{auto_restart});

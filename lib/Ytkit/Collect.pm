@@ -610,7 +610,7 @@ sub _config
                        text => $output_name_text }
     },
     interval       => { alias   => ["interval", "i", "sleep"],
-                        default => 600,
+                        default => 10,
                         text => "Sleep seconds during each collecting iterations." },
     iteration      => { alias   => ["iteration", "count", "c"],
                         default => 0,

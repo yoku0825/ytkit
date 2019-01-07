@@ -133,6 +133,12 @@ sub _config
       isa     => [1,0],
       text    => "Restart when child process has downed.",
     },
+    interval =>
+    {
+      alias => ["interval", "i", "sleep"],
+      default => 600,
+      text => "Sleep seconds during each collecting iterations(passed to yt-collect)",
+    },
   };
   my $config= Ytkit::Config->new({ %$yt_resource_collector_option, 
                                    %$Ytkit::Config::COMMON_OPTION });

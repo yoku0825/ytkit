@@ -275,8 +275,9 @@ sub check_long_query
     my $time= $row->{Time} ? $row->{Time} : 0;
     my $status= compare_threshold($time, $self->{long_query});
 
-    $self->update_status($status, sprintf(q{Detected long query by %s@%s: "%s"},
-                                          $row->{User}, $row->{Host}, $row->{Info})) if $status && $row->{Info};
+    $self->update_status($status, sprintf(q{Detected long query(%d sec) by %s@%s: "%s"},
+                                          $row->{Time}, $row->{User},
+                                          $row->{Host}, $row->{Info})) if $status && $row->{Info};
 
   } ### End of foreach, goes to the next row.
 

@@ -1,7 +1,7 @@
 package Ytkit::ResourceCollector;
 
 ########################################################################
-# Copyright (C) 2018  yoku0825
+# Copyright (C) 2018, 2019  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -85,7 +85,7 @@ sub collect
 
           eval
           {
-            my $prog= Ytkit::Collect->new(@$conf, "--record-path=$dirname", "--verbose=1");
+            my $prog= Ytkit::Collect->new(@$conf, "--record-path=$dirname", "--verbose=1", "--output=json");
             $prog->collect;
           };
 

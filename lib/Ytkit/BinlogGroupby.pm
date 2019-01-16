@@ -1,7 +1,7 @@
 package Ytkit::BinlogGroupby;
 
 ########################################################################
-# Copyright (C) 2014, 2018  yoku0825
+# Copyright (C) 2014, 2019  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -272,13 +272,13 @@ sub _config
   my $yt_binloggroupby_option=
   {
     cell     => { alias => ["cell", "c"],
-                  isa   => [qw{s second 1s 10s m minute 1m 10m h hour 1h}],
+                  isa   => [qw{s second 1s 10s m minute 1m 10m h hour 1h d 1d}],
                   default => "10m",
                   text  => "Unit of aggregation." },
     group_by => { alias => ["group-by", "g"],
                   default => "time",
                   text  => qq{Part of aggregation.\n} .
-                           qq{  "time" [default], "table", "statement", "time,table", "time,statement",\n} .
+                           qq{  "time", "table", "statement", "time,table", "time,statement",\n} .
                            qq{  "table,statement", "all", "time,table,statement" (same as "all")\n} .
                            qq{  "all,exec", "exec,time,table,statement" (same as "all,exec")} },
     output   => { alias => ["output", "o"],

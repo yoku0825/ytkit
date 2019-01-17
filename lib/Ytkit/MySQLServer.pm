@@ -38,7 +38,7 @@ sub new
   {
     _hostname => undef,
     _version  => undef,
-    opt       => $opt,
+    _opt      => $opt,
   };
   bless $self => $class;
 
@@ -89,13 +89,13 @@ sub hostname
   my ($self)= @_;
   return $self->{_hostname} if $self->{_hostname};
 
-  if ($self->show_variables)
+  if ($self->{conn})
   {
     $self->{_hostname}= $self->show_variables->{hostname}->{Value};
   }
   else
   {
-    $self->{_hostname}= $self->{opt}->{host};
+    $self->{_hostname}= $self->{_opt}->{host};
   }
   return $self->{_hostname};
 }

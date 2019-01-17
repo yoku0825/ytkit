@@ -41,7 +41,7 @@ ok(!(defined($server->{conn})), "Connection failed");
 
 ### Dummy instance.
 $server= do { bless {} => "Ytkit::MySQLServer" };
-$server->{opt}->{host}= "localhost";
+$server->{_opt}->{host}= "localhost";
 is($server->hostname, "localhost", "Failed show_variables then hostname is --host argument itself");
 $server->{conn}= "dummy";
 

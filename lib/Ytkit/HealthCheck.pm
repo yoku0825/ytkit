@@ -670,6 +670,8 @@ sub dump_detail
   print_table($fh, $self->{instance}->show_processlist);
   printf($fh "\n%sSHOW SLAVE STATUS%s\n\n", "=" x 10, "=" x 10);
   print_vtable_one_row($fh, $self->{instance}->show_slave_status);
+  printf($fh "\n%sSHOW ENGINE INNODB STATUS%s\n\n", "=" x 10, "=" x 10);
+  print($fh $self->{instance}->show_engine_innodb_status->[0]->{Status});
   return 1;
 }
 

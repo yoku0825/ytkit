@@ -479,4 +479,10 @@ EOS
   return $self->query_arrayref($sql);
 }
 
+sub show_engine_innodb_status
+{
+  my ($self)= @_;
+  return $self->query_arrayref("SHOW ENGINE INNODB STATUS");
+}
+
 return 1;

@@ -1,7 +1,7 @@
 package Ytkit::AlterProgress;
 
 ########################################################################
-# Copyright (C) 2018  yoku0825
+# Copyright (C) 2018, 2019  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -63,19 +63,8 @@ sub new
   bless $self => $class;
   $self->handle_help;
 
-  eval
-  {
-    $self->{instance}= Ytkit::MySQLServer->new($self->{_config}->{result});
-  };
-
-  if ($@)
-  {
-    ### die if can't connect to MySQL.
-    croak("MySQL Connection failed. $@") if !($ENV{HARNESS_ACTIVE});
-
-    ### For test.
-    return $self;
-  }
+  ### croak if can't connect to MySQL.
+  $self->test_connect;
 
   ### Check performance_schema = ON.
   $self->checking_requirement;
@@ -92,15 +81,15 @@ sub checking_requirement
   my ($self)= @_;
 
   ### We needs MySQL >= 5.7.6
-  if ($self->{instance}->mysqld_version < 50706)
+  if ($self->instance->mysqld_version < 50706)
   {
     croak(sprintf("yt-alter-progress needs MySQL Version >= 5.7.6 but Server version is %d",
-                  $self->{instance}->mysqld_version)) if !($ENV{HARNESS_ACTIVE});
+                  $self->instance->mysqld_version)) if !($ENV{HARNESS_ACTIVE});
     return 0;
   }
 
   ### and performance_schema = ON
-  if (!($self->{instance}->p_s_on))
+  if (!($self->instance->p_s_on))
   {
     croak("yt-alter-progress needs performance_schema = ON but actually off")
       if !($ENV{HARNESS_ACTIVE});
@@ -115,7 +104,7 @@ sub setup_instruments
   foreach my $sql (@{$self->_search_instruments})
   {
     $self->{_fix_p_s}= 1;
-    $self->{instance}->exec_sql($sql);
+    $self->instance->exec_sql($sql);
   }
   return 1;
 }
@@ -123,7 +112,7 @@ sub setup_instruments
 sub _search_instruments
 {
   my ($self)= @_;
-  my $rs= $self->{instance}->fetch_p_s_stage_innodb_alter_table;
+  my $rs= $self->instance->fetch_p_s_stage_innodb_alter_table;
   $self->{_saved_instrumentes}= $rs;
 
   my @ret;
@@ -133,7 +122,7 @@ sub _search_instruments
     {
       ### Update ENABLED = YES, TIMED = YES
       my $sql= sprintf("UPDATE performance_schema.setup_instruments SET enabled = 'YES', timed = 'YES' WHERE name = %s",
-                       $self->{instance}->quote($row->{name}));
+                       $self->instance->quote($row->{name}));
       printf("yt-alter-progress updates setup_instruments: { %s) }\n", $sql) if $self->{verbose};
       push(@ret, $sql);
     }
@@ -148,7 +137,7 @@ sub setup_consumers
   foreach my $sql (@{$self->_search_consumers})
   {
     $self->{_fix_p_s}= 1;
-    $self->{instance}->exec_sql($sql);
+    $self->instance->exec_sql($sql);
   }
   return 1;
 }
@@ -156,7 +145,7 @@ sub setup_consumers
 sub _search_consumers
 {
   my ($self)= @_;
-  my $rs= $self->{instance}->fetch_p_s_events_stages;
+  my $rs= $self->instance->fetch_p_s_events_stages;
   $self->{_saved_consumers}= $rs;
   my @ret;
 
@@ -166,7 +155,7 @@ sub _search_consumers
     {
       ### Update ENABLED = YES, TIMED = YES
       my $sql= sprintf("UPDATE performance_schema.setup_consumers SET enabled = 'YES' WHERE name = %s",
-                       $self->{instance}->quote($row->{name}));
+                       $self->instance->quote($row->{name}));
       printf("yt-alter-progress updates setup_consumers { %s }\n", $sql) if $self->{verbose};
       push(@ret, $sql);
     }
@@ -181,7 +170,7 @@ sub restore_setting
   foreach my $sql (@{$self->_restore_setting_sql})
   {
     printf("yt-alter-progress restores performance_schema table { %s }\n", $sql) if $self->{verbose};
-    $self->{instance}->exec_sql($sql);
+    $self->instance->exec_sql($sql);
   }
   return 1;
 }
@@ -196,16 +185,16 @@ sub _restore_setting_sql
     foreach (@{$self->{_saved_consumers}})
     {
       push(@sql, sprintf("UPDATE performance_schema.setup_consumers SET enabled = %s WHERE name = %s",
-                         $self->{instance}->quote($_->{enabled}),
-                         $self->{instance}->quote($_->{name})));
+                         $self->instance->quote($_->{enabled}),
+                         $self->instance->quote($_->{name})));
     }
 
     foreach (@{$self->{_saved_instrumentes}})
     {
       push(@sql, sprintf("UPDATE performance_schema.setup_instruments SET enabled = %s, timed = %s WHERE name = %s",
-                         $self->{instance}->quote($_->{enabled}),
-                         $self->{instance}->quote($_->{timed}),
-                         $self->{instance}->quote($_->{name})));
+                         $self->instance->quote($_->{enabled}),
+                         $self->instance->quote($_->{timed}),
+                         $self->instance->quote($_->{name})));
     }
   }
   return \@sql;
@@ -214,11 +203,11 @@ sub _restore_setting_sql
 sub alter_table_progress
 {
   my ($self)= @_;
-  my $rs= $self->{instance}->alter_table_progress;
+  my $rs= $self->instance->alter_table_progress;
   my $row= $rs->[0];
 
   ### Don't cache.
-  delete($self->{instance}->{_alter_table_progress});
+  delete($self->instance->{_alter_table_progress});
 
   return sprintf("[ %4.2f%% ( %d sec | %d sec) ] %s : %s",
                  $row->{progress} // 0, $row->{estimated} // 0,

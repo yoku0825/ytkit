@@ -1,7 +1,7 @@
 package Ytkit::WaitReplication;
 
 ########################################################################
-# Copyright (C) 2018  yoku0825
+# Copyright (C) 2018, 2019  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,7 +22,7 @@ use strict;
 use warnings;
 use utf8;
 use base "Ytkit";
-use Carp qw{carp croak};
+use Carp qw{ carp croak };
 
 use Ytkit::HealthCheck;
 
@@ -124,7 +124,8 @@ sub wait_slave
     {
       ### yt-healthcheck can't connect server or I/O and/or SQL thread has stopped.
       print("yt-healthcheck returns Unexpected return-code. aborting.\n") if $self->{verbose};
-      croak($healthcheck->print_status);
+      $healthcheck->print_status;
+      croak($healthcheck->{output});
     }
   }
 }

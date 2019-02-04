@@ -33,7 +33,7 @@ no warnings "once";
 
 use_ok("Ytkit::HealthCheck");
 
-my @argv= qw{--role=auto --host=127.0.0.1};
+my @argv= qw{ --role=auto --host=127.0.0.1 };
 
 ### Connection failed.
 my $prog= Ytkit::HealthCheck->new(@argv);
@@ -44,24 +44,24 @@ is($prog->hostname, "127.0.0.1", "Default hostname when connection has failed.")
 
 subtest "decide_role" => sub
 {
-  $prog->{instance}->{_show_slave_status}= [];
-  $prog->{instance}->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
+  $prog->instance->{_show_slave_status}= [];
+  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
   is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master without slave)");
 
-  $prog->{instance}->{_show_slave_status}= [];
-  $prog->{instance}->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_NONGTID_SLAVE::VAR1;
+  $prog->instance->{_show_slave_status}= [];
+  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_NONGTID_SLAVE::VAR1;
   is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with non-gtid slaves)");
   
-  $prog->{instance}->{_show_slave_status}= [];
-  $prog->{instance}->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_GTID_SLAVE::VAR1;
+  $prog->instance->{_show_slave_status}= [];
+  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_GTID_SLAVE::VAR1;
   is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with gtid slaves)");
 
-  $prog->{instance}->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
-  $prog->{instance}->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
+  $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
+  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
   is($prog->decide_role, "slave", "decide_role with SHOW SLAVE STATUS / PROCESSLIST(slave)");
 
-  $prog->{instance}->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
-  $prog->{instance}->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_NONGTID_SLAVE::VAR1;
+  $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
+  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_NONGTID_SLAVE::VAR1;
   is($prog->decide_role, "intermidiate", "decide_role with SHOW SLAVE STATUS / PROCESSLIST(intermidiate)");
 
   $prog->clear_cache;
@@ -69,7 +69,7 @@ subtest "decide_role" => sub
 
 subtest "check_long_query" => sub
 {
-  $prog->{instance}->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
+  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
 
   ### Max query time is 125 (expect of replication threads)
 
@@ -134,8 +134,8 @@ subtest "check_long_query" => sub
 
 subtest "connection_count" => sub
 {
-  $prog->{instance}->{_show_status}   = $Ytkit::Test::SHOW_STATUS::VAR1;
-  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
+  $prog->instance->{_show_status}   = $Ytkit::Test::SHOW_STATUS::VAR1;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
 
   ### max_connections= 151 and Threads_connected= 102, about 67.5% used.
 
@@ -172,8 +172,8 @@ subtest "connection_count" => sub
 
 subtest "autoinc_usage" => sub
 {
-  $prog->{instance}->{_show_variables}      = $Ytkit::Test::SHOW_VARIABLES::VAR1;
-  $prog->{instance}->{_select_autoinc_usage}= $Ytkit::Test::AUTOINC_USAGE::VAR1;
+  $prog->instance->{_show_variables}      = $Ytkit::Test::SHOW_VARIABLES::VAR1;
+  $prog->instance->{_select_autoinc_usage}= $Ytkit::Test::AUTOINC_USAGE::VAR1;
  
   ### Max autoinc is 10001 on unsigned smallint(65535), about 15.2% used.
   
@@ -207,8 +207,8 @@ subtest "autoinc_usage" => sub
 
   $prog->clear_cache;
 
-  $prog->{instance}->{_show_variables}      = $Ytkit::Test::SHOW_VARIABLES::VAR1;
-  $prog->{instance}->{_select_autoinc_usage}   = $Ytkit::Test::AUTOINC_USAGE_SIGNED::VAR1;
+  $prog->instance->{_show_variables}      = $Ytkit::Test::SHOW_VARIABLES::VAR1;
+  $prog->instance->{_select_autoinc_usage}   = $Ytkit::Test::AUTOINC_USAGE_SIGNED::VAR1;
  
   ### Max autoinc is 10001 on signed smallint(32767), about 30.5% used.
   
@@ -222,8 +222,8 @@ subtest "autoinc_usage" => sub
   $prog->clear_cache;
 
   ### Max autoinc is 10001 on signed smallint(32767), about 30.5% used but innodb_stats_on_metadata = ON
-  $prog->{instance}->{_show_variables}      = $Ytkit::Test::SHOW_VARIABLES::STATS_ON_METADATA_IS_ON;
-  $prog->{instance}->{_select_autoinc_usage}   = $Ytkit::Test::AUTOINC_USAGE_SIGNED::VAR1;
+  $prog->instance->{_show_variables}      = $Ytkit::Test::SHOW_VARIABLES::STATS_ON_METADATA_IS_ON;
+  $prog->instance->{_select_autoinc_usage}   = $Ytkit::Test::AUTOINC_USAGE_SIGNED::VAR1;
   $prog->{autoinc_usage}->{warning}= 50;
   $prog->{autoinc_usage}->{critical}= 90;
   $prog->{autoinc_usage}->{enable}= 1;
@@ -237,7 +237,7 @@ subtest "autoinc_usage" => sub
 subtest "read_only" => sub
 {
   ### read_only= 0
-  $prog->{instance}->{_show_variables}   = $Ytkit::Test::SHOW_VARIABLES::VAR1;
+  $prog->instance->{_show_variables}   = $Ytkit::Test::SHOW_VARIABLES::VAR1;
  
   $prog->{read_only}->{should_be}= 1; ### For slaves.
   $prog->check_read_only;
@@ -252,7 +252,7 @@ subtest "read_only" => sub
   $prog->clear_cache;
 
   ### read_only= 1
-  $prog->{instance}->{_show_variables}   = $Ytkit::Test::SHOW_VARIABLES_READ_ONLY::VAR1;
+  $prog->instance->{_show_variables}   = $Ytkit::Test::SHOW_VARIABLES_READ_ONLY::VAR1;
  
   $prog->{read_only}->{should_be}= 1; ### For slaves.
   $prog->check_read_only;
@@ -269,7 +269,7 @@ subtest "read_only" => sub
 
 subtest "slave_status" => sub
 {
-  $prog->{instance}->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
+  $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
 
   ### I/O Running and SQL Running are "YES", Seconds_Behind_Master is 43.
  
@@ -296,7 +296,7 @@ subtest "slave_status" => sub
 
   $prog->clear_cache;
 
-  $prog->{instance}->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_NG::VAR1;
+  $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_NG::VAR1;
 
   ### SQL Running is "NO", always should be CRITICAL
  
@@ -319,21 +319,21 @@ subtest "slave_status" => sub
 subtest "--gtid-hole" => sub
 {
   $prog->{gtid_hole}->{enable}= 1;
-  $prog->{instance}->{_show_master_status}= $Ytkit::Test::SHOW_MASTER_STATUS::VAR1;
+  $prog->instance->{_show_master_status}= $Ytkit::Test::SHOW_MASTER_STATUS::VAR1;
   $prog->check_gtid_hole;
   is($prog->{status}->{str}, "OK", "There's no gtid_hole");
   &reset_param;
   $prog->clear_cache;
 
   $prog->{gtid_hole}->{enable}= 1;
-  $prog->{instance}->{_show_master_status}= $Ytkit::Test::GTID_EXECUTED_HOLE::VAR1;
+  $prog->instance->{_show_master_status}= $Ytkit::Test::GTID_EXECUTED_HOLE::VAR1;
   $prog->check_gtid_hole;
   is($prog->{status}->{str}, "WARNING", "There's gtid_hole");
   &reset_param;
   $prog->clear_cache;
 
   $prog->{gtid_hole}->{enable}= 0;
-  $prog->{instance}->{_show_master_status}= $Ytkit::Test::GTID_EXECUTED_HOLE::VAR1;
+  $prog->instance->{_show_master_status}= $Ytkit::Test::GTID_EXECUTED_HOLE::VAR1;
   $prog->check_gtid_hole;
   is($prog->{status}->{str}, "OK", "--gtid-hole-enable=0");
   &reset_param;
@@ -431,10 +431,10 @@ subtest "--role=fabric" => sub
 
 subtest "checking offline_mode" => sub
 {
-  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
   ok(!($prog->check_offline_mode), "offline_mode = 0");
 
-  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::OFFLINE_MODE;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::OFFLINE_MODE;
   ok($prog->check_offline_mode, "offline_mode = 1");
   &reset_param;
   $prog->clear_cache;

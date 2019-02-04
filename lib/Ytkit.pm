@@ -1,7 +1,7 @@
 package Ytkit;
 
 ########################################################################
-# Copyright (C) 2018  yoku0825
+# Copyright (C) 2018, 2019  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,10 +21,18 @@ package Ytkit;
 use strict;
 use warnings;
 use utf8;
-use Carp qw{carp croak};
+use Carp qw{ carp croak };
 
 use Ytkit::Config;
 use Ytkit::Config::File;
+use Ytkit::MySQLServer;
+
+sub instance
+{
+  my ($self)= @_;
+  $self->{_instance} ||= Ytkit::MySQLServer->new($self->{_config}->{result});
+  return $self->{_instance};
+}
 
 sub help
 {
@@ -75,7 +83,25 @@ sub handle_help
 sub clear_cache
 {
   my ($self)= @_;
-  return $self->{instance}->clear_cache;
+  return $self->instance->clear_cache;
+}
+
+sub test_connect
+{
+  my ($self)= @_;
+
+  ### Test connection
+  $self->instance->conn;
+
+  if ($self->instance->error)
+  {
+    ### die if can't connect to MySQL.
+    my $msg= sprintf("MySQL Connection failed. %s", $self->instance->error);
+    croak($msg) if !($ENV{HARNESS_ACTIVE});
+
+    ### For test.
+    return $self;
+  }
 }
 
 return 1;

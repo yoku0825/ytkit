@@ -31,23 +31,17 @@ no warnings "once";
 
 use_ok("Ytkit::AlterProgress");
 
-### Dummy connection
-my $prog= {};
-bless $prog => "Ytkit::AlterProgress";
-$prog->{instance}= {};
-bless $prog->{instance} => "Ytkit::MySQLServer";
-$prog->{instance}->{conn}= {};
-#bless $prog->{instance}->{conn} => "DBI";
+ok(my $prog= Ytkit::AlterProgress->new("--host=localhost"), "Create new");
 
 $ENV{HARNESS_ACTIVE}= 1;
 
 subtest "Checking requirements" => sub
 {
-  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
   ok($prog->checking_requirement, "Checking Requirement(OK on ps=ON 5.7)");
   $prog->clear_cache;
 
-  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES_55_PS_ON::VAR1;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES_55_PS_ON::VAR1;
   ok(!($prog->checking_requirement), "Checking Requirement(NG on ps=ON 5.5)");
   $prog->clear_cache;
 
@@ -56,11 +50,11 @@ subtest "Checking requirements" => sub
 
 subtest "setup_instruments" => sub
 {
-  $prog->{instance}->{_fetch_p_s_stage_innodb_alter_table} = $Ytkit::Test::fetch_p_s_stage_innodb_alter_table::ALL_YES;
+  $prog->instance->{_fetch_p_s_stage_innodb_alter_table} = $Ytkit::Test::fetch_p_s_stage_innodb_alter_table::ALL_YES;
   is_deeply($prog->_search_instruments, [], "setup_instruments has been already set up");
   $prog->clear_cache;
 
-  $prog->{instance}->{_fetch_p_s_stage_innodb_alter_table} = $Ytkit::Test::fetch_p_s_stage_innodb_alter_table::SOMETHING_NO;
+  $prog->instance->{_fetch_p_s_stage_innodb_alter_table} = $Ytkit::Test::fetch_p_s_stage_innodb_alter_table::SOMETHING_NO;
   is_deeply($prog->_search_instruments, ["UPDATE performance_schema.setup_instruments SET enabled = 'YES', timed = 'YES' WHERE name = 'stage/innodb/alter table (end)'", "UPDATE performance_schema.setup_instruments SET enabled = 'YES', timed = 'YES' WHERE name = 'stage/innodb/alter table (flush)'","UPDATE performance_schema.setup_instruments SET enabled = 'YES', timed = 'YES' WHERE name = 'stage/innodb/alter table (insert)'"], "setup_instruments should be updated");
   $prog->clear_cache;
 
@@ -69,11 +63,11 @@ subtest "setup_instruments" => sub
 
 subtest "setup_consumers" => sub
 {
-  $prog->{instance}->{_fetch_p_s_events_stages} = $Ytkit::Test::fetch_p_s_events_stages::ALL_YES;
+  $prog->instance->{_fetch_p_s_events_stages} = $Ytkit::Test::fetch_p_s_events_stages::ALL_YES;
   is_deeply($prog->_search_consumers, [], "setup_consumers has been already set up");
   $prog->clear_cache;
 
-  $prog->{instance}->{_fetch_p_s_events_stages} = $Ytkit::Test::fetch_p_s_events_stages::ALL_NO;
+  $prog->instance->{_fetch_p_s_events_stages} = $Ytkit::Test::fetch_p_s_events_stages::ALL_NO;
   is_deeply($prog->_search_consumers, ["UPDATE performance_schema.setup_consumers SET enabled = 'YES' WHERE name = 'events_stages_current'","UPDATE performance_schema.setup_consumers SET enabled = 'YES' WHERE name = 'events_stages_history'","UPDATE performance_schema.setup_consumers SET enabled = 'YES' WHERE name = 'events_stages_history_long'"], "setup_consumers should be updated");
   $prog->clear_cache;
 
@@ -82,7 +76,7 @@ subtest "setup_consumers" => sub
 
 subtest "alter_table_progress" => sub
 {
-  $prog->{instance}->{_alter_table_progress}= $Ytkit::Test::alter_table_progress::VAR1;
+  $prog->instance->{_alter_table_progress}= $Ytkit::Test::alter_table_progress::VAR1;
   is($prog->alter_table_progress, "[ 15.38% ( 11 sec | 2 sec) ] stage/innodb/alter table (read PK and internal sort) : ALTER TABLE t1 ADD KEY (charcol1, intcol1)", "Output progress");
   $prog->clear_cache;
 

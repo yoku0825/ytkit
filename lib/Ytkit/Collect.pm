@@ -1,7 +1,7 @@
 package Ytkit::Collect;
 
 ########################################################################
-# Copyright (C) 2018  yoku0825
+# Copyright (C) 2018, 2019  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -24,7 +24,7 @@ use utf8;
 use POSIX;
 use IO::File;
 use base "Ytkit";
-use Carp qw{carp croak};
+use Carp qw{ carp croak };
 
 use Ytkit::MySQLServer;
 
@@ -49,16 +49,8 @@ sub new
   bless $self => $class;
   $self->handle_help;
 
-  eval
-  {
-    $self->{instance}= Ytkit::MySQLServer->new($self->{_config}->{result});
-  };
-
-  if ($@)
-  {
-    ### die if can't connect to MySQL.
-    croak("MySQL Connection failed. $@") if !($ENV{HARNESS_ACTIVE});
-  }
+  ### die if can't connect to MySQL.
+  $self->test_connect;
 
   my @enable= grep { ref($self->{$_}) eq "HASH" && 
                      exists($self->{$_}->{enable}) && 
@@ -127,7 +119,7 @@ sub _collect_one_cycle
 sub is_satisfied_requirement
 {
   my ($self)= @_;
-  return $self->{instance}->p_s_on;
+  return $self->instance->p_s_on;
 }
 
 sub print_query_latency
@@ -157,7 +149,7 @@ sub get_query_latency
   }
   else
   {
-    return $self->{instance}->select_ps_digest($self->{query_latency}->{limit});
+    return $self->instance->select_ps_digest($self->{query_latency}->{limit});
   }
 }
 
@@ -188,7 +180,7 @@ sub get_table_latency
   }
   else
   {
-    return $self->{instance}->select_ps_table($self->{table_latency}->{limit});
+    return $self->instance->select_ps_table($self->{table_latency}->{limit});
   }
 }
 
@@ -207,14 +199,14 @@ sub get_table_size
     return undef;
   }
 
-  if ($self->{instance}->stats_on_metadata)
+  if ($self->instance->stats_on_metadata)
   {
     carp("--table-size-enable was falling-back to 0 ".
          "because innodb_stats_on_metadata = ON could cause performance problem " .
          "when accessing information_schema.tables and etc.") if !($ENV{HARNESS_ACTIVE});
     return undef;
   }
-  return $self->{instance}->select_is_table_by_size($self->{table_size}->{limit});
+  return $self->instance->select_is_table_by_size($self->{table_size}->{limit});
 }
 
 sub _calc_delta
@@ -316,13 +308,13 @@ sub get_innodb_metrics
 {
   my ($self)= @_;
 
-  if ($self->{instance}->mysqld_version < 50608)
+  if ($self->instance->mysqld_version < 50608)
   {
     carp("--innodb_metrics_enable=1 needs MySQL >= 5.6.8, " .
          "please check requirements are satisfied.") if !($ENV{HARNESS_ACTIVE});
     return undef;
   }
-  return $self->{instance}->select_is_metrics;
+  return $self->instance->select_is_metrics;
 }
 
 sub print_show_status
@@ -344,7 +336,7 @@ sub get_show_status
 
   ### Ytkit::MySQLServer::show_status returns hashref(not arrayref),
   ### should be fixed to arrayref.
-  my $global_status= $self->{instance}->show_status;
+  my $global_status= $self->instance->show_status;
   my @ret= map { +{ variable_name => $global_status->{$_}->{Variable_name},
                     value => $global_status->{$_}->{Value},
                     last_update => strftime("%Y-%m-%d %H:%M:%S", localtime) }
@@ -364,7 +356,7 @@ sub get_show_variables
 
   ### Ytkit::MySQLServer::show_variables returns hashref(not arrayref),
   ### should be fixed to arrayref.
-  my $global_variables= $self->{instance}->show_variables;
+  my $global_variables= $self->instance->show_variables;
   my @ret= map { +{ variable_name => $global_variables->{$_}->{Variable_name},
                     value => $global_variables->{$_}->{Value},
                     last_update   => strftime("%Y-%m-%d %H:%M:%S", localtime) }
@@ -388,9 +380,9 @@ sub get_show_grants
   }
   my @ret;
 
-  foreach my $user (@{$self->{instance}->select_user_list})
+  foreach my $user (@{$self->instance->select_user_list})
   {
-    my @grants= map { $_->{grants} } @{$self->{instance}->show_grants($user->{user}, $user->{host})};
+    my @grants= map { $_->{grants} } @{$self->instance->show_grants($user->{user}, $user->{host})};
     push(@ret, +{ user_name => $user->{user}, user_host => $user->{host}, grants => join("; ", @grants) });
   }
   return \@ret;
@@ -413,7 +405,7 @@ sub get_show_slave
   }
   my @ret;
 
-  foreach my $channel (@{$self->{instance}->show_slave_status})
+  foreach my $channel (@{$self->instance->show_slave_status})
   {
     ### Ignore named-channel(for Multi-Source Replication)
     next if exists($channel->{Channel_name}) && $channel->{Channel_name} ne "";
@@ -499,7 +491,7 @@ sub print_low
                         $self->{host} || "localhost",
                         $self->{port} || 3306,
                         join(", ", map { defined($row->{$_}) ? 
-                                           $self->{instance}->quote($row->{$_}) :
+                                           $self->instance->quote($row->{$_}) :
                                            "''"
                                        } @column));
       push(@buff, $info);

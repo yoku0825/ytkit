@@ -1,7 +1,7 @@
 package Ytkit::MySQLServer;
 
 ########################################################################
-# Copyright (C) 2018  yoku0825
+# Copyright (C) 2018, 2019  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,7 +21,7 @@ package Ytkit::MySQLServer;
 use strict;
 use warnings;
 use utf8;
-use Carp qw{carp croak};
+use Carp qw{ carp croak };
 
 use DBI;
 
@@ -29,59 +29,121 @@ sub new
 {
   my ($class, $opt)= @_;
 
-  my $dsn= "dbi:mysql:";
-  $dsn  .= sprintf(";host=%s", $opt->{host}) if $opt->{host};
-  $dsn  .= sprintf(";port=%d", $opt->{port}) if $opt->{port};
-  $dsn  .= sprintf(";mysql_socket=%s", $opt->{socket}) if $opt->{socket};
-
   my $self=
   {
     _hostname => undef,
     _version  => undef,
     _opt      => $opt,
+    _conn     => undef,
+    _error    => undef,
+    _warning  => undef,
   };
   bless $self => $class;
 
-  $self->{conn}= connect_to_mysql($dsn, $opt->{user}, $opt->{password}, $self->{timeout});
   return $self;
 }
 
 sub DESTROY
 {
   my ($self)= @_;
-  return if !($self->{conn});
   eval
   {
-    $self->{conn}->disconnect;
+    $self->conn->disconnect;
   };
 }
 
-sub connect_to_mysql
+sub error
 {
-  my ($dsn, $user, $password, $timeout)= @_;
-  $timeout ||= 10;
+  my ($self, $arg)= @_;
 
-  my $conn= DBI->connect($dsn, $user, $password,
-                         {mysql_enable_utf8     => 1,
-                          mysql_connect_timeout => $timeout,
-                          mysql_write_timeout   => $timeout, 
-                          mysql_read_timeout    => $timeout,
-                          RaiseError            => 1, 
-                          PrintError            => 0,
-                         });
-  return $conn;
+  if (defined($arg))
+  {
+    $self->{_error}= $arg;
+  }
+  else
+  {
+    return $self->{_error};
+  }
 }
 
+sub warning
+{
+  my ($self, $arg)= @_;
+
+  if (defined($arg))
+  {
+    $self->{_warning}= $arg;
+  }
+  else
+  {
+    return $self->{_warning};
+  }
+}
+
+sub conn
+{
+  my ($self)= @_;
+
+  if (!($self->{_conn}))
+  {
+    my $opt= $self->{_opt};
+    my $dsn= "dbi:mysql:";
+    $dsn  .= sprintf(";host=%s", $opt->{host}) if $opt->{host};
+    $dsn  .= sprintf(";port=%d", $opt->{port}) if $opt->{port};
+    $dsn  .= sprintf(";mysql_socket=%s", $opt->{socket}) if $opt->{socket};
+
+    eval
+    {
+      $self->{_conn}= DBI->connect($dsn, $opt->{user}, $opt->{password},
+                                   { mysql_enable_utf8     => 1,
+                                     mysql_connect_timeout => $opt->{timeout},
+                                     mysql_write_timeout   => $opt->{timeout}, 
+                                     mysql_read_timeout    => $opt->{timeout},
+                                     RaiseError            => 1, 
+                                     PrintError            => 0,
+                                   });
+    };
+
+    if ($@)
+    {
+      $self->error($@);
+      $self->{_conn}= undef;
+    }
+  }
+  return $self->{_conn};
+}
 
 sub exec_sql
 {
-  my ($self, $sql, $opt, @ARGV)= @_;
-
+  my ($self, $sql, $opt, @argv)= @_;
   my $ret;
-  eval
+
+  if ($self->conn)
   {
-    $ret= $self->{conn}->do($sql, $opt, @ARGV);
-  };
+    $self->error("");
+    $self->warning("");
+    my $conn= $self->conn;
+    return undef if $self->error;
+
+    eval
+    {
+      $ret= $conn->do($sql, $opt, @argv);
+    };
+
+    if ($@)
+    {
+      $self->error($@);
+      return undef;
+    }
+
+    my $warn;
+    eval
+    {
+      $warn= $conn->selectall_arrayref("SHOW WARNINGS");
+    };
+    $self->warning($warn) if $warn;
+  }
+
   return $ret;
 }
 
@@ -90,28 +152,14 @@ sub hostname
   my ($self)= @_;
   return $self->{_hostname} if $self->{_hostname};
 
-  if ($self->{conn})
-  {
-    $self->{_hostname}= $self->show_variables->{hostname}->{Value};
-  }
-  else
-  {
-    $self->{_hostname}= $self->{_opt}->{host};
-  }
+  $self->{_hostname}= $self->valueof("hostname") // $self->{_opt}->{host};
   return $self->{_hostname};
 }
 
 sub port
 {
   my ($self)= @_;
-  if ($self->show_variables)
-  {
-    $self->{_port} ||= $self->show_variables->{port}->{Value};
-  }
-  else
-  {
-    $self->{_port} ||= 0;
-  }
+  $self->{_port} ||= $self->valueof("port");
   return $self->{_port};
 }
 
@@ -121,7 +169,7 @@ sub mysqld_version
 
   if (!($self->{_version}))
   {
-    if (my $version_raw= $self->show_variables->{version}->{Value})
+    if (my $version_raw= $self->valueof("version"))
     {
       $version_raw =~ /^(\d+)\.(\d+)\.(\d+)/;
       $self->{_version}= sprintf("%d%02d%02d", $1, $2, $3);
@@ -297,8 +345,28 @@ sub query_arrayref
 
   if (!(defined($self->{"_" . ${caller_name}})))
   {
-    return undef if !($self->{conn});
-    $self->{"_" . ${caller_name}}= $self->{conn}->selectall_arrayref($sql, {Slice => {}}, @argv);
+    $self->error("");
+    $self->warning("");
+    my $conn= $self->conn;
+    return undef if $self->error;
+
+    eval
+    {
+      $self->{"_" . ${caller_name}}= $conn->selectall_arrayref($sql, {Slice => {}}, @argv);
+    };
+
+    if ($@)
+    {
+      $self->error($@);
+      return undef;
+    }
+
+    my $warn;
+    eval
+    {
+      $warn= $conn->selectall_arrayref("SHOW WARNINGS");
+    };
+    $self->warning($warn) if $warn;
   }
   return $self->{"_" . ${caller_name}};
 }
@@ -314,8 +382,28 @@ sub query_hashref
 
   if (!(defined($self->{"_" . ${caller_name}})))
   {
-    return undef if !($self->{conn});
-    $self->{"_" . ${caller_name}}= $self->{conn}->selectall_hashref($sql, [$key], @argv);
+    $self->error("");
+    $self->warning("");
+    my $conn= $self->conn;
+    return undef if $self->error;
+
+    eval
+    {
+      $self->{"_" . ${caller_name}}= $conn->selectall_hashref($sql, [$key], @argv);
+    };
+
+    if ($@)
+    {
+      $self->error($@);
+      return undef;
+    }
+
+    my $warn;
+    eval
+    {
+      $warn= $conn->selectall_arrayref("SHOW WARNINGS");
+    };
+    $self->warning($warn) if $warn;
   }
   return $self->{"_" . ${caller_name}};
 }
@@ -326,7 +414,7 @@ sub clear_cache
 
   foreach (keys(%$self))
   {
-    $self->{$_}= undef if $_ =~ /^_/;
+    $self->{$_}= undef if $_ =~ /^_/ && $_ ne "_conn";
   }
 }
 
@@ -334,21 +422,17 @@ sub quote
 {
   my ($self, $str)= @_;
 
-  my $ret;
-  eval
-  {
-    $ret= $self->{conn}->quote($str);
-  };
+  $self->conn;
 
-  if ($@)
+  if ($self->error)
   {
-    ### Return immitate-quote, if $self->{conn} is not connected.
+    ### Return immitate-quote, if $self->conn is not connected.
     $str =~ s/\'/\\'/g;
     return qq{'$str'};
   }
   else
   {
-    return $ret;
+    return $self->conn->quote($str);
   }
 }
 
@@ -375,18 +459,7 @@ sub gtid
 sub stats_on_metadata
 {
   my ($self)= @_;
-
-  if ($self->show_variables)
-  {
-    ### 5.0 and earlier doesn't have innodb_stats_on_metadata.
-    ### They should be falling back as "innodb_stats_on_metadata = ON"
-    return 1 if !($self->show_variables->{innodb_stats_on_metadata});
-    return $self->show_variables->{innodb_stats_on_metadata}->{Value} eq "ON";
-  }
-  else
-  {
-    return undef;
-  }
+  return $self->valueof("innodb_stats_on_metadata") eq "ON";
 }
 
 sub p_s_on
@@ -394,11 +467,25 @@ sub p_s_on
   my ($self)= @_;
 
   if ($self->mysqld_version >= 50608 &&
-      $self->show_variables->{performance_schema}->{Value} eq "ON")
+      $self->valueof("performance_schema") eq "ON")
   {
     return 1;
   }
   return 0;
+}
+
+sub valueof
+{
+  my ($self, $variable_name)= @_;
+
+  if (my $variables= $self->show_variables)
+  {
+    if ($variables->{$variable_name})
+    {
+      return $variables->{$variable_name}->{Value};
+    }
+  }
+  return undef;
 }
 
 sub fetch_p_s_stage_innodb_alter_table

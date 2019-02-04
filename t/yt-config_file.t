@@ -29,6 +29,9 @@ use lib "$Bin/../lib";
 use_ok("Ytkit::Config");
 use_ok("Ytkit::Config::File");
 
+my $save_mysql_pwd= $ENV{MYSQL_PWD};
+$ENV{MYSQL_PWD}= "";
+
 subtest "new Ytkit::Config::File interface" => sub
 {
   my $file= Ytkit::Config::File->new("$Bin/data/yt-config_file.conf");
@@ -157,5 +160,7 @@ subtest "with [global] section" => sub
     done_testing; 
   };
 };
+
+$ENV{MYSQL_PWD}= $save_mysql_pwd;
 
 done_testing;

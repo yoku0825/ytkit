@@ -37,12 +37,7 @@ no warnings "once";
 use_ok("Ytkit::Collect");
 
 ### Dummy connection
-my $prog= {};
-bless $prog => "Ytkit::Collect";
-$prog->{instance}= {};
-bless $prog->{instance} => "Ytkit::MySQLServer";
-$prog->{instance}->{conn}= {};
-#bless $prog->{instance}->{conn} => "DBI";
+ok(my $prog= Ytkit::Collect->new("--host=localhost"), "Create new");
 $prog->{print_header}= 0;
 
 ### Fix output-tablename
@@ -57,15 +52,15 @@ $prog->{port}= 64057;
 
 subtest "checking requirements" => sub
 {
-  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
   is($prog->is_satisfied_requirement, 1, "Accept MySQL 5.7 && performance_schema = ON");
   $prog->clear_cache;
 
-  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES_57_PS_OFF::VAR1;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES_57_PS_OFF::VAR1;
   is($prog->is_satisfied_requirement, 0, "Reject MySQL 5.7 && performance_schema = OFF");
   $prog->clear_cache;
 
-  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES_55_PS_ON::VAR1;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES_55_PS_ON::VAR1;
   is($prog->is_satisfied_requirement, 0, "Reject MySQL 5.5 && performance_schema = ON");
   $prog->clear_cache;
 
@@ -74,8 +69,8 @@ subtest "checking requirements" => sub
 
 subtest "events_statements_summary_by_digest" => sub
 {
-  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
-  $prog->{instance}->{_select_ps_digest}= $Ytkit::Test::SELECT_FROM_ps_digest::VAR1;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
+  $prog->instance->{_select_ps_digest}= $Ytkit::Test::SELECT_FROM_ps_digest::VAR1;
 
   $prog->{output}= "tsv";
   is($prog->print_query_latency, read_file("$Bin/data/select_from_ps_digest_into_tsv.r"), "Print TSV style");
@@ -93,7 +88,7 @@ subtest "events_statements_summary_by_digest" => sub
   is($prog->print_query_latency, read_file("$Bin/data/select_from_ps_digest_into_short.r"), "Print Short style");
 
   ### Turn off performance_schema.
-  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES_57_PS_OFF::VAR1;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES_57_PS_OFF::VAR1;
   is($prog->print_query_latency, undef, "No output when performance_schema = 0");
 
   $prog->clear_cache;
@@ -102,8 +97,8 @@ subtest "events_statements_summary_by_digest" => sub
 
 subtest "table_io_waits_summary_by_table" => sub
 {
-  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
-  $prog->{instance}->{_select_ps_table}= $Ytkit::Test::SELECT_FROM_ps_table::VAR1;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
+  $prog->instance->{_select_ps_table}= $Ytkit::Test::SELECT_FROM_ps_table::VAR1;
 
   $prog->{output}= "tsv";
   is($prog->print_table_latency, read_file("$Bin/data/select_from_ps_table_into_tsv.r"), "Print TSV style");
@@ -121,7 +116,7 @@ subtest "table_io_waits_summary_by_table" => sub
   is($prog->print_table_latency, read_file("$Bin/data/select_from_ps_table_into_short.r"), "Print Short style");
 
   ### Turn off performance_schema.
-  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES_57_PS_OFF::VAR1;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES_57_PS_OFF::VAR1;
   is($prog->print_table_latency, undef, "No output when performance_schema = 0");
 
   $prog->clear_cache;
@@ -130,8 +125,8 @@ subtest "table_io_waits_summary_by_table" => sub
 
 subtest "i_s.tables" => sub
 {
-  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
-  $prog->{instance}->{_select_is_table_by_size}= $Ytkit::Test::SELECT_FROM_is_table::VAR1;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
+  $prog->instance->{_select_is_table_by_size}= $Ytkit::Test::SELECT_FROM_is_table::VAR1;
 
   $prog->{output}= "tsv";
   is($prog->print_table_size, read_file("$Bin/data/select_from_is_table_into_tsv.r"), "Print TSV style");
@@ -149,7 +144,7 @@ subtest "i_s.tables" => sub
   is($prog->print_table_size, undef, "Print Short style is unsupported.");
 
   ### innodb_stats_on_metadata = ON
-  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::STATS_ON_METADATA_IS_ON;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::STATS_ON_METADATA_IS_ON;
   is($prog->print_table_size, undef, "No output when innodb_stats_on_metadata = 1");
   $prog->clear_cache;
   done_testing;
@@ -157,8 +152,8 @@ subtest "i_s.tables" => sub
 
 #subtest "SHOW GLOBAL STATUS" => sub
 #{
-#  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
-#  $prog->{instance}->{_show_status}= $Ytkit::Test::SHOW_STATUS::VAR1;
+#  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
+#  $prog->instance->{_show_status}= $Ytkit::Test::SHOW_STATUS::VAR1;
 #
 #  $prog->clear_cache;
 #  done_testing;
@@ -166,8 +161,8 @@ subtest "i_s.tables" => sub
 
 #subtest "i_s.innodb_metrics" => sub
 #{
-#  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
-#  $prog->{instance}->{_select_is_metrics}= $Ytkit::Test::SELECT_FROM_is_metrics::VAR1;
+#  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
+#  $prog->instance->{_select_is_metrics}= $Ytkit::Test::SELECT_FROM_is_metrics::VAR1;
 #
 #  $prog->clear_cache;
 #  done_testing;
@@ -175,34 +170,34 @@ subtest "i_s.tables" => sub
 
 subtest "user_grants" => sub
 {
-  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
-  $prog->{instance}->{_select_user_list}= $Ytkit::Test::SELECT_user_list::VAR1;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
+  $prog->instance->{_select_user_list}= $Ytkit::Test::SELECT_user_list::VAR1;
 
   ### show_grants clears cache each time.
-  $prog->{instance}->{_show_grants}= $Ytkit::Test::SHOW_GRANTS::VAR1;
+  $prog->instance->{_show_grants}= $Ytkit::Test::SHOW_GRANTS::VAR1;
   $prog->{output}= "tsv";
   is($prog->print_show_grants, read_file("$Bin/data/show_grants_into_tsv.r"), "Print TSV style");
 
-  $prog->{instance}->{_show_grants}= $Ytkit::Test::SHOW_GRANTS::VAR1;
+  $prog->instance->{_show_grants}= $Ytkit::Test::SHOW_GRANTS::VAR1;
   $prog->{output}= "csv";
   is($prog->print_show_grants, read_file("$Bin/data/show_grants_into_csv.r"), "Print CSV style");
 
-  $prog->{instance}->{_show_grants}= $Ytkit::Test::SHOW_GRANTS::VAR1;
+  $prog->instance->{_show_grants}= $Ytkit::Test::SHOW_GRANTS::VAR1;
   $prog->{output}= "json";
   is($prog->print_show_grants, read_file("$Bin/data/show_grants_into_json.r"), "Print JSON style");
 
-  $prog->{instance}->{_show_grants}= $Ytkit::Test::SHOW_GRANTS::VAR1;
+  $prog->instance->{_show_grants}= $Ytkit::Test::SHOW_GRANTS::VAR1;
   $prog->{output}= "sql";
   is($prog->print_show_grants, read_file("$Bin/data/show_grants_into_sql.r"), "Print SQL style");
 
-  $prog->{instance}->{_show_grants}= $Ytkit::Test::SHOW_GRANTS::VAR1;
+  $prog->instance->{_show_grants}= $Ytkit::Test::SHOW_GRANTS::VAR1;
   $prog->{output}= "short";
   is($prog->print_show_grants, undef, "Print SQL style is unsupported.");
 };
 
 #subtest "SHOW GLOBAL VARIABLES" => sub
 #{
-#  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
+#  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
 #
 #  $prog->clear_cache;
 #  done_testing;
@@ -210,8 +205,8 @@ subtest "user_grants" => sub
 
 subtest "SHOW SLAVE STATUS" => sub
 {
-  $prog->{instance}->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
-  $prog->{instance}->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
+  $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
 
   $prog->{output}= "tsv";
   is($prog->print_show_slave, read_file("$Bin/data/show_slave_status_into_tsv.r"), "Print TSV style");

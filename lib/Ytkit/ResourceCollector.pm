@@ -24,7 +24,7 @@ use utf8;
 use POSIX;
 use IO::File;
 use base "Ytkit";
-use Carp qw{carp croak};
+use Carp qw{ carp croak };
 
 use Ytkit::Collect;
 

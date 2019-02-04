@@ -1,7 +1,7 @@
 package Ytkit::HealthCheck;
 
 ########################################################################
-# Copyright (C) 2017, 2018  yoku0825
+# Copyright (C) 2017, 2019  yoku0825
 # Copyright (C) 2018        hacchuu0119
 #
 # This program is free software; you can redistribute it and/or
@@ -24,10 +24,10 @@ use warnings;
 use utf8;
 use POSIX;
 use base "Ytkit";
-use Carp qw{carp croak};
+use Carp qw{ carp croak };
 
 use IO::File;
-use Time::Piece qw{localtime};
+use Time::Piece qw{ localtime };
 use Ytkit::MySQLServer;
 
 ### return code for Nagios-compats.
@@ -81,17 +81,11 @@ sub new
   bless $self => $class;
   $self->handle_help;
 
-  eval
-  {
-    $self->{instance}= Ytkit::MySQLServer->new($self);
-  };
-
-  if ($@)
+  ### Can't use Ytkit::test_connect, because we should return NAGIOS_CRITICAL instead of abort.
+  $self->instance->conn;
+  if ($self->instance->error)
   {
     ### Early return if can't connect to MySQL.
-    $self->{instance}= {};
-    bless $self->{instance} => "Ytkit::MySQLServer";
-    $self->{instance}->{_opt}= $self;
     $self->{status}= NAGIOS_CRITICAL;
     $self->{output}= "Can't connect to MySQL Server($@)";
     $self->{role}= $self->{role} eq "auto" ? "unknown" : $self->{role};
@@ -155,7 +149,7 @@ sub new
   elsif ($role eq "fabric")
   {
     ### mikasafabric couldn't return its hostname.
-    $self->{instance}->{_hostname}= $self->{host};
+    $self->instance->{_hostname}= $self->{host};
     ### mikasafabric for MySQL specific checks.
     $self->check_fabric;
   }
@@ -173,7 +167,7 @@ sub new
 sub DESTROY
 {
   my ($self)= @_;
-  $self->{instance} && $self->{instance}->DESTROY;
+  $self->instance && $self->instance->DESTROY;
 }
 
 sub decide_role
@@ -214,7 +208,7 @@ sub result
 sub hostname
 {
   my ($self)= @_;
-  return $self->{instance}->hostname;
+  return $self->instance->hostname;
 }
 
 sub print_status
@@ -261,6 +255,7 @@ sub check_long_query
     ### Exclude by host.
     if ($self->{long_query}->{exclude_host}->[0])
     {
+      ### show processlist's "Host" is ip_or_hostname:port style.
       my ($host_without_port)= split(/:/, $row->{Host});
       next if grep { $host_without_port eq $_ } @{$self->{long_query}->{exclude_host}};
     }
@@ -304,7 +299,7 @@ sub check_autoinc_usage
   return 0 unless $self->{autoinc_usage}->{enable};
 
   ### Treat as WARNING if innodb_stats_on_metadata = ON
-  if ($self->{instance}->stats_on_metadata)
+  if ($self->instance->stats_on_metadata)
   {
     $self->update_status(NAGIOS_WARNING, "--autoinc-usage-enable was falling-back to 0 " .
                                          "because innodb_stats_on_metadata = ON could cause performance problem " .
@@ -524,31 +519,31 @@ sub compare_threshold
 sub show_slave_status
 {
   my ($self)= @_;
-  return $self->{instance}->show_slave_status;
+  return $self->instance->show_slave_status;
 }
 
 sub show_processlist
 {
   my ($self)= @_;
-  return $self->{instance}->show_processlist;
+  return $self->instance->show_processlist;
 }
 
 sub show_status
 {
   my ($self)= @_;
-  return $self->{instance}->show_status;
+  return $self->instance->show_status;
 }
 
 sub show_variables
 {
   my ($self)= @_;
-  return $self->{instance}->show_variables;
+  return $self->instance->show_variables;
 }
 
 sub select_autoinc_usage
 {
   my ($self)= @_;
-  return $self->{instance}->select_autoinc_usage;
+  return $self->instance->select_autoinc_usage;
 }
 
 sub show_slaves_via_processlist
@@ -574,14 +569,14 @@ sub query_fabric
   if (!(defined($self->{$cache_name})))
   {
     my $sql = sprintf("CALL %s(%s)", $function, $arg ? "'" . $arg . "'" : "");
-    my $stmt= $self->{instance}->{conn}->prepare($sql, {Slice => {}});
+    my $stmt= $self->instance->conn->prepare($sql, {Slice => {}});
 
     eval
     {
       $stmt->execute;
     };
 
-    if ($self->{instance}->{conn}->{mysql_errno} == 1106)
+    if ($self->instance->conn->{mysql_errno} == 1106)
     {
       ### Got error 1106, its unknown command. (ex. dump.health in < 0.6.10)
       return undef;
@@ -612,7 +607,7 @@ sub check_gtid_hole
 
   ### Split for each server_uuid's gtid.
   ### gtid_executed= 'server_uuid1:gtid-range1:gtid-range2:..,server_uuid2:gtid-range3,..'
-  foreach my $one_server_gtid (split(/,/, $self->{instance}->gtid))
+  foreach my $one_server_gtid (split(/,/, $self->instance->gtid))
   {
     my ($server_uuid, @gtid_range)= split(/:/, $one_server_gtid);
 
@@ -627,8 +622,9 @@ sub check_offline_mode
   my ($self)= @_;
 
   ### Check offline_mode (treat as same as failed to connect when offline_mode=1)
-  if ($self->{instance}->show_variables->{offline_mode} &&
-      $self->{instance}->show_variables->{offline_mode}->{Value} eq "ON")
+  if ($self->instance->show_variables && ### Connection-fail
+      $self->instance->show_variables->{offline_mode} && ### For < 5.7
+      $self->instance->show_variables->{offline_mode}->{Value} eq "ON")
   {
     $self->{status}= NAGIOS_CRITICAL;
     $self->{output}= "MySQL Server is now offline mode.";
@@ -667,11 +663,11 @@ sub dump_detail
          $self->{output}, $self->{role},
          Time::Piece::localtime->cdate);
   printf($fh "\n%sSHOW PROCESSLIST%s\n\n", "=" x 10, "=" x 10);
-  print_table($fh, $self->{instance}->show_processlist);
+  print_table($fh, $self->instance->show_processlist);
   printf($fh "\n%sSHOW SLAVE STATUS%s\n\n", "=" x 10, "=" x 10);
-  print_vtable_one_row($fh, $self->{instance}->show_slave_status);
+  print_vtable_one_row($fh, $self->instance->show_slave_status);
   printf($fh "\n%sSHOW ENGINE INNODB STATUS%s\n\n", "=" x 10, "=" x 10);
-  print($fh $self->{instance}->show_engine_innodb_status->[0]->{Status});
+  print($fh $self->instance->show_engine_innodb_status->[0]->{Status});
   return 1;
 }
 

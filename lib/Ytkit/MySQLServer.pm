@@ -49,6 +49,7 @@ sub new
 sub DESTROY
 {
   my ($self)= @_;
+  return if !($self->{conn});
   eval
   {
     $self->{conn}->disconnect;

@@ -25,6 +25,11 @@ use Carp qw{ carp croak };
 
 use DBI;
 
+### Timeout for i_s query.
+use constant ALRM_TIME => 3;
+use constant ALRM_MSG  => "SIGALRM";
+use constant ABORT_I_S => "Querying information_schema is too dangerous for this instance. Aborting.";
+
 sub new
 {
   my ($class, $opt)= @_;
@@ -37,6 +42,7 @@ sub new
     _conn     => undef,
     _error    => undef,
     _warning  => undef,
+    _do_not_query_i_s => 0,
   };
   bless $self => $class;
 
@@ -118,11 +124,10 @@ sub exec_sql
   my ($self, $sql, $opt, @argv)= @_;
   my $ret;
 
-  if ($self->conn)
+  if (my $conn= $self->conn)
   {
     $self->error("");
     $self->warning("");
-    my $conn= $self->conn;
     return undef if $self->error;
 
     eval
@@ -337,14 +342,34 @@ sub show_grants
 sub query_arrayref
 {
   my ($self, $sql, @argv)= @_;
-  my ($caller_name)= (caller 1)[3] =~ /::([^:]+)$/;
+  my $caller= (caller 1)[3] || "";
+  my ($caller_name)= $caller =~ /::([^:]+)$/;
+  $caller_name ||= "";
 
   ### Normalize SQL
   $sql =~ s/\s+/ /g;
+ 
+  ### Add $caller as comment 
   $sql = "/* ytkit $caller_name */ " . $sql;
 
   if (!(defined($self->{"_" . ${caller_name}})))
   {
+    ### Gurad for out-controlled query of information_schema.
+    my $i_s_query= 0;
+    if ($sql =~ /\binformation_schema\b/)
+    {
+      ### If already timed out i_s query, then stop script.
+      if ($self->{_do_not_query_i_s})
+      {
+        $self->error(ABORT_I_S);
+        croak(ABORT_I_S);
+      }
+      $i_s_query= 1;
+      
+      ### Set timeout
+      alarm(ALRM_TIME);
+    } ### Not i_s query doesn't set alarm.
+
     $self->error("");
     $self->warning("");
     my $conn= $self->conn;
@@ -352,13 +377,24 @@ sub query_arrayref
 
     eval
     {
+      local $SIG{ALRM}= sub { croak(ALRM_MSG) };
       $self->{"_" . ${caller_name}}= $conn->selectall_arrayref($sql, {Slice => {}}, @argv);
     };
 
+        ### Disable alarm.
+        alarm(0);
+ 
     if ($@)
     {
+      if ($i_s_query)
+      {
+        ### When got timeout for i_s query, abort and should be handled by upper-layer.
+        $self->{_do_not_query_i_s}= 1;
+
+     }
+
       $self->error($@);
-      return undef;
+      croak("Error occurs during query $sql");
     }
 
     my $warn;
@@ -374,14 +410,31 @@ sub query_arrayref
 sub query_hashref
 {
   my ($self, $sql, $key, @argv)= @_;
-  my ($caller_name)= (caller 1)[3] =~ /::([^:]+)$/;
+  my $caller= (caller 1)[3] || "";
+  my ($caller_name)= $caller =~ /::([^:]+)$/;
+  $caller_name ||= "";
 
   ### Normalize SQL
   $sql =~ s/\s+/ /g;
+ 
+  ### Add $caller as comment 
   $sql = "/* ytkit $caller_name */ " . $sql;
 
   if (!(defined($self->{"_" . ${caller_name}})))
   {
+    ### Gurad for out-controlled query of information_schema.
+    my $i_s_query= 0;
+    if ($sql =~ /\binformation_schema\b/)
+    {
+      ### If already timed out i_s query, then stop script.
+      croak("Querying information_schema is too dangerous for this instance. Aborting.")
+        if $self->{_do_not_query_i_s};
+      $i_s_query= 1;
+      
+      ### Set timeout
+      alarm(ALRM_TIME);
+    } ### Not i_s query doesn't set alarm.
+
     $self->error("");
     $self->warning("");
     my $conn= $self->conn;
@@ -389,13 +442,23 @@ sub query_hashref
 
     eval
     {
+      local $SIG{ALRM}= sub { croak(ALRM_MSG) };
       $self->{"_" . ${caller_name}}= $conn->selectall_hashref($sql, [$key], @argv);
     };
 
     if ($@)
     {
+      if ($i_s_query)
+      {
+        ### When got timeout for i_s query, abort and should be handled by upper-layer.
+        $self->{_do_not_query_i_s}= 1;
+
+        ### Disable alarm.
+        alarm(0);
+      }
+
       $self->error($@);
-      return undef;
+      croak("Error occurs during query $sql");
     }
 
     my $warn;
@@ -414,7 +477,7 @@ sub clear_cache
 
   foreach (keys(%$self))
   {
-    $self->{$_}= undef if $_ =~ /^_/ && $_ ne "_conn";
+    $self->{$_}= undef if $_ =~ /^_/ && $_ ne "_conn" && $_ ne "_do_not_query_i_s";
   }
 }
 

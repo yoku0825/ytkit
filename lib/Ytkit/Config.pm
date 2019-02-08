@@ -1,7 +1,7 @@
 package Ytkit::Config;
 
 ########################################################################
-# Copyright (C) 2017, 2018  yoku0825
+# Copyright (C) 2017, 2019  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,11 +21,11 @@ package Ytkit::Config;
 use strict;
 use warnings;
 use utf8;
-use Carp qw{carp croak};
+use Carp qw{ carp croak };
 
 use Ytkit::Config::Option;
 
-my $_version= "0.1.9";
+my $_version= "0.1.10";
 
 our $CONNECT_OPTION=
 {

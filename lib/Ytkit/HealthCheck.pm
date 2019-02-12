@@ -307,17 +307,37 @@ sub check_autoinc_usage
     return 0;
   }
 
-  foreach my $row (@{$self->select_autoinc_usage})
+  ### select_autoinc_usage can raise an error when server has many tables
+  eval
   {
-    ### Calculate max value of autoinc from datatype.
-    my ($type, $unsigned)= $row->{column_type} =~ /^([a-z]+)\(.+\)(\s+(unsigned))?/;
-    my $max= 2 ** (BYTES->{$type} * 8 - ($unsigned ? 0 : 1));
-    my $ratio= ($row->{auto_increment} / $max) * 100;
+    $self->select_autoinc_usage;
+  };
 
-    my $status= compare_threshold($ratio, $self->{autoinc_usage});
-    $self->update_status($status, sprintf(qq{table %s.%s uses auto_increment column %s %5.2f%%(%d/%d)"\t},
-                                          $row->{table_schema}, $row->{table_name}, $row->{column_name},
-                                          $ratio, $row->{auto_increment}, $max)) if $status;
+  if ($@)
+  {
+    ### Treat as NAGIOS_CRITICAL
+    $self->update_status(NAGIOS_CRITICAL, sprintf("check_autoinc_usage fails because %s. " .
+                                                  "Please consider --autoinc-usage-enable=0 " .
+                                                  "(Maybe there are too much tables)",
+                                                  $@));
+
+    ### Reconnect for next check.
+    $self->instance->reconnect;
+  }
+  else
+  {
+    foreach my $row (@{$self->select_autoinc_usage})
+    {
+      ### Calculate max value of autoinc from datatype.
+      my ($type, $unsigned)= $row->{column_type} =~ /^([a-z]+)\(.+\)(\s+(unsigned))?/;
+      my $max= 2 ** (BYTES->{$type} * 8 - ($unsigned ? 0 : 1));
+      my $ratio= ($row->{auto_increment} / $max) * 100;
+
+      my $status= compare_threshold($ratio, $self->{autoinc_usage});
+      $self->update_status($status, sprintf(qq{table %s.%s uses auto_increment column %s %5.2f%%(%d/%d)"\t},
+                                            $row->{table_schema}, $row->{table_name}, $row->{column_name},
+                                            $ratio, $row->{auto_increment}, $max)) if $status;
+    }
   }
 
   return;

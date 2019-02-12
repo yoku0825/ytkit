@@ -394,7 +394,7 @@ sub query_arrayref
      }
 
       $self->error($@);
-      croak("Error occurs during query $sql");
+      croak("Error occurs during query $sql; $@");
     }
 
     my $warn;
@@ -458,7 +458,7 @@ sub query_hashref
       }
 
       $self->error($@);
-      croak("Error occurs during query $sql");
+      croak("Error occurs during query $sql; $@");
     }
 
     my $warn;
@@ -634,6 +634,26 @@ sub show_engine_innodb_status
 {
   my ($self)= @_;
   return $self->query_arrayref("SHOW ENGINE INNODB STATUS");
+}
+
+sub reconnect
+{
+  my ($self)= @_;
+
+  ### Ping connection
+  eval
+  {
+    $self->conn;
+    $self->exec_sql("SELECT 1");
+  };
+
+  ### Reconnect if it fails.
+  if ($@)
+  {
+    $self->conn->disconnect;
+    delete($self->{_conn});
+    $self->conn;
+  }
 }
 
 return 1;

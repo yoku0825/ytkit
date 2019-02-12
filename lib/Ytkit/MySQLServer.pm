@@ -354,9 +354,10 @@ sub query_arrayref
 
   if (!(defined($self->{"_" . ${caller_name}})))
   {
+    $self->reconnect;
     ### Gurad for out-controlled query of information_schema.
     my $i_s_query= 0;
-    if ($sql =~ /\binformation_schema\b/)
+    if ($sql =~ /\binformation_schema\.(?:tables|columns)/i)
     {
       ### If already timed out i_s query, then stop script.
       if ($self->{_do_not_query_i_s})
@@ -381,8 +382,8 @@ sub query_arrayref
       $self->{"_" . ${caller_name}}= $conn->selectall_arrayref($sql, {Slice => {}}, @argv);
     };
 
-        ### Disable alarm.
-        alarm(0);
+    ### Disable alarm.
+    alarm(0);
  
     if ($@)
     {
@@ -391,7 +392,7 @@ sub query_arrayref
         ### When got timeout for i_s query, abort and should be handled by upper-layer.
         $self->{_do_not_query_i_s}= 1;
 
-     }
+      }
 
       $self->error($@);
       croak("Error occurs during query $sql; $@");
@@ -422,9 +423,10 @@ sub query_hashref
 
   if (!(defined($self->{"_" . ${caller_name}})))
   {
+    $self->reconnect;
     ### Gurad for out-controlled query of information_schema.
     my $i_s_query= 0;
-    if ($sql =~ /\binformation_schema\b/)
+    if ($sql =~ /\binformation_schema\.(?:tables|columns)/i)
     {
       ### If already timed out i_s query, then stop script.
       croak("Querying information_schema is too dangerous for this instance. Aborting.")
@@ -648,9 +650,12 @@ sub reconnect
   };
 
   ### Reconnect if it fails.
-  if ($@)
+  if ($@ || $self->error)
   {
-    $self->conn->disconnect;
+    eval
+    {
+      $self->conn->disconnect;
+    };
     delete($self->{_conn});
     $self->conn;
   }

@@ -320,9 +320,6 @@ sub check_autoinc_usage
                                                   "Please consider --autoinc-usage-enable=0 " .
                                                   "(Maybe there are too much tables)",
                                                   $@));
-
-    ### Reconnect for next check.
-    $self->instance->reconnect;
   }
   else
   {

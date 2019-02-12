@@ -206,7 +206,18 @@ sub get_table_size
          "when accessing information_schema.tables and etc.") if !($ENV{HARNESS_ACTIVE});
     return undef;
   }
-  return $self->instance->select_is_table_by_size($self->{table_size}->{limit});
+
+  my $ret;
+  eval
+  {
+    $ret= $self->instance->select_is_table_by_size($self->{table_size}->{limit});
+  };
+  if ($@)
+  {
+    carp("--table-size-enable was falling-back to 0 because $@") if !($ENV{HARNESS_ACTIVE});
+    return undef;
+  }
+  return $ret;
 }
 
 sub _calc_delta

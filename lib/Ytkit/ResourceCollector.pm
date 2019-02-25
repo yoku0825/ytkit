@@ -85,7 +85,7 @@ sub collect
 
           eval
           {
-            my $prog= Ytkit::Collect->new(@$conf, "--record-path=$dirname", "--verbose=1", "--output=json");
+            my $prog= Ytkit::Collect->new("--record-path=$dirname", "--verbose=1", "--output=json", @$conf);
             $prog->collect;
           };
 

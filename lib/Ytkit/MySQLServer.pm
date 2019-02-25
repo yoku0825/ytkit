@@ -158,7 +158,7 @@ sub hostname
   my ($self)= @_;
   return $self->{_hostname} if $self->{_hostname};
 
-  $self->{_hostname}= $self->valueof("hostname") // $self->{_opt}->{host};
+  $self->{_hostname}= $self->valueof("hostname") || $self->{_opt}->{host};
   return $self->{_hostname};
 }
 

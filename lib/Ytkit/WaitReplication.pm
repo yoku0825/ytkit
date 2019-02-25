@@ -50,21 +50,6 @@ sub new
   bless $self => $class;
   $self->handle_help;
 
-  if (grep { $_ =~ /timeout/ && $_ !~ /retry/ } @orig_argv)
-  {
-    if (grep { $_ =~ /timeout/ && $_ =~ /retry/ } @orig_argv)
-    {
-      ### Both --timeout and --retry-timeout are specified, maybe they are specified correctly.
-    }
-    else
-    {
-      ### --timeout is specified but --retry-timeout is NOT, maybe using old-param 
-      $self->{retry_timeout}= $self->{timeout};
-      carp("--timeout is deprecated (See #15), use --retry-timeout instead. (Sorry if you mean really 'timeout')\n" .
-           "Set $self->{timeout} into both of --timeout(connection timeout parameter) and --retry-timeout");
-    }
-  }
-
   $self=
   {
     %$self,
@@ -143,10 +128,6 @@ sub _config
     retry_timeout => { alias => ["retry_timeout"],
                        default => 1800,
                        text => "Seconds for scripts running(timeout when --retry-timeout < retry_count * sleep_interval)" },
-    timeout => { alias => ["timeout"],
-                 default => 1800,
-                 text => "Seconds for scripts running(timeout when --timeout < retry_count * sleep_interval)\n" .
-                         "This parameter is DEPRECATED. Use --retry-timeout instead." },
   };
   my $config= Ytkit::Config->new({ %$yt_wait_replication_option,
                                    %$Ytkit::Config::CONNECT_OPTION,

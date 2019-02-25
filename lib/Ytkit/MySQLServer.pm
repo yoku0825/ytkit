@@ -52,6 +52,7 @@ sub new
 sub DESTROY
 {
   my ($self)= @_;
+  return undef if !($self->{_conn});
   eval
   {
     $self->conn->disconnect;
@@ -550,7 +551,7 @@ sub valueof
       return $variables->{$variable_name}->{Value};
     }
   }
-  return undef;
+  return "";
 }
 
 sub fetch_p_s_stage_innodb_alter_table

@@ -52,6 +52,7 @@ sub new
 sub DESTROY
 {
   my ($self)= @_;
+  return undef if !($self->{_conn});
   eval
   {
     $self->conn->disconnect;
@@ -157,7 +158,7 @@ sub hostname
   my ($self)= @_;
   return $self->{_hostname} if $self->{_hostname};
 
-  $self->{_hostname}= $self->valueof("hostname") // $self->{_opt}->{host};
+  $self->{_hostname}= $self->valueof("hostname") || $self->{_opt}->{host};
   return $self->{_hostname};
 }
 
@@ -550,7 +551,7 @@ sub valueof
       return $variables->{$variable_name}->{Value};
     }
   }
-  return undef;
+  return "";
 }
 
 sub fetch_p_s_stage_innodb_alter_table

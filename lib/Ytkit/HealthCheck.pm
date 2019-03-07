@@ -673,7 +673,7 @@ sub dump_detail
     printf("Couldn't open %s, falling back to STDERR\n", $self->{dump_detail});
     $fh= IO::Handle->new_from_fd(2, "w");
   }
-  binmode $fh, ":raw";
+  binmode $fh, ":utf8";
 
   printf($fh "# %s\n", Time::Piece::localtime->strftime("%Y/%m/%d %H:%M:%S"));
   printf($fh "# %s on %s: %s (%s)\n",

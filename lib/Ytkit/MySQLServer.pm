@@ -639,6 +639,14 @@ sub show_engine_innodb_status
   return $self->query_arrayref("SHOW ENGINE INNODB STATUS");
 }
 
+sub thread_id
+{
+  my ($self)= @_;
+
+  ### pseudo_thread_id is SESSION scope.
+  return $self->query_arrayref("SHOW SESSION VARIABLES LIKE 'pseudo_thread_id'")->[0]->{Value} // 0;
+}
+
 sub reconnect
 {
   my ($self)= @_;

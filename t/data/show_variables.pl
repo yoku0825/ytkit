@@ -1999,4 +1999,11 @@ $OFFLINE_MODE= \%VAR1;
 $OFFLINE_MODE->{offline_mode}= { Variable_name => "offline_mode",
                                  Value => "ON" };
 
+$show_session_variables_like_pseudo_thread_id = [
+          {
+            'Value' => '72',
+            'Variable_name' => 'pseudo_thread_id'
+          }
+        ];
+
 return 1;

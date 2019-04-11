@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2018  yoku0825
+# Copyright (C) 2018, 2019  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -156,6 +156,11 @@ subtest "innodb_stats_on_metadata" => sub
   done_testing;
 };
 
-
+subtest "pseudo_thread_id" => sub
+{
+  $server->{_thread_id}= $Ytkit::Test::SHOW_VARIABLES::show_session_variables_like_pseudo_thread_id;
+  is($server->thread_id, 72, "pseudo_thread_id");
+  done_testing;
+};
 
 done_testing;

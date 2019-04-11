@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2018  yoku0825
+# Copyright (C) 2018, 2019  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -30,5 +30,10 @@ require "$Bin/Test.pl";
 no warnings "once";
 
 use_ok("Ytkit", "use Ytkit");
+
+my $basedir= "$Bin/../";
+my @db_single= `grep -r DB::single --exclude=ytkit.t --exclude=HEAD --exclude=COMMIT_EDITMSG --exclude=master`;
+ok(!(@db_single), "DB::single has been removed.");
+
 done_testing;
 

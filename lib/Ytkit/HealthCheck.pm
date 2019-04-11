@@ -228,6 +228,8 @@ sub check_long_query
   return 0 unless $self->{long_query}->{enable};
 
   ### Evaluate each thread.
+  my @warning_thread;
+  my @critical_thread;
   foreach my $row (@{$self->show_processlist})
   {
     my $user= $row->{User};
@@ -268,13 +270,38 @@ sub check_long_query
 
     ### Evaluate by time.
     my $time= $row->{Time} ? $row->{Time} : 0;
+
     my $status= compare_threshold($time, $self->{long_query});
 
-    $self->update_status($status, sprintf(q{Detected long query(%d sec) by %s@%s: "%s"},
-                                          $row->{Time}, $row->{User},
-                                          $row->{Host}, $row->{Info})) if $status && $row->{Info};
-
+    if ($status->{str} eq "WARNING")
+    {
+      push(@warning_thread, sprintf(q{Detected long query(%d sec) by %s@%s: "%s"},
+                                    $row->{Time}, $row->{User},
+                                    $row->{Host}, $row->{Info})) if $row->{Info};
+    }
+    elsif ($status->{str} eq "CRITICAL")
+    {
+      ### Push @warning_thread too for the timing of CRITICAL fallbacks to WARNING.
+      push(@critical_thread, sprintf(q{Detected long query(%d sec) by %s@%s: "%s"},
+                                     $row->{Time}, $row->{User},
+                                     $row->{Host}, $row->{Info})) if $row->{Info};
+      push(@warning_thread, sprintf(q{Detected long query(%d sec) by %s@%s: "%s"},
+                                    $row->{Time}, $row->{User},
+                                    $row->{Host}, $row->{Info})) if $row->{Info};
+    }
   } ### End of foreach, goes to the next row.
+
+  ### Calc between count and min_critical_thread
+  my $critical_count= @critical_thread;
+  my $warning_count= @warning_thread;
+  if ($critical_count >= $self->{long_query}->{min_critical_thread})
+  {
+    $self->update_status(NAGIOS_CRITICAL, join("\n", @critical_thread));
+  }
+  elsif ($warning_count >= $self->{long_query}->{min_warning_thread})
+  {
+    $self->update_status(NAGIOS_WARNING, join("\n", @critical_thread));
+  }
 
   return;
 }
@@ -821,6 +848,12 @@ EOS
       exclude_query => { multi   => 1,
                          text    => qq{Specify to ignore values for "SHOW PROCESSLIST"'s "Info"(SQL statement)\n} .
                                     qq{  When first-match them, doesn't raise WARNING or CRITICAL(always OK)} },
+      min_warning_thread => { default => 1,
+                              text    => qq{Don't return NAGIOS_WARNING when threads which is over long-query-warning\n} .
+                                         qq{  are less than long-query-min-warning-thread} },
+      min_critical_thread => { default => 1,
+                               text    => qq{Don't return NAGIOS_CRITICAL when threads which is over long-query-critical\n} .
+                                          qq{  are less than long-query-min-critical-thread} },
     },
     connection_count =>
     {

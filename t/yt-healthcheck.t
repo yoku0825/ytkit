@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2017, 2018  yoku0825
+# Copyright (C) 2017, 2019  yoku0825
 # Copyright (C) 2018        hacchuu0119
 #
 # This program is free software; you can redistribute it and/or
@@ -75,6 +75,8 @@ subtest "check_long_query" => sub
 
   $prog->{long_query}->{warning}= 10000;
   $prog->{long_query}->{critical}= 10000;
+  $prog->{long_query}->{min_warning_thread}= 1;
+  $prog->{long_query}->{min_critical_thread}= 1;
   $prog->{long_query}->{enable}= 1;
   $prog->check_long_query;
   is($prog->{status}->{str}, "OK", "check_long_query < warning");
@@ -82,6 +84,8 @@ subtest "check_long_query" => sub
 
   $prog->{long_query}->{warning}= 100;
   $prog->{long_query}->{critical}= 10000;
+  $prog->{long_query}->{min_warning_thread}= 1;
+  $prog->{long_query}->{min_critical_thread}= 1;
   $prog->{long_query}->{enable}= 1;
   $prog->check_long_query;
   is($prog->{status}->{str}, "WARNING", "check_long_query between warning and critical");
@@ -89,6 +93,8 @@ subtest "check_long_query" => sub
 
   $prog->{long_query}->{warning}= 100;
   $prog->{long_query}->{critical}= 100;
+  $prog->{long_query}->{min_warning_thread}= 1;
+  $prog->{long_query}->{min_critical_thread}= 1;
   $prog->{long_query}->{enable}= 1;
   $prog->check_long_query;
   is($prog->{status}->{str}, "CRITICAL", "check_long_query > critical");
@@ -97,6 +103,8 @@ subtest "check_long_query" => sub
   ### Excluded by host.
   $prog->{long_query}->{warning}= 100;
   $prog->{long_query}->{critical}= 100;
+  $prog->{long_query}->{min_warning_thread}= 1;
+  $prog->{long_query}->{min_critical_thread}= 1;
   $prog->{long_query}->{enable}= 1;
   $prog->{long_query}->{exclude_host}= ["192.168.0.1"];
   $prog->check_long_query;
@@ -106,6 +114,8 @@ subtest "check_long_query" => sub
   ### Excluded by user.
   $prog->{long_query}->{warning}= 5000;
   $prog->{long_query}->{critical}= 5000;
+  $prog->{long_query}->{min_warning_thread}= 1;
+  $prog->{long_query}->{min_critical_thread}= 1;
   $prog->{long_query}->{enable}= 1;
   $prog->{long_query}->{exclude_user}= ["userexclude"];
   $prog->check_long_query;
@@ -115,6 +125,8 @@ subtest "check_long_query" => sub
   ### Excluded by SQL
   $prog->{long_query}->{warning}= 100;
   $prog->{long_query}->{critical}= 100;
+  $prog->{long_query}->{min_warning_thread}= 1;
+  $prog->{long_query}->{min_critical_thread}= 1;
   $prog->{long_query}->{enable}= 1;
   $prog->{long_query}->{exclude_query}= ["SELECT SLEEP"];
   $prog->check_long_query;
@@ -124,12 +136,82 @@ subtest "check_long_query" => sub
   ### disabled by option
   $prog->{long_query}->{warning}= 100;
   $prog->{long_query}->{critical}= 100;
+  $prog->{long_query}->{min_warning_thread}= 1;
+  $prog->{long_query}->{min_critical_thread}= 1;
   $prog->{long_query}->{enable}= 0;
   $prog->check_long_query;
   is($prog->{status}->{str}, "OK", "Disabled by --long-query-enable=0");
   &reset_param;
 
   $prog->clear_cache;
+};
+
+subtest "long_query with threads" => sub
+{
+  $prog->{long_query}->{warning}= 900;
+  $prog->{long_query}->{min_warning_thread}= 4;
+  $prog->{long_query}->{critical}= 10000;
+  $prog->{long_query}->{min_critical_thread}= 1000;
+  $prog->{long_query}->{enable}= 1;
+
+  ### time > long_query_warning but count < min_warning_thread
+  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::time_1_0_1000_6000;
+  $prog->check_long_query;
+  ### 1000 => warn, 6000 => warn & crit, then warn_count = 2, crit_count = 1
+  is($prog->{status}->{str}, "OK", "check_long_query > warning but count < min_warning_thread");
+
+  ### time > long_query_warning and count = min_warning_thread
+  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::time_1_0_1000_1000_6000_6000;
+  $prog->check_long_query;
+  ### 1000 => warn * 2, 6000 => warn & crit * 2, then warn_count = 4, crit_count = 2
+  is($prog->{status}->{str}, "WARNING", "check_long_query > warning and count = min_warning_threads");
+
+  ### time > long_query_warning and count > min_warning_thread
+  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::time_1_0_1000_1000_1000_6000_6000_6000;
+  $prog->check_long_query;
+  ### 1000 => warn * 3, 6000 => warn & crit * 3, then warn_count = 6, crit_count = 3
+  is($prog->{status}->{str}, "WARNING", "check_long_query > warning and count > min_warning_threads");
+
+  &reset_param;
+
+  $prog->{long_query}->{warning}= 100;
+  $prog->{long_query}->{min_warning_thread}= 2;
+  $prog->{long_query}->{critical}= 1500;
+  $prog->{long_query}->{min_critical_thread}= 2;
+  $prog->{long_query}->{enable}= 1;
+
+  ### time > long_query_critical but count < min_critical_thread
+  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
+  $prog->check_long_query;
+  ### 1000 => warn, 6000 => warn & crit, then warn_count = 2, crit_count = 1
+  is($prog->{status}->{str}, "WARNING", "check_long_query > critical but count < min_critical_thread");
+
+  ### time > long_query_critical and count = min_critical_thread
+  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::time_1_0_1000_1000_6000_6000;
+  $prog->check_long_query;
+  ### 1000 => warn * 2, 6000 => warn & crit * 2, then warn_count = 4, crit_count = 2
+  is($prog->{status}->{str}, "CRITICAL", "check_long_query > critical and count = min_critical_threads");
+
+  ### time > long_query_critical and count > min_critical_thread
+  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::time_1_0_1000_1000_1000_6000_6000_6000;
+  ### 1000 => warn * 3, 6000 => warn & crit * 3, then warn_count = 6, crit_count = 3
+  $prog->check_long_query;
+  is($prog->{status}->{str}, "CRITICAL", "check_long_query > critical and count > min_critical_threads");
+
+
+  &reset_param;
+  $prog->{long_query}->{warning}= 1000;
+  $prog->{long_query}->{min_warning_thread}= 2;
+  $prog->{long_query}->{critical}= 5000;
+  $prog->{long_query}->{min_critical_thread}= 4;
+  $prog->{long_query}->{enable}= 1;
+
+  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::time_1_0_1000_1000_6000_6000;
+  $prog->check_long_query;
+  is($prog->{status}->{str}, "WARNING", "warning thread= 4(warn 2 + crit 2) AND critical thread= 2");
+
+  &reset_param;
+  done_testing;
 };
 
 subtest "connection_count" => sub

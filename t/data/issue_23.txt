@@ -1,0 +1,66 @@
+/*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE=1*/;
+/*!40019 SET @@session.max_insert_delayed_threads=0*/;
+/*!50003 SET @OLD_COMPLETION_TYPE=@@COMPLETION_TYPE,COMPLETION_TYPE=0*/;
+DELIMITER /*!*/;
+# at 4
+#190412 18:19:20 server id 1056  end_log_pos 120 CRC32 0x332ccf01 	Start: binlog v 4, server v 5.6.43-log created 190412 18:19:20 at startup
+# Warning: this binlog is either in use or was not closed properly.
+ROLLBACK/*!*/;
+BINLOG '
+GFiwXA8gBAAAdAAAAHgAAAABAAQANS42LjQzLWxvZwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAYWLBcEzgNAAgAEgAEBAQEEgAAXAAEGggAAAAICAgCAAAACgoKGRkAAQHP
+LDM=
+'/*!*/;
+# at 120
+#190412 18:19:20 server id 1056  end_log_pos 191 CRC32 0x7de544b6 	Previous-GTIDs
+# 3927e90b-1d2f-11e9-a12a-0201a32caf75:1-1230
+# at 191
+#190412 19:49:53 server id 1056  end_log_pos 239 CRC32 0x92c63c27 	GTID [commit=yes]
+SET @@SESSION.GTID_NEXT= '3927e90b-1d2f-11e9-a12a-0201a32caf75:1231'/*!*/;
+# at 239
+#190412 19:49:53 server id 1056  end_log_pos 315 CRC32 0xe098e614 	Query	thread_id=314	exec_time=0	error_code=0
+SET TIMESTAMP=1555066193/*!*/;
+SET @@session.pseudo_thread_id=314/*!*/;
+SET @@session.foreign_key_checks=1, @@session.sql_auto_is_null=0, @@session.unique_checks=1, @@session.autocommit=1/*!*/;
+SET @@session.sql_mode=1075838976/*!*/;
+SET @@session.auto_increment_increment=1, @@session.auto_increment_offset=1/*!*/;
+/*!\C utf8mb4 *//*!*/;
+SET @@session.character_set_client=45,@@session.collation_connection=45,@@session.collation_server=12/*!*/;
+SET @@session.lc_time_names=0/*!*/;
+SET @@session.collation_database=DEFAULT/*!*/;
+BEGIN
+/*!*/;
+# at 315
+#190412 19:49:53 server id 1056  end_log_pos 437 CRC32 0x6545cc5e 	Query	thread_id=314	exec_time=0	error_code=0
+SET TIMESTAMP=1555066193/*!*/;
+INSERT INTO mysql.plugin VALUES ('hoge', 'fuga.so')
+/*!*/;
+# at 437
+#190412 19:49:53 server id 1056  end_log_pos 514 CRC32 0x315895f9 	Query	thread_id=314	exec_time=0	error_code=0
+SET TIMESTAMP=1555066193/*!*/;
+COMMIT
+/*!*/;
+# at 514
+#190412 19:50:09 server id 1056  end_log_pos 562 CRC32 0x78cd839f 	GTID [commit=yes]
+SET @@SESSION.GTID_NEXT= '3927e90b-1d2f-11e9-a12a-0201a32caf75:1232'/*!*/;
+# at 562
+#190412 19:50:09 server id 1056  end_log_pos 638 CRC32 0x5a55c692 	Query	thread_id=314	exec_time=0	error_code=0
+SET TIMESTAMP=1555066209/*!*/;
+BEGIN
+/*!*/;
+# at 638
+#190413 19:50:09 server id 1056  end_log_pos 761 CRC32 0x734c3f8c 	Query	thread_id=314	exec_time=0	error_code=0
+SET TIMESTAMP=1555066209/*!*/;
+INSERT INTO mysql.plugin VALUES ('hoge1', 'fuga.so')
+/*!*/;
+# at 761
+#190413 19:50:09 server id 1056  end_log_pos 838 CRC32 0x2d72fba1 	Query	thread_id=314	exec_time=0	error_code=0
+SET TIMESTAMP=1555066209/*!*/;
+COMMIT
+/*!*/;
+SET @@SESSION.GTID_NEXT= 'AUTOMATIC' /* added by mysqlbinlog *//*!*/;
+DELIMITER ;
+# End of log file
+ROLLBACK /* added by mysqlbinlog */;
+/*!50003 SET COMPLETION_TYPE=@OLD_COMPLETION_TYPE*/;
+/*!50530 SET @@SESSION.PSEUDO_SLAVE_MODE=0*/;

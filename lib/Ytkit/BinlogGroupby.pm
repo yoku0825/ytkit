@@ -48,57 +48,66 @@ sub new
   {
     _config => $config,
     %{$config->{result}},
-    _counter => _decide_counter($config->{result}->{group_by}),
   };
   bless $self => $class;
   $self->handle_help;
 
   $self->set_parser;
+  $self->decide_counter;
   return 0 if !($self->{header_parser}) || !($self->{print_format});
 
   return $self;
 }
 
-sub _decide_counter
+sub decide_counter
 {
-  my ($group_by)= @_;
-  $group_by= sort_csv($group_by);
+  my ($self)= @_;
+  my $group_by= sort_csv($self->{_config}->{result}->{group_by});
 
   if ($group_by eq "table")
   {
-    return Ytkit::BinlogGroupby::Groupby_Table->new;
+    $self->{_counter}= Ytkit::BinlogGroupby::Groupby_Table->new;
+
+    ### Force set "--sort", see https://github.com/yoku0825/ytkit/issues/23
+    $self->{sort}= 1;
   }
   elsif ($group_by eq "statement")
   {
-    return Ytkit::BinlogGroupby::Groupby_Statement->new;
+    $self->{_counter}= Ytkit::BinlogGroupby::Groupby_Statement->new;
+
+    ### Force set "--sort", see https://github.com/yoku0825/ytkit/issues/23
+    $self->{sort}= 1;
   }
   elsif ($group_by eq "time")
   {
-    return Ytkit::BinlogGroupby::Groupby_Time->new;
+    $self->{_counter}= Ytkit::BinlogGroupby::Groupby_Time->new;
   }
   elsif ($group_by eq "statement,time")
   {
-    return Ytkit::BinlogGroupby::Groupby_TimeStatement->new;
+    $self->{_counter}= Ytkit::BinlogGroupby::Groupby_TimeStatement->new;
   }
   elsif ($group_by eq "statement,table")
   {
-    return Ytkit::BinlogGroupby::Groupby_TableStatement->new;
+    $self->{_counter}= Ytkit::BinlogGroupby::Groupby_TableStatement->new;
+
+    ### Force set "--sort", see https://github.com/yoku0825/ytkit/issues/23
+    $self->{sort}= 1;
   }
   elsif ($group_by eq "table,time")
   {
-    return Ytkit::BinlogGroupby::Groupby_TimeTable->new;
+    $self->{_counter}= Ytkit::BinlogGroupby::Groupby_TimeTable->new;
   }
   elsif ($group_by eq "all" || $group_by eq "statement,table,time")
   {
-    return Ytkit::BinlogGroupby::Groupby_TimeTableStatement->new;
+    $self->{_counter}= Ytkit::BinlogGroupby::Groupby_TimeTableStatement->new;
   }
   elsif ($group_by eq "all,exec" || $group_by eq "exec,statement,table,time")
   {
-    return Ytkit::BinlogGroupby::Groupby_TimeTableStatementExec->new;
+    $self->{_counter}= Ytkit::BinlogGroupby::Groupby_TimeTableStatementExec->new;
   }
   else
   {
-    return undef;
+    $self->{_counter}= undef;
   }
 }
 

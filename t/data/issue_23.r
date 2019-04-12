@@ -1,0 +1,1 @@
+mysql.plugin	2

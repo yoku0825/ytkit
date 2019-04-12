@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2017, 2018  yoku0825
+# Copyright (C) 2017, 2019  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -126,6 +126,13 @@ subtest "parse all group-by" => sub
     done_testing;
   };
 };
+
+subtest "Regression tests" => sub
+{
+  run_test("issue_23.txt", "issue_23.r", "--group-by=table");
+  done_testing;
+};
+
 
 subtest "config description" => sub
 {

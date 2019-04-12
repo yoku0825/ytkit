@@ -246,27 +246,6 @@ sub set_parser
   $self->{print_format} = $format;
 }
 
-sub compare_csv
-{
-  my ($csv1, $csv2)= @_;
-  return 0 if !(defined($csv1)) || !(defined($csv2));
-
-  $csv1= sort_csv($csv1);
-  $csv2= sort_csv($csv2);
-  return $csv1 eq $csv2;
-}
-
-sub compare_groupby
-{
-  my ($self, @groupby_list)= @_;
-  
-  foreach (@groupby_list)
-  {
-    return 1 if compare_csv($self->{group_by}, $_);
-  }
-  return 0;
-}
-
 sub _config
 {
   my $yt_binloggroupby_option=

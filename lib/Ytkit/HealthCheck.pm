@@ -180,6 +180,7 @@ sub decide_role
 
   if ($master && $slave)
   {
+    ### Intermidiate-master in a cascaded replication toporogy.
     return "intermidiate";
   }
   elsif($master)

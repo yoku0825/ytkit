@@ -301,7 +301,7 @@ sub check_long_query
   }
   elsif ($warning_count >= $self->{long_query}->{min_warning_thread})
   {
-    $self->update_status(NAGIOS_WARNING, join("\n", @critical_thread));
+    $self->update_status(NAGIOS_WARNING, join("\n", @warning_thread));
   }
 
   return;

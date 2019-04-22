@@ -9,7 +9,7 @@ URL:		https://github.com/yoku0825/ytkit/archive/%{version}.tar.gz#/%{name}-%{ver
 Source0:	%{name}-%{version}.tar.gz
 
 Requires:	perl 
-Requires:       perl(DBD::MySQL) perl(Time::Piece) perl(Carp::Always)
+Requires:       perl(DBD::MySQL) perl(Time::Piece) perl(Carp)
 AutoReq:        no
 BuildArch:      noarch
 BuildRequires:  make perl

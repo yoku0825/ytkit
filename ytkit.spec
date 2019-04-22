@@ -8,11 +8,12 @@ License:	GPLv2
 URL:		https://github.com/yoku0825/ytkit/archive/%{version}.tar.gz#/%{name}-%{version}.tar.gz
 Source0:	%{name}-%{version}.tar.gz
 
-Requires:	perl perl-DBD-MySQL perl-Time-Piece perl-Carp-Always 
+Requires:	perl 
+Requires:       perl(DBD::MySQL) perl(Time::Piece) perl(Carp::Always)
 AutoReq:        no
 BuildArch:      noarch
-BuildRequires:  make perl perl-Test-Harness perl-Test-MockTime
-#BuildRequires: perl(App::cpanminus)
+BuildRequires:  make perl
+BuildRequires:  perl(Test::Harness) perl(Test::MockTime)
 
 %define _rpmfilename %{name}-%{version}-%{release}.noarch.rpm
 

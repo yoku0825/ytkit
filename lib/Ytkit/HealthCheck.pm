@@ -907,8 +907,8 @@ EOS
     },
     dump_detail      => { alias   => ["dump-detail"],
                           text    => qq{When result is NOT NAGIOS_OK,\n} .
-                                     qq{  output results of "SHOW PROCESSLIST" and } .
-                                     qq{"SHOW SLAVE STATUS" into specified file}, }
+                                     qq{  output results of "SHOW PROCESSLIST", "SHOW SLAVE STATUS" } .
+                                     qq{and "SHOW ENGINE INNODB STATUS"" into specified file}, }
   };
 
   my $config= Ytkit::Config->new({ %$yt_healthcheck_option, 

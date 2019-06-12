@@ -42,8 +42,8 @@ $server->{_conn}= 1;
 
 subtest "show_slave_status" => sub
 {
-  $server->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
-  is_deeply($server->show_slave_status, $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1, "SHOW SLAVE STATUS");
+  $server->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::OK;
+  is_deeply($server->show_slave_status, $Ytkit::Test::SHOW_SLAVE_STATUS::OK, "SHOW SLAVE STATUS");
   $server->clear_cache;
 };
 

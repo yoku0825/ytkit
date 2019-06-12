@@ -56,8 +56,8 @@ subtest "show_slave_hosts" => sub
 
 subtest "show_processlist" => sub
 {
-  $server->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
-  is_deeply($server->show_processlist, $Ytkit::Test::SHOW_PROCESSLIST::VAR1, "SHOW PROCESSLIST");
+  $server->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::time_1_0_1000_6000;
+  is_deeply($server->show_processlist, $Ytkit::Test::SHOW_PROCESSLIST::time_1_0_1000_6000, "SHOW PROCESSLIST");
   $server->clear_cache;
 };
 

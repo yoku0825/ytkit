@@ -45,23 +45,23 @@ is($prog->hostname, "127.0.0.1", "Default hostname when connection has failed.")
 subtest "decide_role" => sub
 {
   $prog->instance->{_show_slave_status}= [];
-  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
+  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_slave;
   is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master without slave)");
 
   $prog->instance->{_show_slave_status}= [];
-  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_NONGTID_SLAVE::VAR1;
+  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_nongtid;
   is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with non-gtid slaves)");
   
   $prog->instance->{_show_slave_status}= [];
-  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_GTID_SLAVE::VAR1;
+  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_gtid;
   is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with gtid slaves)");
 
   $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::OK;
-  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
+  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_slave;
   is($prog->decide_role, "slave", "decide_role with SHOW SLAVE STATUS / PROCESSLIST(slave)");
 
   $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::OK;
-  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_NONGTID_SLAVE::VAR1;
+  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_nongtid;
   is($prog->decide_role, "intermidiate", "decide_role with SHOW SLAVE STATUS / PROCESSLIST(intermidiate)");
 
   $prog->clear_cache;
@@ -69,7 +69,7 @@ subtest "decide_role" => sub
 
 subtest "check_long_query" => sub
 {
-  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
+  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::time_1_0_1000_6000;
 
   ### Max query time is 125 (expect of replication threads)
 
@@ -181,7 +181,7 @@ subtest "long_query with threads" => sub
   $prog->{long_query}->{enable}= 1;
 
   ### time > long_query_critical but count < min_critical_thread
-  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
+  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::time_1_0_1000_6000;
   $prog->check_long_query;
   ### 1000 => warn, 6000 => warn & crit, then warn_count = 2, crit_count = 1
   is($prog->{status}->{str}, "WARNING", "check_long_query > critical but count < min_critical_thread");

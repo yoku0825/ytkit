@@ -7,13 +7,13 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v0.1.3
+          key: v0.1.11
       - run: yum install -y perl-App-cpanminus gcc mysql-devel perl-homedir make rpm-build perl-DBD-MySQL perl-Time-Piece epel-release
-      - run: yum install -y perl-Test-MockTime perl-Carp-Always
+      - run: yum install -y perl-Test-MockTime perl-Carp-Always perl-Clone
       - run: cpanm App::cpanminus
       - run: /usr/local/bin/cpanm --installdeps .
       - save_cache:
-          key: v0.1.3
+          key: v0.1.11
           paths: ~/perl5
       - run: make test
 

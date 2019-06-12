@@ -13,7 +13,7 @@ Requires:       perl(DBD::MySQL) perl(Time::Piece) perl(Carp)
 AutoReq:        no
 BuildArch:      noarch
 BuildRequires:  make perl
-BuildRequires:  perl(Test::Harness) perl(Test::MockTime)
+BuildRequires:  perl(Test::Harness) perl(Test::MockTime) perl(Clone)
 
 %define _rpmfilename %{name}-%{version}-%{release}.noarch.rpm
 

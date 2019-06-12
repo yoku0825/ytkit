@@ -1,6 +1,8 @@
 package Ytkit::Test::AUTOINC_USAGE;
 
-$VAR1 = [
+use Clone qw{ clone };
+
+$UNSIGNED = [
           {
             'column_type' => 'smallint(5) unsigned',
             'table_schema' => 'd1',
@@ -23,5 +25,8 @@ $VAR1 = [
             'table_name' => 'time_zone'
           }
         ];
+
+$SIGNED= clone($UNSIGNED);
+$SIGNED->[0]->{column_type}= 'smallint(5)';
 
 return 1;

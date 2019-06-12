@@ -56,11 +56,11 @@ subtest "decide_role" => sub
   $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_GTID_SLAVE::VAR1;
   is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with gtid slaves)");
 
-  $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
+  $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::OK;
   $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::VAR1;
   is($prog->decide_role, "slave", "decide_role with SHOW SLAVE STATUS / PROCESSLIST(slave)");
 
-  $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
+  $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::OK;
   $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST_WITH_NONGTID_SLAVE::VAR1;
   is($prog->decide_role, "intermidiate", "decide_role with SHOW SLAVE STATUS / PROCESSLIST(intermidiate)");
 
@@ -255,7 +255,7 @@ subtest "connection_count" => sub
 subtest "autoinc_usage" => sub
 {
   $prog->instance->{_show_variables}      = $Ytkit::Test::SHOW_VARIABLES::VAR1;
-  $prog->instance->{_select_autoinc_usage}= $Ytkit::Test::AUTOINC_USAGE::VAR1;
+  $prog->instance->{_select_autoinc_usage}= $Ytkit::Test::AUTOINC_USAGE::UNSIGNED;
  
   ### Max autoinc is 10001 on unsigned smallint(65535), about 15.2% used.
   
@@ -290,7 +290,7 @@ subtest "autoinc_usage" => sub
   $prog->clear_cache;
 
   $prog->instance->{_show_variables}      = $Ytkit::Test::SHOW_VARIABLES::VAR1;
-  $prog->instance->{_select_autoinc_usage}   = $Ytkit::Test::AUTOINC_USAGE_SIGNED::VAR1;
+  $prog->instance->{_select_autoinc_usage}   = $Ytkit::Test::AUTOINC_USAGE::SIGNED;
  
   ### Max autoinc is 10001 on signed smallint(32767), about 30.5% used.
   
@@ -305,7 +305,7 @@ subtest "autoinc_usage" => sub
 
   ### Max autoinc is 10001 on signed smallint(32767), about 30.5% used but innodb_stats_on_metadata = ON
   $prog->instance->{_show_variables}      = $Ytkit::Test::SHOW_VARIABLES::STATS_ON_METADATA_IS_ON;
-  $prog->instance->{_select_autoinc_usage}   = $Ytkit::Test::AUTOINC_USAGE_SIGNED::VAR1;
+  $prog->instance->{_select_autoinc_usage}   = $Ytkit::Test::AUTOINC_USAGE::SIGNED;
   $prog->{autoinc_usage}->{warning}= 50;
   $prog->{autoinc_usage}->{critical}= 90;
   $prog->{autoinc_usage}->{enable}= 1;
@@ -351,7 +351,7 @@ subtest "read_only" => sub
 
 subtest "slave_status" => sub
 {
-  $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
+  $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::OK;
 
   ### I/O Running and SQL Running are "YES", Seconds_Behind_Master is 43.
  
@@ -378,7 +378,7 @@ subtest "slave_status" => sub
 
   $prog->clear_cache;
 
-  $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_NG::VAR1;
+  $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::NG;
 
   ### SQL Running is "NO", always should be CRITICAL
  

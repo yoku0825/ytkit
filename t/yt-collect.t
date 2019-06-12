@@ -206,7 +206,7 @@ subtest "user_grants" => sub
 subtest "SHOW SLAVE STATUS" => sub
 {
   $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
-  $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS_OK::VAR1;
+  $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::OK;
 
   $prog->{output}= "tsv";
   is($prog->print_show_slave, read_file("$Bin/data/show_slave_status_into_tsv.r"), "Print TSV style");

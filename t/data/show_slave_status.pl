@@ -1,6 +1,8 @@
-package Ytkit::Test::SHOW_SLAVE_STATUS_NG;
+package Ytkit::Test::SHOW_SLAVE_STATUS;
 
-$VAR1 = [
+use Clone qw{ clone };
+
+$NG = [
           {
             'Master_SSL_Allowed' => 'No',
             'Master_SSL_Crl' => '',
@@ -58,5 +60,9 @@ $VAR1 = [
             'Last_IO_Error' => ''
           }
         ];
+
+$OK= clone($NG);
+$OK->[0]->{Slave_SQL_Running} = "Yes";
+$OK->[0]->{Seconds_Behind_Master} = "43";
 
 return 1;

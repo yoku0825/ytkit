@@ -334,7 +334,7 @@ subtest "read_only" => sub
   $prog->clear_cache;
 
   ### read_only= 1
-  $prog->instance->{_show_variables}   = $Ytkit::Test::SHOW_VARIABLES_READ_ONLY::VAR1;
+  $prog->instance->{_show_variables}   = $Ytkit::Test::SHOW_VARIABLES::read_only;
  
   $prog->{read_only}->{should_be}= 1; ### For slaves.
   $prog->check_read_only;

@@ -56,11 +56,11 @@ subtest "checking requirements" => sub
   is($prog->is_satisfied_requirement, 1, "Accept MySQL 5.7 && performance_schema = ON");
   $prog->clear_cache;
 
-  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES_57_PS_OFF::VAR1;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql57_ps_off;
   is($prog->is_satisfied_requirement, 0, "Reject MySQL 5.7 && performance_schema = OFF");
   $prog->clear_cache;
 
-  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES_55_PS_ON::VAR1;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql55_ps_on;
   is($prog->is_satisfied_requirement, 0, "Reject MySQL 5.5 && performance_schema = ON");
   $prog->clear_cache;
 
@@ -88,7 +88,7 @@ subtest "events_statements_summary_by_digest" => sub
   is($prog->print_query_latency, read_file("$Bin/data/select_from_ps_digest_into_short.r"), "Print Short style");
 
   ### Turn off performance_schema.
-  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES_57_PS_OFF::VAR1;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql57_ps_off;
   is($prog->print_query_latency, undef, "No output when performance_schema = 0");
 
   $prog->clear_cache;
@@ -116,7 +116,7 @@ subtest "table_io_waits_summary_by_table" => sub
   is($prog->print_table_latency, read_file("$Bin/data/select_from_ps_table_into_short.r"), "Print Short style");
 
   ### Turn off performance_schema.
-  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES_57_PS_OFF::VAR1;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql57_ps_off;
   is($prog->print_table_latency, undef, "No output when performance_schema = 0");
 
   $prog->clear_cache;

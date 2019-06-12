@@ -41,7 +41,7 @@ subtest "Checking requirements" => sub
   ok($prog->checking_requirement, "Checking Requirement(OK on ps=ON 5.7)");
   $prog->clear_cache;
 
-  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES_55_PS_ON::VAR1;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql55_os_on;
   ok(!($prog->checking_requirement), "Checking Requirement(NG on ps=ON 5.5)");
   $prog->clear_cache;
 

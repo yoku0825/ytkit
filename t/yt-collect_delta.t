@@ -61,7 +61,7 @@ subtest "events_statements_summary_by_digest" => sub
     is($prog->print_query_latency, undef, "First read returns nothing");
 
     $prog->instance->{_select_ps_digest}= $Ytkit::Test::SELECT_FROM_ps_digest::VAR2;
-    is($prog->print_query_latency, read_file("$Bin/data/delta_select_from_ps_digest_into_short_2s.r"), "Print Short style");
+    is($prog->print_query_latency, read_file("$Bin/data/r/delta_select_from_ps_digest_into_short_2s.r"), "Print Short style");
   };
 
   subtest "--delta_per_second=1" => sub
@@ -73,7 +73,7 @@ subtest "events_statements_summary_by_digest" => sub
     is($prog->print_query_latency, undef, "First read returns nothing");
 
     $prog->instance->{_select_ps_digest}= $Ytkit::Test::SELECT_FROM_ps_digest::VAR2;
-    is($prog->print_query_latency, read_file("$Bin/data/delta_select_from_ps_digest_into_short_1s.r"), "Print Short style");
+    is($prog->print_query_latency, read_file("$Bin/data/r/delta_select_from_ps_digest_into_short_1s.r"), "Print Short style");
   };
 
   $prog->clear_cache;
@@ -93,7 +93,7 @@ subtest "table_io_waits_summary_by_table" => sub
     is($prog->print_table_latency, undef, "First read returns nothing");
 
     $prog->instance->{_select_ps_table}= $Ytkit::Test::SELECT_FROM_ps_table::VAR2;
-    is($prog->print_table_latency, read_file("$Bin/data/delta_select_from_ps_table_into_short_2s.r"), "Print Short style");
+    is($prog->print_table_latency, read_file("$Bin/data/r/delta_select_from_ps_table_into_short_2s.r"), "Print Short style");
   };
 
   subtest "--delta_per_second=1" => sub
@@ -105,7 +105,7 @@ subtest "table_io_waits_summary_by_table" => sub
     is($prog->print_table_latency, undef, "First read returns nothing");
 
     $prog->instance->{_select_ps_table}= $Ytkit::Test::SELECT_FROM_ps_table::VAR2;
-    is($prog->print_table_latency, read_file("$Bin/data/delta_select_from_ps_table_into_short_1s.r"), "Print Short style");
+    is($prog->print_table_latency, read_file("$Bin/data/r/delta_select_from_ps_table_into_short_1s.r"), "Print Short style");
   };
 
 
@@ -125,7 +125,7 @@ subtest "SHOW GLOBAL STATUS" => sub
     is($prog->print_show_status, undef, "First read returns nothing");
 
     $prog->instance->{_show_status}= $Ytkit::Test::SHOW_STATUS::VAR2;
-    is($prog->print_show_status, read_file("$Bin/data/delta_show_status_into_short_2s.r"), "Print Short style");
+    is($prog->print_show_status, read_file("$Bin/data/r/delta_show_status_into_short_2s.r"), "Print Short style");
   };
 
   subtest "--delta_per_second=1" => sub
@@ -136,7 +136,7 @@ subtest "SHOW GLOBAL STATUS" => sub
     is($prog->print_show_status, undef, "First read returns nothing");
 
     $prog->instance->{_show_status}= $Ytkit::Test::SHOW_STATUS::VAR2;
-    is($prog->print_show_status, read_file("$Bin/data/delta_show_status_into_short_1s.r"), "Print Short style");
+    is($prog->print_show_status, read_file("$Bin/data/r/delta_show_status_into_short_1s.r"), "Print Short style");
   };
 
   $prog->clear_cache;
@@ -155,7 +155,7 @@ subtest "i_s.innodb_metrics" => sub
     is($prog->print_innodb_metrics, undef, "First read returns nothing");
 
     $prog->instance->{_select_is_metrics}= $Ytkit::Test::SELECT_FROM_is_metrics::VAR2;
-    is($prog->print_innodb_metrics, read_file("$Bin/data/delta_select_from_is_metrics_into_short_2s.r"), "Print Short style");
+    is($prog->print_innodb_metrics, read_file("$Bin/data/r/delta_select_from_is_metrics_into_short_2s.r"), "Print Short style");
   };
 
   subtest "--delta_per_second=1" => sub
@@ -166,7 +166,7 @@ subtest "i_s.innodb_metrics" => sub
     is($prog->print_innodb_metrics, undef, "First read returns nothing");
 
     $prog->instance->{_select_is_metrics}= $Ytkit::Test::SELECT_FROM_is_metrics::VAR2;
-    is($prog->print_innodb_metrics, read_file("$Bin/data/delta_select_from_is_metrics_into_short_1s.r"), "Print Short style");
+    is($prog->print_innodb_metrics, read_file("$Bin/data/r/delta_select_from_is_metrics_into_short_1s.r"), "Print Short style");
   };
 
   $prog->clear_cache;

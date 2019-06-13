@@ -73,19 +73,19 @@ subtest "events_statements_summary_by_digest" => sub
   $prog->instance->{_select_ps_digest}= $Ytkit::Test::SELECT_FROM_ps_digest::VAR1;
 
   $prog->{output}= "tsv";
-  is($prog->print_query_latency, read_file("$Bin/data/select_from_ps_digest_into_tsv.r"), "Print TSV style");
+  is($prog->print_query_latency, read_file("$Bin/data/r/select_from_ps_digest_into_tsv.r"), "Print TSV style");
 
   $prog->{output}= "csv";
-  is($prog->print_query_latency, read_file("$Bin/data/select_from_ps_digest_into_csv.r"), "Print CSV style");
+  is($prog->print_query_latency, read_file("$Bin/data/r/select_from_ps_digest_into_csv.r"), "Print CSV style");
 
   $prog->{output}= "json";
-  is($prog->print_query_latency, read_file("$Bin/data/select_from_ps_digest_into_json.r"), "Print JSON style");
+  is($prog->print_query_latency, read_file("$Bin/data/r/select_from_ps_digest_into_json.r"), "Print JSON style");
 
   $prog->{output}= "sql";
-  is($prog->print_query_latency, read_file("$Bin/data/select_from_ps_digest_into_sql.r"), "Print SQL style");
+  is($prog->print_query_latency, read_file("$Bin/data/r/select_from_ps_digest_into_sql.r"), "Print SQL style");
 
   $prog->{output}= "short";
-  is($prog->print_query_latency, read_file("$Bin/data/select_from_ps_digest_into_short.r"), "Print Short style");
+  is($prog->print_query_latency, read_file("$Bin/data/r/select_from_ps_digest_into_short.r"), "Print Short style");
 
   ### Turn off performance_schema.
   $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql57_ps_off;
@@ -101,19 +101,19 @@ subtest "table_io_waits_summary_by_table" => sub
   $prog->instance->{_select_ps_table}= $Ytkit::Test::SELECT_FROM_ps_table::VAR1;
 
   $prog->{output}= "tsv";
-  is($prog->print_table_latency, read_file("$Bin/data/select_from_ps_table_into_tsv.r"), "Print TSV style");
+  is($prog->print_table_latency, read_file("$Bin/data/r/select_from_ps_table_into_tsv.r"), "Print TSV style");
 
   $prog->{output}= "csv";
-  is($prog->print_table_latency, read_file("$Bin/data/select_from_ps_table_into_csv.r"), "Print CSV style");
+  is($prog->print_table_latency, read_file("$Bin/data/r/select_from_ps_table_into_csv.r"), "Print CSV style");
 
   $prog->{output}= "json";
-  is($prog->print_table_latency, read_file("$Bin/data/select_from_ps_table_into_json.r"), "Print JSON style");
+  is($prog->print_table_latency, read_file("$Bin/data/r/select_from_ps_table_into_json.r"), "Print JSON style");
 
   $prog->{output}= "sql";
-  is($prog->print_table_latency, read_file("$Bin/data/select_from_ps_table_into_sql.r"), "Print SQL style");
+  is($prog->print_table_latency, read_file("$Bin/data/r/select_from_ps_table_into_sql.r"), "Print SQL style");
 
   $prog->{output}= "short";
-  is($prog->print_table_latency, read_file("$Bin/data/select_from_ps_table_into_short.r"), "Print Short style");
+  is($prog->print_table_latency, read_file("$Bin/data/r/select_from_ps_table_into_short.r"), "Print Short style");
 
   ### Turn off performance_schema.
   $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql57_ps_off;
@@ -129,16 +129,16 @@ subtest "i_s.tables" => sub
   $prog->instance->{_select_is_table_by_size}= $Ytkit::Test::SELECT_FROM_is_table::VAR1;
 
   $prog->{output}= "tsv";
-  is($prog->print_table_size, read_file("$Bin/data/select_from_is_table_into_tsv.r"), "Print TSV style");
+  is($prog->print_table_size, read_file("$Bin/data/r/select_from_is_table_into_tsv.r"), "Print TSV style");
 
   $prog->{output}= "csv";
-  is($prog->print_table_size, read_file("$Bin/data/select_from_is_table_into_csv.r"), "Print CSV style");
+  is($prog->print_table_size, read_file("$Bin/data/r/select_from_is_table_into_csv.r"), "Print CSV style");
 
   $prog->{output}= "json";
-  is($prog->print_table_size, read_file("$Bin/data/select_from_is_table_into_json.r"), "Print JSON style");
+  is($prog->print_table_size, read_file("$Bin/data/r/select_from_is_table_into_json.r"), "Print JSON style");
 
   $prog->{output}= "sql";
-  is($prog->print_table_size, read_file("$Bin/data/select_from_is_table_into_sql.r"), "Print SQL style");
+  is($prog->print_table_size, read_file("$Bin/data/r/select_from_is_table_into_sql.r"), "Print SQL style");
 
   $prog->{output}= "short";
   is($prog->print_table_size, undef, "Print Short style is unsupported.");
@@ -176,19 +176,19 @@ subtest "user_grants" => sub
   ### show_grants clears cache each time.
   $prog->instance->{_show_grants}= $Ytkit::Test::SHOW_GRANTS::VAR1;
   $prog->{output}= "tsv";
-  is($prog->print_show_grants, read_file("$Bin/data/show_grants_into_tsv.r"), "Print TSV style");
+  is($prog->print_show_grants, read_file("$Bin/data/r/show_grants_into_tsv.r"), "Print TSV style");
 
   $prog->instance->{_show_grants}= $Ytkit::Test::SHOW_GRANTS::VAR1;
   $prog->{output}= "csv";
-  is($prog->print_show_grants, read_file("$Bin/data/show_grants_into_csv.r"), "Print CSV style");
+  is($prog->print_show_grants, read_file("$Bin/data/r/show_grants_into_csv.r"), "Print CSV style");
 
   $prog->instance->{_show_grants}= $Ytkit::Test::SHOW_GRANTS::VAR1;
   $prog->{output}= "json";
-  is($prog->print_show_grants, read_file("$Bin/data/show_grants_into_json.r"), "Print JSON style");
+  is($prog->print_show_grants, read_file("$Bin/data/r/show_grants_into_json.r"), "Print JSON style");
 
   $prog->instance->{_show_grants}= $Ytkit::Test::SHOW_GRANTS::VAR1;
   $prog->{output}= "sql";
-  is($prog->print_show_grants, read_file("$Bin/data/show_grants_into_sql.r"), "Print SQL style");
+  is($prog->print_show_grants, read_file("$Bin/data/r/show_grants_into_sql.r"), "Print SQL style");
 
   $prog->instance->{_show_grants}= $Ytkit::Test::SHOW_GRANTS::VAR1;
   $prog->{output}= "short";
@@ -209,16 +209,16 @@ subtest "SHOW SLAVE STATUS" => sub
   $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::OK;
 
   $prog->{output}= "tsv";
-  is($prog->print_show_slave, read_file("$Bin/data/show_slave_status_into_tsv.r"), "Print TSV style");
+  is($prog->print_show_slave, read_file("$Bin/data/r/show_slave_status_into_tsv.r"), "Print TSV style");
 
   $prog->{output}= "csv";
-  is($prog->print_show_slave, read_file("$Bin/data/show_slave_status_into_csv.r"), "Print CSV style");
+  is($prog->print_show_slave, read_file("$Bin/data/r/show_slave_status_into_csv.r"), "Print CSV style");
 
   $prog->{output}= "json";
-  is($prog->print_show_slave, read_file("$Bin/data/show_slave_status_into_json.r"), "Print JSON style");
+  is($prog->print_show_slave, read_file("$Bin/data/r/show_slave_status_into_json.r"), "Print JSON style");
 
   $prog->{output}= "sql";
-  is($prog->print_show_slave, read_file("$Bin/data/show_slave_status_into_sql.r"), "Print SQL style");
+  is($prog->print_show_slave, read_file("$Bin/data/r/show_slave_status_into_sql.r"), "Print SQL style");
 
   $prog->{output}= "short";
   is($prog->print_show_slave, undef, "Print Short style is unsupported.");

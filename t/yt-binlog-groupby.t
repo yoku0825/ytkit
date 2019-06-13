@@ -153,7 +153,7 @@ sub run_test
 
   my $prog= Ytkit::BinlogGroupby->new(@argv);
   open(my $in, "<", sprintf("%s/data/%s", $Bin, $infile)) or die;
-  open(my $expect, "<", sprintf("%s/data/%s", $Bin, $resultfile)) or die;
+  open(my $expect, "<", sprintf("%s/data/r/%s", $Bin, $resultfile)) or die;
   
   while (<$in>)
   {

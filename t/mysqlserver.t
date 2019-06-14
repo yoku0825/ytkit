@@ -163,4 +163,21 @@ subtest "pseudo_thread_id" => sub
   done_testing;
 };
 
+subtest "Set information_schema_stats_expiry" => sub
+{
+  $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql57_ps_on;
+  $server->{_should_set_stats_expiry}= $Ytkit::Test::SHOW_VARIABLES::stats_expiry_empty;
+  ok(!($server->should_set_stats_expiry), "5.7 doesn't have information_schema_stats_expiry.");
+
+  $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80;
+  $server->{_should_set_stats_expiry}= $Ytkit::Test::SHOW_VARIABLES::stats_expiry_nonzero;
+  ok($server->should_set_stats_expiry, "8.0 and information_schema_stats_expiry <> 0.");
+
+  $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80;
+  $server->{_should_set_stats_expiry}= $Ytkit::Test::SHOW_VARIABLES::stats_expiry_zero;
+  ok(!($server->should_set_stats_expiry), "8.0 and information_schema_stats_expiry = 0.");
+ 
+  done_testing;
+};
+
 done_testing;

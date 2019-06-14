@@ -116,6 +116,10 @@ sub conn
       $self->error($@);
       $self->{_conn}= undef;
     }
+    else
+    {
+      $self->update_stats_expiry if $self->mysqld_version >= 80013 && $self->should_set_stats_expiry;
+    }
   }
   return $self->{_conn};
 }
@@ -538,6 +542,18 @@ sub p_s_on
     return 1;
   }
   return 0;
+}
+
+sub  should_set_stats_expiry
+{
+  my ($self)= @_;
+  return $self->query_arrayref("SHOW SESSION VARIABLES LIKE 'information_schema_stats_expiry'")->[0]->{Value} // 0;
+}
+
+sub update_stats_expiry
+{
+  my ($self)= @_;
+  return $self->exec_sql("SET SESSION information_schema_stats_expiry = 0");
 }
 
 sub valueof

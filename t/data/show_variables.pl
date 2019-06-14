@@ -2005,13 +2005,29 @@ $show_session_variables_like_pseudo_thread_id = [
             'Variable_name' => 'pseudo_thread_id'
           }
         ];
+$stats_expiry_empty = [];
+
+$stats_expiry_nonzero = [
+          {
+            'Value' => '86400',
+            'Variable_name' => 'information_schema_stats_expiry'
+          }
+        ];
+
+$stats_expiry_zero = [
+          {
+            'Value' => '0',
+            'Variable_name' => 'information_schema_stats_expiry'
+          }
+        ];
+
+
 
 $read_only= clone($mysql57_ps_on);
 $read_only->{read_only}->{Value}= "ON";
 
 $mysql57_ps_off= clone($mysql57_ps_on);
 $mysql57_ps_off->{performance_schema}->{Value}= "OFF";
-
 
 $VAR1= $mysql57_ps_on;
 

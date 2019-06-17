@@ -311,7 +311,6 @@ sub clear
 sub increment
 {
   ### This should be implemented in each class.
-  ...;
 }
 
 sub _print_n_element

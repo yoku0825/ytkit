@@ -62,6 +62,7 @@ subtest "new Ytkit::Config::File interface" => sub
                                      port => 3306,
                                      user => "abcdef",
                                      password => "hogehoge",
+                                     ask_pass => 0,
                                      timeout => 1,
                                      socket => undef }, "Parse server1");
       done_testing;
@@ -75,6 +76,7 @@ subtest "new Ytkit::Config::File interface" => sub
                                      port => undef,
                                      user => undef,
                                      password => "",
+                                     ask_pass => 0,
                                      timeout => 1,
                                      socket => undef }, "Parse server2");
       done_testing;
@@ -88,6 +90,7 @@ subtest "new Ytkit::Config::File interface" => sub
                                      port => undef,
                                      user => undef,
                                      password => "",
+                                     ask_pass => 0,
                                      timeout => 1,
                                      socket => undef }, "empty section");
       done_testing;
@@ -101,6 +104,7 @@ subtest "new Ytkit::Config::File interface" => sub
                                      port => undef,
                                      user => undef,
                                      password => "",
+                                     ask_pass => 0,
                                      timeout => 1,
                                      socket => undef }, "empty section");
       is_deeply($config->{left_argv}, [q{--one="aaa bbb"},
@@ -118,6 +122,7 @@ subtest "new Ytkit::Config::File interface" => sub
                                      port => undef,
                                      user => "mysql",
                                      password => "",
+                                     ask_pass => 0,
                                      timeout => 1,
                                      socket => undef }, "Treat as options");
       is_deeply($config->{left_argv}, [q{--abc=def},
@@ -142,6 +147,7 @@ subtest "with [global] section" => sub
                                    port => 3306,
                                    user => "abcdef",
                                    password => "hogehoge",
+                                   ask_pass => 0,
                                    socket => undef,
                                    timeout => 1}, "[global] should be overrided");
     done_testing;
@@ -155,6 +161,7 @@ subtest "with [global] section" => sub
                                    port => undef,
                                    user => "global_user",
                                    password => "",
+                                   ask_pass => 0,
                                    socket => undef,
                                    timeout => 1 }, "[global] should be applied");
     done_testing; 

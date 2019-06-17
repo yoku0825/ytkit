@@ -5,3 +5,4 @@ requires "Carp";
 requires "Test::More";
 requires "Clone";
 requires "JSON";
+requires "Term::ReadKey";

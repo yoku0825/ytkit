@@ -8,7 +8,7 @@ jobs:
       - checkout
       - restore_cache:
           key: v0.1.11
-      - run: yum install -y perl-App-cpanminus gcc mysql-devel perl-homedir make rpm-build perl-DBD-MySQL perl-Time-Piece epel-release perl-JSON
+      - run: yum install -y perl-App-cpanminus gcc mysql-devel perl-homedir make rpm-build perl-DBD-MySQL perl-Time-Piece epel-release perl-JSON perl-Term-ReadKey
       - run: yum install -y perl-Test-MockTime perl-Carp-Always perl-Clone
       - run: cpanm App::cpanminus
       - run: /usr/local/bin/cpanm --installdeps .

@@ -22,6 +22,7 @@ use strict;
 use warnings;
 use utf8;
 use Carp qw{ carp croak };
+use Term::ReadKey;
 
 use Ytkit::Config;
 use Ytkit::Config::File;
@@ -78,6 +79,10 @@ sub handle_help
     print STDERR $self->usage;
     exit 3;
   }
+  elsif ($self->{ask_pass})
+  {
+    $self->ask_password;
+  }
 }
 
 sub clear_cache
@@ -102,6 +107,19 @@ sub test_connect
     ### For test.
     return $self;
   }
+}
+
+sub ask_password
+{
+  my ($self)= @_;
+
+  Term::ReadKey::ReadMode("noecho");
+  print "Password: ";
+  my $password= Term::ReadKey::ReadLine;
+  Term::ReadKey::ReadMode("restore");
+  print "\n";
+  chomp($password);
+  $self->{_config}->{result}->{password}= $password;
 }
 
 return 1;

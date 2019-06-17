@@ -43,6 +43,10 @@ our $CONNECT_OPTION=
   password => { alias => ["p", "password"],
                 default => $ENV{MYSQL_PWD} // "",
                 text  => "Password for the user specified by --user" },
+  ask_pass => { alias => ["ask-pass", "askpass", "ask-password"],
+                default => 0,
+                text  => "Ask --password by prompt",
+                noarg => 1 },
   timeout  => { alias => ["timeout"], default => 1,
                 text  => "Seconds before timeout\n" .
                          "  (Set into read_timeout, write_timeout, connect_timeout)" },

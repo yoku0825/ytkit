@@ -4,3 +4,4 @@ requires "Time::Piece";
 requires "Carp";
 requires "Test::More";
 requires "Clone";
+requires "JSON";

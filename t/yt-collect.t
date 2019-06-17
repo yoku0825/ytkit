@@ -22,6 +22,7 @@ use strict;
 use warnings;
 use utf8;
 use Test::More;
+use JSON qw{ from_json };
 
 use Test::MockTime;
 Test::MockTime::set_fixed_time("2018-06-06 12:27:34 +0900", "%Y-%m-%d %H:%M:%S %z");
@@ -79,7 +80,9 @@ subtest "events_statements_summary_by_digest" => sub
   is($prog->print_query_latency, read_file("$Bin/data/r/select_from_ps_digest_into_csv.r"), "Print CSV style");
 
   $prog->{output}= "json";
-  is($prog->print_query_latency, read_file("$Bin/data/r/select_from_ps_digest_into_json.r"), "Print JSON style");
+  is_deeply(from_json($prog->print_query_latency),
+            from_json(read_file("$Bin/data/r/select_from_ps_digest_into_json.r")),
+            "Print JSON style");
 
   $prog->{output}= "sql";
   is($prog->print_query_latency, read_file("$Bin/data/r/select_from_ps_digest_into_sql.r"), "Print SQL style");
@@ -107,7 +110,9 @@ subtest "table_io_waits_summary_by_table" => sub
   is($prog->print_table_latency, read_file("$Bin/data/r/select_from_ps_table_into_csv.r"), "Print CSV style");
 
   $prog->{output}= "json";
-  is($prog->print_table_latency, read_file("$Bin/data/r/select_from_ps_table_into_json.r"), "Print JSON style");
+  is_deeply(from_json($prog->print_table_latency),
+            from_json(read_file("$Bin/data/r/select_from_ps_table_into_json.r")),
+            "Print JSON style");
 
   $prog->{output}= "sql";
   is($prog->print_table_latency, read_file("$Bin/data/r/select_from_ps_table_into_sql.r"), "Print SQL style");
@@ -135,7 +140,9 @@ subtest "i_s.tables" => sub
   is($prog->print_table_size, read_file("$Bin/data/r/select_from_is_table_into_csv.r"), "Print CSV style");
 
   $prog->{output}= "json";
-  is($prog->print_table_size, read_file("$Bin/data/r/select_from_is_table_into_json.r"), "Print JSON style");
+  is_deeply(from_json($prog->print_table_size),
+            from_json(read_file("$Bin/data/r/select_from_is_table_into_json.r")),
+            "Print JSON style");
 
   $prog->{output}= "sql";
   is($prog->print_table_size, read_file("$Bin/data/r/select_from_is_table_into_sql.r"), "Print SQL style");
@@ -184,7 +191,9 @@ subtest "user_grants" => sub
 
   $prog->instance->{_show_grants}= $Ytkit::Test::SHOW_GRANTS::VAR1;
   $prog->{output}= "json";
-  is($prog->print_show_grants, read_file("$Bin/data/r/show_grants_into_json.r"), "Print JSON style");
+  is_deeply(from_json($prog->print_show_grants),
+            from_json(read_file("$Bin/data/r/show_grants_into_json.r")),
+            "Print JSON style");
 
   $prog->instance->{_show_grants}= $Ytkit::Test::SHOW_GRANTS::VAR1;
   $prog->{output}= "sql";
@@ -215,7 +224,9 @@ subtest "SHOW SLAVE STATUS" => sub
   is($prog->print_show_slave, read_file("$Bin/data/r/show_slave_status_into_csv.r"), "Print CSV style");
 
   $prog->{output}= "json";
-  is($prog->print_show_slave, read_file("$Bin/data/r/show_slave_status_into_json.r"), "Print JSON style");
+  is_deeply(from_json($prog->print_show_slave),
+            from_json(read_file("$Bin/data/r/show_slave_status_into_json.r")),
+            "Print JSON style");
 
   $prog->{output}= "sql";
   is($prog->print_show_slave, read_file("$Bin/data/r/show_slave_status_into_sql.r"), "Print SQL style");

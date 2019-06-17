@@ -23,6 +23,7 @@ use warnings;
 use utf8;
 use POSIX;
 use IO::File;
+use JSON qw{ to_json };
 use base "Ytkit";
 use Carp qw{ carp croak };
 
@@ -477,20 +478,9 @@ sub print_low
   elsif ($self->{output} eq "json")
   {
     return undef if !($table);
-    foreach my $row (@$rs)
-    {
-      ### Add host/port information
-      my $info= sprintf(q|{"host":"%s","port":"%s",%s}|,
-                        $self->{host} || "localhost",
-                        $self->{port} || 3306,
-                        join(",", map { sprintf(q|"%s":"%s"|,
-                                                $_, defined($row->{$_}) ? 
-                                                      escape_backslash($row->{$_}) :
-                                                      "")
-                                      } @column));
-      push(@buff, $info);
-    }
-    return sprintf(q|{"%s":[%s]}|, $table, join(",", @buff)) . "\n";
+    my $header= { host => $self->{host} || "localhost",
+                  port => $self->{port} || 3306, };
+    return to_json({ $table => [map { +{ %$header, %$_, } } @$rs] });
   }
   elsif ($self->{output} eq "sql")
   {

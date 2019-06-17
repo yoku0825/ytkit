@@ -116,10 +116,6 @@ sub conn
       $self->error($@);
       $self->{_conn}= undef;
     }
-    else
-    {
-      $self->update_stats_expiry if $self->mysqld_version >= 80013 && $self->should_set_stats_expiry;
-    }
   }
   return $self->{_conn};
 }
@@ -225,6 +221,10 @@ sub show_variables
 sub select_autoinc_usage
 {
   my ($self)= @_;
+
+  ### 8.0.13 and later uses cache for i_s.tables...
+  $self->update_stats_expiry if $self->mysqld_version >= 80013 && $self->should_set_stats_expiry;
+
   my $sql= << "EOS";
 SELECT
   table_schema AS table_schema,
@@ -286,6 +286,10 @@ EOS
 sub select_is_table_by_size
 {
   my ($self, $limit)= @_;
+
+  ### 8.0.13 and later uses cache for i_s.tables...
+  $self->update_stats_expiry if $self->mysqld_version >= 80013 && $self->should_set_stats_expiry;
+
   my $sql= << "EOS";
 SELECT
   table_schema AS table_schema,

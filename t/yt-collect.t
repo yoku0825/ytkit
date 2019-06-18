@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2018  yoku0825
+# Copyright (C) 2018, 2019  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -115,7 +115,19 @@ subtest "table_io_waits_summary_by_table" => sub
             "Print JSON style");
 
   $prog->{output}= "sql";
-  is($prog->print_table_latency, read_file("$Bin/data/r/select_from_ps_table_into_sql.r"), "Print SQL style");
+  my $sql_orig= my $sql= read_file("$Bin/data/r/select_from_ps_table_into_sql.r");
+  is($prog->print_table_latency, $sql, "Print SQL style");
+
+  $prog->{sql_ignore}= 1;
+  $sql =~ s/INSERT INTO/INSERT IGNORE INTO/;
+  is($prog->print_table_latency, $sql, "Print SQL style with IGNORE");
+  delete($prog->{sql_ignore});
+
+  $prog->{sql_replace}= 1;
+  $sql= $sql_orig;
+  $sql =~ s/INSERT INTO/REPLACE INTO/;
+  is($prog->print_table_latency, $sql, "Print SQL style with REPLACE");
+  delete($prog->{sql_replace});
 
   $prog->{output}= "short";
   is($prog->print_table_latency, read_file("$Bin/data/r/select_from_ps_table_into_short.r"), "Print Short style");

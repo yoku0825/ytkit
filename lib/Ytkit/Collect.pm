@@ -497,7 +497,8 @@ sub print_low
                                        } @column));
       push(@buff, $info);
     }
-    return sprintf("INSERT INTO %s (%s) VALUES %s;\n",
+    return sprintf("%s INTO %s (%s) VALUES %s;\n",
+                   $self->{sql_replace} ? "REPLACE" : $self->{sql_ignore} ? "INSERT IGNORE" : "INSERT",
                    $table, join(", ", ("host", "port", @column)),
                    join(", ", @buff));
   }
@@ -612,6 +613,14 @@ sub _config
                         default => "tsv",
                         isa     => [qw{tsv csv json sql short}],
                         text => "Results output style." },
+    sql_ignore     => { alias => ["sql-ignore", "ignore"],
+                        noarg => 1,
+                        text => "Use INSERT IGNORE INTO instead of INSERT INTO.\n" .
+                                "  (Effects only --output=sql)" },
+    sql_replace    => { alias => ["sql-replace", "replace"],
+                        noarg => 1,
+                        text => "Use REPLACE INTO instead of INSERT INTO.\n" .
+                                "  (Effects only --output=sql)" },
     record_path    => { alias   => ["record-path", "r"],
                         text => "When specified, each collection-methods write into the directory.\n" .
                                 "  (When not set, write into STDOUT)" },

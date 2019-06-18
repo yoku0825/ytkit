@@ -425,7 +425,7 @@ sub get_show_slave
     ### Ignore named-channel(for Multi-Source Replication)
     next if exists($channel->{Channel_name}) && $channel->{Channel_name} ne "";
 
-    push(@ret, { master_host => $channel->{Master_Host},
+    push(@ret, { master_ipaddr => $channel->{Master_Host},
                  master_port => $channel->{Master_Port},
                  last_update => strftime("%Y-%m-%d %H:%M:%S", localtime), });
   }
@@ -447,7 +447,7 @@ sub print_low
     if ($self->{verbose})
     {
       ### Header
-      push(@buff, join($seperator, map { qq|"$_"| } ("host", "port", @column)));
+      push(@buff, join($seperator, map { qq|"$_"| } ("ipaddr", "port", @column)));
     }
 
     ### Body
@@ -481,7 +481,7 @@ sub print_low
   elsif ($self->{output} eq "json")
   {
     return undef if !($table);
-    my $header= { host => $self->{host} || "localhost",
+    my $header= { ipaddr => $self->{host} || "localhost",
                   port => $self->{port} || 3306, };
     return to_json({ $table => [map { +{ %$header, %$_, } } @$rs] });
   }
@@ -502,7 +502,7 @@ sub print_low
     }
     return sprintf("%s INTO %s (%s) VALUES %s%s;\n",
                    $self->{sql_replace} ? "REPLACE" : $self->{sql_ignore} ? "INSERT IGNORE" : "INSERT",
-                   $table, join(", ", ("host", "port", @column)),
+                   $table, join(", ", ("ipaddr", "port", @column)),
                    join(", ", @buff),
                    $self->{sql_update} ? sprintf(" ON DUPLICATE KEY UPDATE %s",
                                                  join(", ", map { sprintf("%s = VALUES(%s)", $_, $_) } @column)) : "");

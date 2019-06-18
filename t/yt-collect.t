@@ -68,6 +68,56 @@ subtest "checking requirements" => sub
   done_testing;
 };
 
+subtest "Handling --sql-update, --sql-ignore and --sql-replace by fix_sql_options()" => sub
+{
+  ### Dummy instance.
+  my $prog3= {};
+  bless $prog3 => "Ytkit::Collect";
+
+  @{$prog3}{qw(sql_update sql_ignore sql_replace)}= (1, 0, 0);
+  $prog3->fix_sql_options;
+  ok($prog3->{sql_update} && !($prog3->{sql_ignore}) && !($prog3->{sql_replace}),
+     "Handle only --sql-update");
+  $prog3->clear_cache;
+
+  @{$prog3}{qw(sql_update sql_ignore sql_replace)}= (0, 1, 0);
+  $prog3->fix_sql_options;
+  ok(!($prog3->{sql_update}) && $prog3->{sql_ignore} && !($prog3->{sql_replace}),
+     "Handle only --sql-ignore");
+  $prog3->clear_cache;
+
+  @{$prog3}{qw(sql_update sql_ignore sql_replace)}= (0, 0, 1);
+  $prog3->fix_sql_options;
+  ok(!($prog3->{sql_update}) && !($prog3->{sql_ignore}) && $prog3->{sql_replace},
+     "Handle only --sql-replace");
+  $prog3->clear_cache;
+
+  @{$prog3}{qw(sql_update sql_ignore sql_replace)}= (1, 1, 0);
+  $prog3->fix_sql_options;
+  ok(!($prog3->{sql_update}) && !($prog3->{sql_ignore}) && !($prog3->{sql_replace}),
+     "--sql-update --sql-ignore falls back to simple INSERT INTO");
+  $prog3->clear_cache;
+
+  @{$prog3}{qw(sql_update sql_ignore sql_replace)}= (1, 0, 1);
+  $prog3->fix_sql_options;
+  ok(!($prog3->{sql_update}) && !($prog3->{sql_ignore}) && !($prog3->{sql_replace}),
+     "--sql-update --sql-replace falls back to simple INSERT INTO");
+  $prog3->clear_cache;
+
+  @{$prog3}{qw(sql_update sql_ignore sql_replace)}= (0, 1, 1);
+  $prog3->fix_sql_options;
+  ok(!($prog3->{sql_update}) && !($prog3->{sql_ignore}) && !($prog3->{sql_replace}),
+     "--sql-ignore --sql-replace falls back to simple INSERT INTO");
+  $prog3->clear_cache;
+
+  @{$prog3}{qw(sql_update sql_ignore sql_replace)}= (1, 1, 1);
+  $prog3->fix_sql_options;
+  ok(!($prog3->{sql_update}) && !($prog3->{sql_ignore}) && !($prog3->{sql_replace}),
+     "--sql-update --sql-ignore --sql-replace falls back to simple INSERT INTO");
+  $prog3->clear_cache;
+  done_testing;
+};
+
 subtest "events_statements_summary_by_digest" => sub
 {
   $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
@@ -115,19 +165,30 @@ subtest "table_io_waits_summary_by_table" => sub
             "Print JSON style");
 
   $prog->{output}= "sql";
-  my $sql_orig= my $sql= read_file("$Bin/data/r/select_from_ps_table_into_sql.r");
-  is($prog->print_table_latency, $sql, "Print SQL style");
+  is($prog->print_table_latency, read_file("$Bin/data/r/select_from_ps_table_into_sql.r"), "Print SQL style");
 
-  $prog->{sql_ignore}= 1;
-  $sql =~ s/INSERT INTO/INSERT IGNORE INTO/;
-  is($prog->print_table_latency, $sql, "Print SQL style with IGNORE");
-  delete($prog->{sql_ignore});
+  subtest "--output=sql variations" => sub
+  {
+    my $sql_replace= my $sql_ignore= read_file("$Bin/data/r/select_from_ps_table_into_sql.r");
 
-  $prog->{sql_replace}= 1;
-  $sql= $sql_orig;
-  $sql =~ s/INSERT INTO/REPLACE INTO/;
-  is($prog->print_table_latency, $sql, "Print SQL style with REPLACE");
-  delete($prog->{sql_replace});
+    $prog->{sql_ignore}= 1;
+    $sql_ignore =~ s/INSERT INTO/INSERT IGNORE INTO/;
+    is($prog->print_table_latency, $sql_ignore, "Print SQL style with IGNORE");
+    delete($prog->{sql_ignore});
+
+    $prog->{sql_replace}= 1;
+    $sql_replace =~ s/INSERT INTO/REPLACE INTO/;
+    is($prog->print_table_latency, $sql_replace, "Print SQL style with REPLACE");
+    delete($prog->{sql_replace});
+
+    $prog->{sql_update}= 1;
+    is($prog->print_table_latency,
+       read_file("$Bin/data/r/select_from_ps_table_into_sql_dup_key.r"),
+       "Print SQL stype with ON DUPLICATE KEY UPDATE");
+    delete($prog->{sql_update});
+
+    done_testing;
+  };
 
   $prog->{output}= "short";
   is($prog->print_table_latency, read_file("$Bin/data/r/select_from_ps_table_into_short.r"), "Print Short style");

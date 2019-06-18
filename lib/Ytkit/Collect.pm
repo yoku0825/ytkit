@@ -50,6 +50,9 @@ sub new
   bless $self => $class;
   $self->handle_help;
 
+  ### Check --sql-update, --sql-ignore and --sql-replace at once.
+  $self->fix_sql_options;
+
   ### die if can't connect to MySQL.
   $self->test_connect;
 
@@ -497,10 +500,12 @@ sub print_low
                                        } @column));
       push(@buff, $info);
     }
-    return sprintf("%s INTO %s (%s) VALUES %s;\n",
+    return sprintf("%s INTO %s (%s) VALUES %s%s;\n",
                    $self->{sql_replace} ? "REPLACE" : $self->{sql_ignore} ? "INSERT IGNORE" : "INSERT",
                    $table, join(", ", ("host", "port", @column)),
-                   join(", ", @buff));
+                   join(", ", @buff),
+                   $self->{sql_update} ? sprintf(" ON DUPLICATE KEY UPDATE %s",
+                                                 join(", ", map { sprintf("%s = VALUES(%s)", $_, $_) } @column)) : "");
   }
   else
   {
@@ -520,6 +525,22 @@ sub escape_backslash
   $str =~ s/\"/\\"/g;
 
   return $str;
+}
+
+sub fix_sql_options
+{
+  my ($self)= @_;
+
+  ### Check --sql-update, --sql-ignore and --sql-replace at once.
+  if (($self->{sql_update} // 0) + ($self->{sql_replace} // 0) + ($self->{sql_ignore} // 0) > 1)
+  {
+    carp("--sql-update(or its synonym), --sql-ignore(or its synonym) and --sql-replace(or its synonym) " .
+         "are NOT able to turn-on at same time.\n" .
+         "Falling back to turn-off all of them(using simple INSERT INTO statement)") if !($ENV{HARNESS_ACTIVE});
+    delete($self->{sql_update}) if $self->{sql_update};
+    delete($self->{sql_replace}) if $self->{sql_replace};
+    delete($self->{sql_ignore}) if $self->{sql_ignore};
+  }
 }
 
 sub _config
@@ -621,6 +642,9 @@ sub _config
                         noarg => 1,
                         text => "Use REPLACE INTO instead of INSERT INTO.\n" .
                                 "  (Effects only --output=sql)" },
+    sql_update => { alias => ["sql-duplicate-key-update", "sql-update", "update", "duplicate-key-update"],
+                    noarg => 1,
+                    text => "Use INSERT INTO .. DUPLICATE KEY UPDATE .. for each column." },
     record_path    => { alias   => ["record-path", "r"],
                         text => "When specified, each collection-methods write into the directory.\n" .
                                 "  (When not set, write into STDOUT)" },

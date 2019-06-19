@@ -264,8 +264,8 @@ sub select_ps_table
   my ($self, $limit)= @_;
   my $sql= << "EOS";
 SELECT
-  object_schema, 
-  object_name,
+  object_schema AS table_schema, 
+  object_name AS table_name,
   count_read,
   sum_timer_read,
   count_write,

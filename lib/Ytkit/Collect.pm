@@ -162,7 +162,7 @@ sub print_table_latency
   my ($self)= @_;
   my ($ret, $prev);
 
-  ($ret, $prev)= $self->_calc_delta(["object_schema", "object_name"],
+  ($ret, $prev)= $self->_calc_delta(["table_schema", "table_name"],
                                     ["count_read", "sum_timer_read", "count_write", "sum_timer_write"],
                                     $self->get_table_latency, $self->{_previous}->{table_latency});
 

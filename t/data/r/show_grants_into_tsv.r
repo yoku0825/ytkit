@@ -1,1 +1,1 @@
-"163-44-175-117"	"64057"	"GRANT USAGE ON *.* TO 'mysql.sys'@'localhost'; GRANT TRIGGER ON `sys`.* TO 'mysql.sys'@'localhost'; GRANT SELECT ON `sys`.`sys_config` TO 'mysql.sys'@'localhost'"	"localhost"	"mysql.sys"
+"163-44-175-117"	"64057"	"GRANT USAGE ON *.* TO 'mysql.sys'@'localhost'; GRANT TRIGGER ON `sys`.* TO 'mysql.sys'@'localhost'; GRANT SELECT ON `sys`.`sys_config` TO 'mysql.sys'@'localhost'"	"2018-06-06 12:27:34"	"localhost"	"mysql.sys"

@@ -398,7 +398,10 @@ sub get_show_grants
   foreach my $user (@{$self->instance->select_user_list})
   {
     my @grants= map { $_->{grants} } @{$self->instance->show_grants($user->{user}, $user->{host})};
-    push(@ret, +{ user_name => $user->{user}, user_host => $user->{host}, grants => join("; ", @grants) });
+    push(@ret, +{ user_name => $user->{user},
+                  user_host => $user->{host},
+                  grants => join("; ", @grants),
+                  last_update => strftime("%Y-%m-%d %H:%M:%S", localtime), });
   }
   return \@ret;
 }

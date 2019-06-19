@@ -8,7 +8,8 @@ $VAR1 = [
             'index_length' => '0',
             'last_update' => '2018-05-14 14:38:54',
             'table_name' => 'stock',
-            'data_free' => '4194304'
+            'data_free' => '4194304',
+            'engine' => 'InnoDB'
           },
           {
             'table_schema' => 'tpcc',
@@ -17,7 +18,8 @@ $VAR1 = [
             'index_length' => '0',
             'last_update' => '2018-05-14 14:38:54',
             'table_name' => 'order_line',
-            'data_free' => '7340032'
+            'data_free' => '7340032',
+            'engine' => 'InnoDB'
           },
           {
             'table_schema' => 'tpcc',
@@ -26,7 +28,8 @@ $VAR1 = [
             'index_length' => '0',
             'last_update' => '2018-05-14 14:38:54',
             'table_name' => 'customer',
-            'data_free' => '2097152'
+            'data_free' => '2097152',
+            'engine' => 'InnoDB'
           },
           {
             'table_schema' => 'tpcc',
@@ -35,7 +38,8 @@ $VAR1 = [
             'index_length' => '0',
             'last_update' => '2018-05-14 14:38:54',
             'table_name' => 'item',
-            'data_free' => '4194304'
+            'data_free' => '4194304',
+            'engine' => 'InnoDB'
           },
           {
             'table_schema' => 'tpcc',
@@ -44,7 +48,8 @@ $VAR1 = [
             'index_length' => '0',
             'last_update' => '2018-05-14 14:38:54',
             'table_name' => 'history',
-            'data_free' => '4194304'
+            'data_free' => '4194304',
+            'engine' => 'InnoDB'
           },
           {
             'table_schema' => 'mysql',
@@ -53,7 +58,8 @@ $VAR1 = [
             'index_length' => '81920',
             'last_update' => '2018-05-14 14:38:54',
             'table_name' => 'help_topic',
-            'data_free' => '4194304'
+            'data_free' => '4194304',
+            'engine' => 'InnoDB'
           },
           {
             'table_schema' => 'tpcc',
@@ -62,7 +68,8 @@ $VAR1 = [
             'index_length' => '0',
             'last_update' => '2018-05-14 14:38:54',
             'table_name' => 'orders',
-            'data_free' => '4194304'
+            'data_free' => '4194304',
+            'engine' => 'InnoDB'
           },
           {
             'table_schema' => 'tpcc',
@@ -71,7 +78,8 @@ $VAR1 = [
             'index_length' => '0',
             'last_update' => '2018-05-14 14:38:54',
             'table_name' => 'new_orders',
-            'data_free' => '0'
+            'data_free' => '0',
+            'engine' => 'InnoDB'
           },
           {
             'table_schema' => 'mysql',
@@ -80,7 +88,8 @@ $VAR1 = [
             'index_length' => '81920',
             'last_update' => '2018-05-14 14:38:54',
             'table_name' => 'help_keyword',
-            'data_free' => '4194304'
+            'data_free' => '4194304',
+            'engine' => 'InnoDB'
           },
           {
             'table_schema' => 'mysql',
@@ -89,7 +98,8 @@ $VAR1 = [
             'index_length' => '0',
             'last_update' => '2018-05-14 14:38:54',
             'table_name' => 'help_relation',
-            'data_free' => '4194304'
+            'data_free' => '4194304',
+            'engine' => 'InnoDB'
           }
         ];
 

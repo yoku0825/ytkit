@@ -298,6 +298,7 @@ SELECT
   data_length AS data_length,
   index_length AS index_length,
   data_free AS data_free,
+  engine AS engine,
   NOW() AS last_update
 FROM
   information_schema.tables

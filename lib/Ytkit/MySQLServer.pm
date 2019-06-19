@@ -251,9 +251,21 @@ sub show_master_logs
 sub select_ps_digest
 {
   my ($self, $limit)= @_;
-  my $sql= "SELECT schema_name, digest, digest_text, count_star, sum_timer_wait, NOW() AS last_update " .
-           "FROM performance_schema.events_statements_summary_by_digest " .
-           "ORDER BY count_star DESC";
+  my $sql= << "EOS";
+SELECT
+  schema_name,
+  digest,
+  digest_text,
+  count_star,
+  sum_timer_wait,
+  sum_rows_examined,
+  sum_rows_sent,
+  NOW() AS last_update
+FROM
+  performance_schema.events_statements_summary_by_digest
+ORDER BY
+  count_star DESC
+EOS
   $sql .= sprintf(" LIMIT %d", $limit) if $limit;
  
   return $self->query_arrayref($sql);

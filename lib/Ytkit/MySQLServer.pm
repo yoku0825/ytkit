@@ -128,7 +128,7 @@ sub exec_sql
   if (my $conn= $self->conn)
   {
     $self->error("");
-    $self->warning("");
+    $self->warning([]);
     return undef if $self->error;
 
     eval
@@ -138,7 +138,7 @@ sub exec_sql
 
     if ($@)
     {
-      $self->error($@);
+      $self->error(sprintf("%s (%s): %s", $sql, join(", ", @argv), $@));
       return undef;
     }
 
@@ -389,7 +389,7 @@ sub query_arrayref
     } ### Not i_s query doesn't set alarm.
 
     $self->error("");
-    $self->warning("");
+    $self->warning([]);
     my $conn= $self->conn;
     return undef if $self->error;
 
@@ -411,7 +411,7 @@ sub query_arrayref
 
       }
 
-      $self->error($@);
+      $self->error(sprintf("%s (%s): %s", $sql, join(", ", @argv), $@));
       $self->croakf("Error occurs during query $sql; $@");
     }
 
@@ -471,7 +471,7 @@ sub query_hashref
         alarm(0);
       }
 
-      $self->error($@);
+      $self->error(sprintf("%s (%s): %s", $sql, join(", ", @argv), $@));
       $self->croakf("Error occurs during query %s; %s", $sql, $@);
     }
 

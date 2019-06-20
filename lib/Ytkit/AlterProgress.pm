@@ -22,7 +22,6 @@ use strict;
 use warnings;
 use utf8;
 use base "Ytkit";
-use Carp qw{carp croak};
 
 use Ytkit::MySQLServer;
 
@@ -83,15 +82,15 @@ sub checking_requirement
   ### We needs MySQL >= 5.7.6
   if ($self->instance->mysqld_version < 50706)
   {
-    croak(sprintf("yt-alter-progress needs MySQL Version >= 5.7.6 but Server version is %d",
-                  $self->instance->mysqld_version)) if !($ENV{HARNESS_ACTIVE});
+    $self->croakf("yt-alter-progress needs MySQL Version >= 5.7.6 but Server version is %d",
+                  $self->instance->mysqld_version) if !($ENV{HARNESS_ACTIVE});
     return 0;
   }
 
   ### and performance_schema = ON
   if (!($self->instance->p_s_on))
   {
-    croak("yt-alter-progress needs performance_schema = ON but actually off")
+    $self->croakf("yt-alter-progress needs performance_schema = ON but actually off")
       if !($ENV{HARNESS_ACTIVE});
     return 0;
   }
@@ -123,7 +122,7 @@ sub _search_instruments
       ### Update ENABLED = YES, TIMED = YES
       my $sql= sprintf("UPDATE performance_schema.setup_instruments SET enabled = 'YES', timed = 'YES' WHERE name = %s",
                        $self->instance->quote($row->{name}));
-      printf("yt-alter-progress updates setup_instruments: { %s) }\n", $sql) if $self->{verbose};
+      $self->debugf("yt-alter-progress updates setup_instruments: { %s) }\n", $sql);
       push(@ret, $sql);
     }
   }
@@ -156,7 +155,7 @@ sub _search_consumers
       ### Update ENABLED = YES, TIMED = YES
       my $sql= sprintf("UPDATE performance_schema.setup_consumers SET enabled = 'YES' WHERE name = %s",
                        $self->instance->quote($row->{name}));
-      printf("yt-alter-progress updates setup_consumers { %s }\n", $sql) if $self->{verbose};
+      $self->debugf("yt-alter-progress updates setup_consumers { %s }\n", $sql);
       push(@ret, $sql);
     }
   }
@@ -169,7 +168,7 @@ sub restore_setting
 
   foreach my $sql (@{$self->_restore_setting_sql})
   {
-    printf("yt-alter-progress restores performance_schema table { %s }\n", $sql) if $self->{verbose};
+    $self->debugf("yt-alter-progress restores performance_schema table { %s }\n", $sql);
     $self->instance->exec_sql($sql);
   }
   return 1;

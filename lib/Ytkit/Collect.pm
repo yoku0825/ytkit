@@ -25,7 +25,6 @@ use POSIX;
 use IO::File;
 use JSON qw{ to_json };
 use base "Ytkit";
-use Carp qw{ carp croak };
 
 use Ytkit::MySQLServer;
 
@@ -147,8 +146,8 @@ sub get_query_latency
 
   if (!($self->is_satisfied_requirement))
   {
-    carp("--query_latency_enable=1 needs MySQL >= 5.6.8 and performance_schema = ON, " .
-         "please check requirements are satisfied.") if !($ENV{HARNESS_ACTIVE});
+    $self->carpf("--query_latency_enable=1 needs MySQL >= 5.6.8 and performance_schema = ON, " .
+                 "please check requirements are satisfied.") if !($ENV{HARNESS_ACTIVE});
     return undef;
   }
   else
@@ -178,8 +177,8 @@ sub get_table_latency
 
   if (!($self->is_satisfied_requirement))
   {
-    carp("--table_latency_enable=1 needs MySQL >= 5.6.8 and performance_schema = ON, " .
-         "please check requirements are satisfied.") if !($ENV{HARNESS_ACTIVE});
+    $self->carpf("--table_latency_enable=1 needs MySQL >= 5.6.8 and performance_schema = ON, " .
+                 "please check requirements are satisfied.") if !($ENV{HARNESS_ACTIVE});
     return undef;
   }
   else
@@ -199,15 +198,15 @@ sub get_table_size
   my ($self)= @_;
   if ($self->{output} eq "short")
   {
-    carp("--table-size-enable does not support --output=short") if !($ENV{HARNESS_ACTIVE});
+    $self->carpf("--table-size-enable does not support --output=short") if !($ENV{HARNESS_ACTIVE});
     return undef;
   }
 
   if ($self->instance->stats_on_metadata)
   {
-    carp("--table-size-enable was falling-back to 0 ".
-         "because innodb_stats_on_metadata = ON could cause performance problem " .
-         "when accessing information_schema.tables and etc.") if !($ENV{HARNESS_ACTIVE});
+    $self->carpf("--table-size-enable was falling-back to 0 ".
+                 "because innodb_stats_on_metadata = ON could cause performance problem " .
+                 "when accessing information_schema.tables and etc.") if !($ENV{HARNESS_ACTIVE});
     return undef;
   }
 
@@ -218,7 +217,7 @@ sub get_table_size
   };
   if ($@)
   {
-    carp("--table-size-enable was falling-back to 0 because $@") if !($ENV{HARNESS_ACTIVE});
+    $self->carpf("--table-size-enable was falling-back to 0 because $@") if !($ENV{HARNESS_ACTIVE});
     return undef;
   }
   return $ret;
@@ -325,8 +324,8 @@ sub get_innodb_metrics
 
   if ($self->instance->mysqld_version < 50608)
   {
-    carp("--innodb_metrics_enable=1 needs MySQL >= 5.6.8, " .
-         "please check requirements are satisfied.") if !($ENV{HARNESS_ACTIVE});
+    $self->carpf("--innodb_metrics_enable=1 needs MySQL >= 5.6.8, " .
+                 "please check requirements are satisfied.") if !($ENV{HARNESS_ACTIVE});
     return undef;
   }
   return $self->instance->select_is_metrics;
@@ -390,7 +389,7 @@ sub get_show_grants
   my ($self)= @_;
   if ($self->{output} eq "short")
   {
-    carp("--show-grants-enable does not support --output=short") if !($ENV{HARNESS_ACTIVE});
+    $self->carpf("--show-grants-enable does not support --output=short") if !($ENV{HARNESS_ACTIVE});
     return undef;
   }
   my @ret;
@@ -418,7 +417,7 @@ sub get_show_slave
 
   if ($self->{output} eq "short")
   {
-    carp("--show-slave-enable does not support --output=short") if !($ENV{HARNESS_ACTIVE});
+    $self->carpf("--show-slave-enable does not support --output=short") if !($ENV{HARNESS_ACTIVE});
     return undef;
   }
   my @ret;
@@ -513,7 +512,7 @@ sub print_low
   else
   {
     ### Unknown output-type
-    croak(sprintf("Unknown --output = %s", $self->{output}));
+    $self->croakf("Unknown --output = %s", $self->{output});
   }
 }
 
@@ -537,9 +536,9 @@ sub fix_sql_options
   ### Check --sql-update, --sql-ignore and --sql-replace at once.
   if (($self->{sql_update} // 0) + ($self->{sql_replace} // 0) + ($self->{sql_ignore} // 0) > 1)
   {
-    carp("--sql-update(or its synonym), --sql-ignore(or its synonym) and --sql-replace(or its synonym) " .
-         "are NOT able to turn-on at same time.\n" .
-         "Falling back to turn-off all of them(using simple INSERT INTO statement)") if !($ENV{HARNESS_ACTIVE});
+    $self->carpf("--sql-update(or its synonym), --sql-ignore(or its synonym) and --sql-replace(or its synonym) " .
+                 "are NOT able to turn-on at same time.\n" .
+                 "Falling back to turn-off all of them(using simple INSERT INTO statement)") if !($ENV{HARNESS_ACTIVE});
     delete($self->{sql_update}) if $self->{sql_update};
     delete($self->{sql_replace}) if $self->{sql_replace};
     delete($self->{sql_ignore}) if $self->{sql_ignore};

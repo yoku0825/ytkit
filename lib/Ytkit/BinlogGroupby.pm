@@ -22,7 +22,6 @@ use strict;
 use warnings;
 use utf8;
 use base "Ytkit";
-use Carp qw{carp croak};
 
 use constant
 {
@@ -179,9 +178,9 @@ sub output
   my ($self)= @_;
   my @ret= ();
 
-  printf("binlog entries between %s and %s\n",
-         sprintf($self->{print_format}, $self->{first_seen}),
-         sprintf($self->{print_format}, $self->{last_seen})) if $self->{verbose};
+  $self->debugf("binlog entries between %s and %s\n",
+                sprintf($self->{print_format}, $self->{first_seen} // ""),
+                sprintf($self->{print_format}, $self->{last_seen} // ""));
 
   return $self->{_counter}->result;
 }

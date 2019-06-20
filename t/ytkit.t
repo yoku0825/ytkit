@@ -31,8 +31,80 @@ no warnings "once";
 
 use_ok("Ytkit", "use Ytkit");
 
+subtest "Output message functions" => sub
+{
+  my $ytkit= {};
+  bless $ytkit => "Ytkit";
+
+  subtest "no --silent and no --verbose" => sub
+  {
+    @{$ytkit}{"silent", "verbose"}= (0, 0);
+    ok(!($ytkit->fix_common_options), "Not adjust");
+    ok($ytkit->infof("TEST"), "infof vs default should be printed");
+    ok($ytkit->notef("TEST"), "notef vs default should be printed");
+    ok($ytkit->carpf("TEST"), "carpf vs default should be printed");
+    ok(!($ytkit->debugf("TEST")), "debugf vs default should not be printed");
+
+    eval
+    {
+      $ytkit->croakf("TEST");
+    };
+    ok($@, "croakf vs default should be croaked");
+
+    done_testing;
+  };
+
+  subtest "--silent and no --verbose" => sub
+  {
+    @{$ytkit}{"silent", "verbose"}= (1, 0);
+    ok(!($ytkit->fix_common_options), "Not adjust");
+    ok(!($ytkit->infof("TEST")), "infof vs --silent should not be printed");
+    ok(!($ytkit->notef("TEST")), "notef vs --silent should not be printed");
+    ok(!($ytkit->carpf("TEST")), "carpf vs --silent should not be printed");
+    ok(!($ytkit->debugf("TEST")), "debugf vs --silent should not be printed");
+
+    eval
+    {
+      $ytkit->croakf("TEST");
+    };
+    ok($@, "croakf vs --silent should be croaked");
+
+    done_testing;
+  };
+
+  subtest "no --silent and --verbose" => sub
+  {
+    @{$ytkit}{"silent", "verbose"}= (0, 1);
+    ok(!($ytkit->fix_common_options), "Not adjust");
+    ok($ytkit->infof("TEST"), "infof vs --verbose should be printed");
+    ok($ytkit->notef("TEST"), "notef vs --verbose should be printed");
+    ok($ytkit->carpf("TEST"), "carpf vs --verbose should be printed");
+    ok($ytkit->debugf("TEST"), "debugf vs --verbose should be printed");
+
+    eval
+    {
+      $ytkit->croakf("TEST");
+    };
+    ok($@, "croakf vs --verbose should be croaked");
+
+    done_testing;
+  };
+
+  subtest "--silent and --verbose" => sub
+  {
+    @{$ytkit}{"silent", "verbose"}= (1, 1);
+    ok($ytkit->fix_common_options, "Adjust to no --silent and --verbose");
+    is($ytkit->{silent}, 0, "Turn off --silent");
+    is($ytkit->{verbose}, 1, "Keep --verbose");
+    ### After that, as same as "no --silent and --verbose"
+    done_testing;
+  };
+  done_testing;
+};
+
+
 my $basedir= "$Bin/../";
-my @db_single= `grep -r DB::single --exclude=ytkit.t --exclude=HEAD --exclude=COMMIT_EDITMSG --exclude=master`;
+my @db_single= `grep -r DB::single --exclude=ytkit.t --exclude=HEAD --exclude=COMMIT_EDITMSG --exclude=master $basedir`;
 ok(!(@db_single), "DB::single has been removed.");
 
 done_testing;

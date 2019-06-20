@@ -60,29 +60,46 @@ sub handle_help
 {
   my ($self)= @_;
 
+  $self->fix_common_options;
+
   if ($self->{help})
   {
-    print $self->help;
+    $self->{silent}= 0;
+    $self->infof($self->help);
     exit 0;
   }
   elsif ($self->{version})
   {
-    print $self->version;
+    $self->{silent}= 0;
+    $self->infof($self->version);
     exit 0;
   }
   elsif (@{$self->{_config}->{left_argv}} && $self->{_config}->{_allow_extra_argv} == 0)
   {
     ### script doesn't allow bare argument.
-    my $msg= sprintf("You give unknown argument(s) [%s]\n\n",
-                     join(" ", @{$self->{_config}->{left_argv}}));
-    carp($msg);
-    print STDERR $self->usage;
+    $self->carpf("You give unknown argument(s) [%s]\n\n",
+                 join(" ", @{$self->{_config}->{left_argv}}));
+    $self->notef(STDERR $self->usage);
     exit 3;
   }
   elsif ($self->{ask_pass})
   {
     $self->ask_password;
   }
+}
+
+sub fix_common_options
+{
+  my ($self)= @_;
+
+  if ($self->{silent} && $self->{verbose})
+  {
+    ### --silent and --verbose are exclusive
+    $self->{silent}= 0;
+    $self->carpf("Can't set both --silent and --verbose. Failling back to only --verbose");
+    return 1;
+  }
+  return 0;
 }
 
 sub clear_cache
@@ -120,6 +137,79 @@ sub ask_password
   print "\n";
   chomp($password);
   $self->{_config}->{result}->{password}= $password;
+}
+
+sub infof
+{
+  my ($self, $format, @argv)= @_;
+
+  if ($self->{silent})
+  {
+    return undef;
+  }
+  else
+  {
+    my $msg= sprintf($format, @argv);
+    printf(STDOUT $msg) if !($ENV{HARNESS_ACTIVE});
+    return $msg;
+  }
+}
+
+sub notef
+{
+  my ($self, $format, @argv)= @_;
+
+  if ($self->{silent})
+  {
+    return undef;
+  }
+  else
+  {
+    my $msg= sprintf($format, @argv);
+    printf(STDERR $msg) if !($ENV{HARNESS_ACTIVE});
+    return $msg;
+  }
+}
+
+sub debugf
+{
+  my ($self, $format, @argv)= @_;
+
+  if (!($self->{verbose}))
+  {
+    return undef;
+  }
+  else
+  {
+    my $msg= sprintf($format, @argv);
+    printf(STDERR $msg) if !($ENV{HARNESS_ACTIVE});
+    return $msg;
+  }
+}
+
+sub croakf
+{
+  my ($self, $format, @argv)= @_;
+
+  ### Do not handle by --silent
+  my $msg= sprintf($format, @argv);
+  croak($msg);
+}
+
+sub carpf
+{
+  my ($self, $format, @argv)= @_;
+
+  if ($self->{silent})
+  {
+    return undef;
+  }
+  else
+  {
+    my $msg= sprintf($format, @argv);
+    carp($msg) if !($ENV{HARNESS_ACTIVE});
+    return $msg;
+  }
 }
 
 return 1;

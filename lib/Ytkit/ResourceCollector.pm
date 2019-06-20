@@ -24,7 +24,6 @@ use utf8;
 use POSIX;
 use IO::File;
 use base "Ytkit";
-use Carp qw{ carp croak };
 
 use Ytkit::Collect;
 
@@ -81,7 +80,7 @@ sub collect
 
         while ()
         {
-          carp("Starting to connect to $instance") if !($ENV{HARNESS_ACTIVE});
+          $self->carpf("Starting to connect to $instance") if !($ENV{HARNESS_ACTIVE});
 
           eval
           {
@@ -89,7 +88,7 @@ sub collect
             $prog->collect;
           };
 
-          carp("$instance has been disconnected. ($@)") if !($ENV{HARNESS_ACTIVE});
+          $self->carpf("%s has been disconnected. (%s)", $instance, $@) if !($ENV{HARNESS_ACTIVE});
 
           ### --auto-restart=0, break loop to exit.
           last if !($self->{auto_restart});
@@ -106,7 +105,7 @@ sub collect
   }
   else
   {
-    croak(sprintf("Can't read config_file %s", $config_file));
+    $self->croakf("Can't read config_file %s", $config_file);
   }
 }
 

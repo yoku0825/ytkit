@@ -22,7 +22,6 @@ use strict;
 use warnings;
 use utf8;
 use base "Ytkit";
-use Carp qw{ carp croak };
 
 use Ytkit::HealthCheck;
 
@@ -77,7 +76,7 @@ sub wait_slave
   {
     ### Report CRITICAL only when I/O and/or SQL threads have stopped.
     my $healthcheck= Ytkit::HealthCheck->new(@{$self->{healthcheck_opt}});
-    croak($healthcheck->{output}) 
+    $self->croakf($healthcheck->{output}) 
       if $healthcheck->{status}->{exit_code} eq Ytkit::HealthCheck::NAGIOS_CRITICAL->{exit_code};
 
     $healthcheck->check_slave_status;
@@ -95,9 +94,8 @@ sub wait_slave
       if (($wait_count * $self->{sleep}) > $self->{retry_timeout})
       {
         ### Retry out.
-        my $msg= sprintf("Retrying %d times each %d seconds but Seconds_Behind_Master still exceeds %d.",
-                         $wait_count, $self->{sleep}, $self->{seconds_behind_master});
-        croak($msg);
+        $self->croakf("Retrying %d times each %d seconds but Seconds_Behind_Master still exceeds %d.",
+                      $wait_count, $self->{sleep}, $self->{seconds_behind_master});
       }
       else
       {
@@ -108,9 +106,9 @@ sub wait_slave
     else
     {
       ### yt-healthcheck can't connect server or I/O and/or SQL thread has stopped.
-      print("yt-healthcheck returns Unexpected return-code. aborting.\n") if $self->{verbose};
+      $self->debugf("yt-healthcheck returns Unexpected return-code. aborting.\n");
       $healthcheck->print_status;
-      croak($healthcheck->{output});
+      $self->croakf($healthcheck->{output});
     }
   }
 }

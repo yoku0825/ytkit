@@ -21,8 +21,8 @@ package Ytkit::MySQLServer;
 use strict;
 use warnings;
 use utf8;
-use Carp qw{ carp croak };
 
+use base "Ytkit";
 use DBI;
 
 ### Timeout for i_s query.
@@ -142,12 +142,7 @@ sub exec_sql
       return undef;
     }
 
-    my $warn;
-    eval
-    {
-      $warn= $conn->selectall_arrayref("SHOW WARNINGS");
-    };
-    $self->warning($warn) if $warn;
+    $self->check_warnings;
   }
 
   return $ret;
@@ -385,7 +380,7 @@ sub query_arrayref
       if ($self->{_do_not_query_i_s})
       {
         $self->error(ABORT_I_S);
-        croak(ABORT_I_S);
+        $self->croakf(ABORT_I_S);
       }
       $i_s_query= 1;
       
@@ -400,7 +395,7 @@ sub query_arrayref
 
     eval
     {
-      local $SIG{ALRM}= sub { croak(ALRM_MSG) };
+      local $SIG{ALRM}= sub { $self->croakf(ALRM_MSG) };
       $self->{"_" . ${caller_name}}= $conn->selectall_arrayref($sql, {Slice => {}}, @argv);
     };
 
@@ -417,15 +412,10 @@ sub query_arrayref
       }
 
       $self->error($@);
-      croak("Error occurs during query $sql; $@");
+      $self->croakf("Error occurs during query $sql; $@");
     }
 
-    my $warn;
-    eval
-    {
-      $warn= $conn->selectall_arrayref("SHOW WARNINGS");
-    };
-    $self->warning($warn) if $warn;
+    $self->check_warnings;
   }
   return $self->{"_" . ${caller_name}};
 }
@@ -451,7 +441,7 @@ sub query_hashref
     if ($sql =~ /\binformation_schema\.(?:tables|columns)/i)
     {
       ### If already timed out i_s query, then stop script.
-      croak("Querying information_schema is too dangerous for this instance. Aborting.")
+      $self->croakf("Querying information_schema is too dangerous for this instance. Aborting.")
         if $self->{_do_not_query_i_s};
       $i_s_query= 1;
       
@@ -466,7 +456,7 @@ sub query_hashref
 
     eval
     {
-      local $SIG{ALRM}= sub { croak(ALRM_MSG) };
+      local $SIG{ALRM}= sub { $self->croakf(ALRM_MSG) };
       $self->{"_" . ${caller_name}}= $conn->selectall_hashref($sql, [$key], @argv);
     };
 
@@ -482,18 +472,25 @@ sub query_hashref
       }
 
       $self->error($@);
-      croak("Error occurs during query $sql; $@");
+      $self->croakf("Error occurs during query %s; %s", $sql, $@);
     }
 
-    my $warn;
-    eval
-    {
-      $warn= $conn->selectall_arrayref("SHOW WARNINGS");
-    };
-    $self->warning($warn) if $warn;
+    $self->check_warnings;
   }
   return $self->{"_" . ${caller_name}};
 }
+
+sub check_warnings
+{
+  my ($self)= @_;
+
+  my $warn;
+  eval
+  {
+    $warn= $self->conn->selectall_arrayref("SHOW WARNINGS");
+  };
+  $self->warning($warn) if $warn;
+} 
 
 sub clear_cache
 {

@@ -231,6 +231,7 @@ FROM
   information_schema.tables 
     JOIN information_schema.columns USING(table_schema, table_name)
 WHERE
+  table_schema NOT IN ('mysql', 'information_schema', 'performance_schema', 'sys') AND
   auto_increment IS NOT NULL AND 
   extra = 'auto_increment'
 EOS
@@ -309,6 +310,8 @@ SELECT
   NOW() AS last_update
 FROM
   information_schema.tables
+WHERE
+  table_schema NOT IN ('mysql', 'information_schema', 'performance_schema', 'sys')
 ORDER BY
   data_length + index_length DESC
 EOS

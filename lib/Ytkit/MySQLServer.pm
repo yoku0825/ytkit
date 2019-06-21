@@ -232,6 +232,7 @@ FROM
     JOIN information_schema.columns USING(table_schema, table_name)
 WHERE
   table_schema NOT IN ('mysql', 'information_schema', 'performance_schema', 'sys') AND
+  table_type = 'BASE TABLE' AND
   auto_increment IS NOT NULL AND 
   extra = 'auto_increment'
 EOS
@@ -311,7 +312,8 @@ SELECT
 FROM
   information_schema.tables
 WHERE
-  table_schema NOT IN ('mysql', 'information_schema', 'performance_schema', 'sys')
+  table_schema NOT IN ('mysql', 'information_schema', 'performance_schema', 'sys') AND
+  table_type = 'BASE TABLE'
 ORDER BY
   data_length + index_length DESC
 EOS

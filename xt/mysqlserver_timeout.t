@@ -54,9 +54,7 @@ subtest "Queries should be time-outed" => sub
   {
     $server->query_arrayref("SELECT SLEEP(5) FROM information_schema.tables LIMIT 1");
   };
-  is($@, Ytkit::MySQLServer::ALRM_MSG, "i_s, 5sec should be error");
-  #is(substr($server->error, 0, length(Ytkit::MySQLServer::ALRM_MSG)),
-  #   Ytkit::MySQLServer::ALRM_MSG, "i_s, 5sec should be error");
+  like($@, qr{\bSIGALRM\b}, "i_s, 5sec should be error");
   $server->clear_cache;
 
   eval

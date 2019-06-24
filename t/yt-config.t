@@ -85,8 +85,8 @@ subtest "new Ytkit::Config interface" => sub
     my @expected_argv= qw{ this_should_be_left_in_argv this_should_be_left_in_argv_too };
     my $config= Ytkit::Config->new($option_struct);
     $config->parse_argv(@test_argv);
-    is_deeply($config->{result}, $expected_opt, "Options by Ytkit::Config::options");
-    is_deeply($config->{left_argv}, \@expected_argv, "ARGV by Ytkit::Config::options");
+    is_deeply($config->{result}, $expected_opt, "Options after parse_argv");
+    is_deeply($config->{left_argv}, \@expected_argv, "ARGV after parse_argv");
     
     done_testing;
   };

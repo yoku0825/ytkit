@@ -25,7 +25,7 @@ use Carp qw{ carp croak };
 
 use Ytkit::Config::Option;
 
-my $_version= "0.1.11";
+my $_version= "0.1.12";
 
 our $CONNECT_OPTION=
 {
@@ -135,15 +135,6 @@ sub new
 
   bless $self => $class;
   return $self;
-}
-
-sub options
-{
-  ### Deprecated, left for compatibility
-  my ($definition, @argv)= @_;
-  my $config= Ytkit::Config->new($definition);
-  $config->parse_argv(@argv);
-  return ($config->{result}, @{$config->{left_argv}});
 }
 
 sub parse_argv

@@ -180,4 +180,57 @@ subtest "Set information_schema_stats_expiry" => sub
   done_testing;
 };
 
+subtest "Parse SHOW ENGINE INNODB STATUS" => sub
+{
+  subtest "MySQL 5.0" => sub
+  {
+    $server->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql50;
+    is($server->latest_deadlock->epoch, 1562551919, "Parse LATEST DETECTED DEADLOCK");
+    done_testing;
+  };
+
+  subtest "MySQL 5.1(InnoDB Plugin Only" => sub
+  {
+    $server->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql51;
+    is($server->latest_deadlock->epoch, 1562563203, "Parse LATEST DETECTED DEADLOCK");
+    done_testing;
+  };
+
+  subtest "MySQL 5.5" => sub
+  {
+    $server->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql55;
+    is($server->latest_deadlock->epoch, 1562563601, "Parse LATEST DETECTED DEADLOCK");
+    done_testing;
+  };
+ 
+  subtest "MySQL 5.6" => sub
+  {
+    $server->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql56;
+    is($server->latest_deadlock->epoch, 1562563782, "Parse LATEST DETECTED DEADLOCK");
+    done_testing;
+  };
+ 
+  subtest "MySQL 5.7" => sub
+  {
+    $server->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql57;
+    is($server->latest_deadlock->epoch, 1562837618, "Parse LATEST DETECTED DEADLOCK");
+
+    $server->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql57_no_deadlock;
+    is($server->latest_deadlock->epoch, 0, "Parse LATEST DETECTED DEADLOCK but doesn't exist");
+ 
+    done_testing;
+  };
+ 
+  subtest "MySQL 8.0" => sub
+  {
+    $server->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql80;
+    is($server->latest_deadlock->epoch, 1562838160, "Parse LATEST DETECTED DEADLOCK");
+    done_testing;
+  };
+ 
+  done_testing;
+};
+
+
+
 done_testing;

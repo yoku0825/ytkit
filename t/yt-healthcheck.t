@@ -24,6 +24,9 @@ use warnings;
 use utf8;
 use Test::More;
 
+use Test::MockTime;
+Test::MockTime::set_fixed_time("2018-06-06 12:27:34 +0900", "%Y-%m-%d %H:%M:%S %z");
+
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
 require "$Bin/Test.pl";
@@ -523,6 +526,42 @@ subtest "checking offline_mode" => sub
 
   done_testing;
 };
+
+subtest "Parse SHOW ENGINE INNODB STATUS" => sub
+{
+  $prog->instance->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql57;
+  $prog->{deadlock}->{enable}= 1;
+  $prog->{deadlock}->{warning}= 300;
+  $prog->{deadlock}->{critical}= 60;
+
+  ### Test data LATEST DEADLOCK is "2019-07-11 18:33:38"
+
+  Test::MockTime::set_fixed_time("2019-07-11 18:34:37 +0900", "%Y-%m-%d %H:%M:%S %z");
+  $prog->check_latest_deadlock;
+  is($prog->{status}->{str}, "CRITICAL", "LATEST DETECTED DEADLOCK occurs last 60 seconds");
+  &reset_param;
+
+  Test::MockTime::set_fixed_time("2019-07-11 18:34:39 +0900", "%Y-%m-%d %H:%M:%S %z");
+  $prog->check_latest_deadlock;
+  is($prog->{status}->{str}, "WARNING", "LATEST DETECTED DEADLOCK occurs last 300 seconds");
+  &reset_param;
+
+  Test::MockTime::set_fixed_time("2019-07-12 18:34:39 +0900", "%Y-%m-%d %H:%M:%S %z");
+  $prog->check_latest_deadlock;
+  is($prog->{status}->{str}, "OK", "LATEST DETECTED DEADLOCK does not occur last 300 seconds");
+  &reset_param;
+
+  $prog->instance->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql57_no_deadlock;
+  Test::MockTime::set_fixed_time("2019-07-11 18:34:37 +0900", "%Y-%m-%d %H:%M:%S %z");
+  $prog->check_latest_deadlock;
+  is($prog->{status}->{str}, "OK", "LATEST DETECTED DEADLOCK does not occur");
+  &reset_param;
+
+  $prog->clear_cache;
+
+  done_testing;
+};
+
 
 subtest "config description" => sub
 {

@@ -24,6 +24,7 @@ use utf8;
 
 use base "Ytkit";
 use DBI;
+use Time::Piece qw{ localtime };
 
 ### Timeout for i_s query.
 use constant ALRM_TIME => 3;
@@ -680,6 +681,48 @@ sub thread_id
 
   ### pseudo_thread_id is SESSION scope.
   return $self->query_arrayref("SHOW SESSION VARIABLES LIKE 'pseudo_thread_id'")->[0]->{Value} // 0;
+}
+
+sub latest_deadlock
+{
+  my ($self)= @_;
+
+  my $text= $self->show_engine_innodb_status->[0]->{Status};
+
+  my @tmp= split(/^---+\n/m, $text);
+  my $ret;
+  for (my $n= 0; $n <= $#tmp; $n++)
+  {
+    my $current= $tmp[$n];
+    chomp($current);
+    if ($current eq "LATEST DETECTED DEADLOCK")
+    {
+      $ret= $tmp[$n + 1];
+    }
+    else
+    {
+      next;
+    }
+  }
+  return localtime(0) if !($ret);
+
+  @tmp= split(/\s/, $ret);
+  
+  eval
+  {
+    $ret= localtime(Time::Piece->strptime($tmp[0] . " " . $tmp[1], "%y%m%d %H:%M:%S"));
+  };
+  
+  if ($@)
+  {
+    eval
+    {
+      $ret= localtime(Time::Piece->strptime($tmp[0] . " " . $tmp[1], "%Y-%m-%d %H:%M:%S"));
+    };
+  }
+
+  return $ret if !($@);
+  return undef;
 }
 
 sub reconnect

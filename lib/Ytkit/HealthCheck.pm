@@ -677,6 +677,27 @@ sub check_offline_mode
   return 0;
 }
 
+sub check_latest_deadlock
+{
+  my ($self)= @_;
+  my $latest= $self->instance->latest_deadlock;
+  my $diff  = localtime() - $latest;
+
+  my $status;
+  if ($diff < $self->{deadlock}->{critical})
+  {
+    $status= NAGIOS_CRITICAL;
+  }
+  elsif ($diff < $self->{deadlock}->{warning})
+  {
+    $status= NAGIOS_WARNING;
+  }
+
+  $self->update_status($status, sprintf(qq{LATEST DETECTED DEADLOCK has occurred at %s},
+                                        $latest)) if $status;
+  return 0; 
+}
+
 sub dump_detail
 {
   my ($self)= @_;
@@ -702,11 +723,11 @@ sub dump_detail
   }
   binmode $fh, ":utf8";
 
-  printf($fh "# %s\n", Time::Piece::localtime->strftime("%Y/%m/%d %H:%M:%S"));
+  printf($fh "# %s\n", localtime->strftime("%Y/%m/%d %H:%M:%S"));
   printf($fh "# %s on %s: %s (%s)\n",
          $self->{status}->{str}, $self->hostname,
          $self->{output}, $self->{role},
-         Time::Piece::localtime->cdate);
+         localtime->cdate);
   printf($fh "\n%sSHOW PROCESSLIST%s\n\n", "=" x 10, "=" x 10);
   print_table($fh, $self->instance->show_processlist);
   printf($fh "\n%sSHOW SLAVE STATUS%s\n\n", "=" x 10, "=" x 10);
@@ -903,6 +924,15 @@ EOS
                   text    => qq{When set to 1, check does gtid_hole exist.\n} .
                              qq{  When gtid_executed is like "server_uuid:1-2:4-5", server_uuid:3 is gtid_hole.\n} .
                              qq{  This option default will be 1 in future release.} },
+    },
+    deadlock =>
+    {
+      enable => { default => 0,
+                  text    => "When set to 1, check LATEST DETECTED DEADLOCK section in SHOW ENGINE INNODB STATUS.", },
+      warning => { default => 300,
+                   text    => "Warning threshold for LATEST DETECTED DEADLOCK time (seconds)", },
+      critical => { default => 1,
+                   text    => "Critical threshold for LATEST DETECTED DEADLOCK time (seconds)", },
     },
     dump_detail      => { alias   => ["dump-detail"],
                           text    => qq{When result is NOT NAGIOS_OK,\n} .

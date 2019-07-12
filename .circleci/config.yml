@@ -15,7 +15,8 @@ jobs:
       - save_cache:
           key: v0.1.11
           paths: ~/perl5
-      - run: make test
+      - run:
+          command: "make test"
           environment:
             TZ: "UTC-9"
 

@@ -16,6 +16,8 @@ jobs:
           key: v0.1.11
           paths: ~/perl5
       - run: make test
+          environment:
+            TZ: "UTC-9"
 
 workflows:
   version: 2

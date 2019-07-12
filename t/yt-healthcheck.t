@@ -529,7 +529,6 @@ subtest "checking offline_mode" => sub
 
 subtest "Parse SHOW ENGINE INNODB STATUS" => sub
 {
-  $ENV{TZ}= "UTC-9";
 
   $prog->instance->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql57;
   $prog->{deadlock}->{enable}= 1;

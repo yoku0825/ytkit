@@ -28,30 +28,49 @@ use lib "$Bin/../lib";
 use Test::mysqld;
 
 use Ytkit::MySQLServer;
-my $mysqld= Test::mysqld->new;
 
-my $server= Ytkit::MySQLServer->new({ host   => "localhost",
-                                      socket => $mysqld->base_dir . "/tmp/mysql.sock",
-                                      user   => "root" });
-$server->conn;
-ok(!($server->error), "Connect to mysqld");
-
-my $file_path= "$Bin/../lib/Ytkit/MySQLServer.pm";
-my @method   = `grep "^sub" $file_path | awk '{print \$2}'`;
-my @ignore   = qw{ conn new DESTROY query_arrayref query_hashref warning error show_grants exec_sql valueof clear_cache };
-
-foreach my $func (@method)
+my $test=
 {
-  chomp($func);
-  next if !($func);
-  next if grep { $func eq $_ } @ignore;
+  #"5.0.96" => { mysqld => "/usr/mysql/5.0.96/libexec/mysqld", mysql_install_db => "/usr/mysql/5.0.96/bin/mysql_install_db" },
+  #"5.1.72" => { mysqld => "/usr/mysql/5.1.73/libexec/mysqld", mysql_install_db => "/usr/mysql/5.1.73/bin/mysql_install_db" },
+  #"5.5.62" => { mysqld => "/usr/mysql/5.5.62/bin/mysqld", mysql_install_db => "/usr/mysql/5.5.62/scripts/mysql_install_db" },
+  #"5.6.43" => { mysqld => "/usr/mysql/5.6.43/bin/mysqld", mysql_install_db => "/usr/mysql/5.6.43/scripts/mysql_install_db" },
+  #"5.7.26" => { mysqld => "/usr/mysql/5.7.26/bin/mysqld" },
+  "8.0.16" => { mysqld => "/usr/mysql/8.0.16/bin/mysqld" },
+};
 
-  eval
+### Put test-binaries into /usr/mysql/X.X.XX 
+foreach my $version (sort(keys(%$test)))
+{
+  subtest "Testing via $version" => sub
   {
-    $server->$func;
-  };
+    my $mysqld= Test::mysqld->new($test->{$version});
 
-  ok(!($@) && !($server->error), "$func has executed without error.");
+    my $server= Ytkit::MySQLServer->new({ host   => "localhost",
+                                          socket => $mysqld->base_dir . "/tmp/mysql.sock",
+                                          user   => "root" });
+    $server->conn;
+    ok(!($server->error), "Connect to mysqld");
+    
+    my $file_path= "$Bin/../lib/Ytkit/MySQLServer.pm";
+    my @method   = `grep "^sub" $file_path | awk '{print \$2}'`;
+    my @ignore   = qw{ conn new DESTROY query_arrayref query_hashref warning error show_grants exec_sql valueof clear_cache };
+    
+    foreach my $func (@method)
+    {
+      chomp($func);
+      next if !($func);
+      next if grep { $func eq $_ } @ignore;
+    
+      eval
+      {
+        $server->$func;
+      };
+    
+      ok(!($@) && !($server->error), "$func has executed without error.");
+    }
+    done_testing;
+  };
 }
 
 done_testing;

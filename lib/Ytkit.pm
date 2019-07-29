@@ -150,7 +150,7 @@ sub infof
   else
   {
     my $msg= sprintf($format, @argv);
-    printf(STDOUT $msg) if !($ENV{HARNESS_ACTIVE});
+    print(STDOUT $msg) if !($ENV{HARNESS_ACTIVE});
     return $msg;
   }
 }
@@ -166,7 +166,7 @@ sub notef
   else
   {
     my $msg= sprintf($format, @argv);
-    printf(STDERR $msg) if !($ENV{HARNESS_ACTIVE});
+    print(STDERR $msg) if !($ENV{HARNESS_ACTIVE});
     return $msg;
   }
 }
@@ -182,7 +182,7 @@ sub debugf
   else
   {
     my $msg= sprintf($format, @argv);
-    printf(STDERR $msg) if !($ENV{HARNESS_ACTIVE});
+    print(STDERR $msg) if !($ENV{HARNESS_ACTIVE});
     return $msg;
   }
 }

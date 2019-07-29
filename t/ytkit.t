@@ -102,6 +102,19 @@ subtest "Output message functions" => sub
   done_testing;
 };
 
+subtest "Issue #31" => sub
+{
+  my $ytkit= {};
+  bless $ytkit => "Ytkit";
+
+  local $SIG{__WARN__}= sub
+  {
+    ok(0, "Include \% character should not raise warnings");
+  };
+  ok($ytkit->infof("%s:%d", "%Y", 3306));
+  done_testing;
+};
+
 
 my $basedir= "$Bin/../";
 my @db_single= `grep -r DB::single --exclude=ytkit.t --exclude=HEAD --exclude=COMMIT_EDITMSG --exclude=master $basedir`;

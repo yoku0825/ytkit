@@ -573,7 +573,7 @@ sub  should_set_stats_expiry
 sub update_stats_expiry
 {
   my ($self)= @_;
-  return $self->exec_sql("SET SESSION information_schema_stats_expiry = 0");
+  return $self->exec_sql("/*!80013 SET SESSION information_schema_stats_expiry = 0; */");
 }
 
 sub valueof

@@ -35,7 +35,7 @@ my $test=
   #"5.1.72" => { mysqld => "/usr/mysql/5.1.73/libexec/mysqld", mysql_install_db => "/usr/mysql/5.1.73/bin/mysql_install_db" },
   #"5.5.62" => { mysqld => "/usr/mysql/5.5.62/bin/mysqld", mysql_install_db => "/usr/mysql/5.5.62/scripts/mysql_install_db" },
   #"5.6.45" => { mysqld => "/usr/mysql/5.6.45/bin/mysqld", mysql_install_db => "/usr/mysql/5.6.45/scripts/mysql_install_db" },
-  #"5.7.27" => { mysqld => "/usr/mysql/5.7.27/bin/mysqld" },
+  "5.7.27" => { mysqld => "/usr/mysql/5.7.27/bin/mysqld" },
   "8.0.17" => { mysqld => "/usr/mysql/8.0.17/bin/mysqld" },
 };
 
@@ -44,14 +44,19 @@ foreach my $version (sort(keys(%$test)))
 {
   subtest "Testing via $version" => sub
   {
+    $test->{$version}->{my_cnf}=
+    {
+      server_id => 1,
+      log_bin   => "mysql-bin",
+    };
     my $mysqld= Test::mysqld->new($test->{$version});
 
     my $server= Ytkit::MySQLServer->new({ host   => "localhost",
                                           socket => $mysqld->base_dir . "/tmp/mysql.sock",
-                                          user   => "root" });
+                                          user   => "root", });
     $server->conn;
     ok(!($server->error), "Connect to mysqld");
-    
+
     my $file_path= "$Bin/../lib/Ytkit/MySQLServer.pm";
     my @method   = `grep "^sub" $file_path | awk '{print \$2}'`;
     my @ignore   = qw{ conn new DESTROY query_arrayref query_hashref warning error show_grants exec_sql valueof clear_cache };

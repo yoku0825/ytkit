@@ -132,6 +132,7 @@ sub new
     $self->{read_only}->{should_be}= 0;
     $self->check_read_only;
     $self->check_gtid_hole;
+    $self->check_latest_deadlock;
   }
   elsif ($role eq "backup")
   {

@@ -304,6 +304,11 @@ subtest "SHOW SLAVE STATUS" => sub
   $prog->{output}= "sql";
   is($prog->print_show_slave, read_file("$Bin/data/r/show_slave_status_into_sql.r"), "Print SQL style");
 
+  $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::with_channel;
+  is($prog->print_show_slave,
+     read_file("$Bin/data/r/show_slave_status_with_channel_into_sql.r"),
+     "Print SQL style (With channel)");
+
   $prog->{output}= "short";
   is($prog->print_show_slave, undef, "Print Short style is unsupported.");
 

@@ -425,7 +425,7 @@ sub get_show_slave
   foreach my $channel (@{$self->instance->show_slave_status})
   {
     ### Ignore named-channel(for Multi-Source Replication)
-    next if exists($channel->{Channel_name}) && $channel->{Channel_name} ne "";
+    next if exists($channel->{Channel_Name}) && $channel->{Channel_Name} ne "";
 
     push(@ret, { master_ipaddr => $channel->{Master_Host},
                  master_port => $channel->{Master_Port},

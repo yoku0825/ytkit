@@ -1,0 +1,6 @@
+# at 352
+#190807 18:56:51 server id 1080  end_log_pos 474 CRC32 0xd82f611d       Query   thread_id=669   exec_time=0     error_code=0
+use `d1`/*!*/;
+SET TIMESTAMP=1565171811/*!*/;
+INSERT LOW_PRIORITY INTO t1 VALUES (12, 'twelve')
+/*!*/;

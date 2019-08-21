@@ -130,6 +130,7 @@ subtest "parse all group-by" => sub
 subtest "Regression tests" => sub
 {
   run_test("issue_23.txt", "issue_23.r", "--group-by=table");
+  run_test("issue_33.txt", "issue_33.r", "--group-by=all");
   done_testing;
 };
 

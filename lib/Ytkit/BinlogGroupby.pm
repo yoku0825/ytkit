@@ -25,7 +25,10 @@ use base "Ytkit";
 
 use constant
 {
-  SBR_REGEX => qr/^(insert|update|delete|replace)\s+(?:ignore\s+)?(?:(?:into|from)?\s+)?(\S+?)\s+/i,
+  SBR_REGEX => qr/^(insert|update|delete|replace)\s+
+                   (?:(?:ignore|low_priority|delayed|high_priority)\s+)?
+                   (?:(?:into|from)?\s+)?
+                   (\S+?)\s+/ix,
   RBR_REGEX => qr/^\#\#\#\s+(INSERT|UPDATE|DELETE)\s+(?:(?:INTO|FROM)?\s+)?(\S+)/,
 };
 

@@ -115,6 +115,14 @@ subtest "Issue #31" => sub
   done_testing;
 };
 
+subtest "Issue #34" => sub
+{
+  my $ret= `$Bin/../bin/yt-binlog-groupby -h 2>&1`;
+  chomp($ret);
+  unlike($ret, qr{Can't locate object method});
+  done_testing; 
+};
+
 
 my $basedir= "$Bin/../";
 my @db_single= `grep -r DB::single --exclude=ytkit.t --exclude=HEAD --exclude=COMMIT_EDITMSG --exclude=master $basedir`;

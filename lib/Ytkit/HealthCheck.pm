@@ -682,6 +682,8 @@ sub check_offline_mode
 sub check_latest_deadlock
 {
   my ($self)= @_;
+  return 0 unless $self->{deadlock}->{enable};
+
   my $latest= $self->instance->latest_deadlock;
   my $diff  = localtime() - $latest;
 

@@ -552,6 +552,13 @@ subtest "Parse SHOW ENGINE INNODB STATUS" => sub
   is($prog->{status}->{str}, "OK", "LATEST DETECTED DEADLOCK does not occur last 300 seconds");
   &reset_param;
 
+  Test::MockTime::set_fixed_time("2019-07-11 18:34:37 +0900", "%Y-%m-%d %H:%M:%S %z");
+  $prog->{deadlock}->{enable}= 0;
+  $prog->check_latest_deadlock;
+  is($prog->{status}->{str}, "OK", "LATEST DETECTED DEADLOCK occur last 60 seconds but deadlock_enable is OFF");
+  &reset_param;
+
+  $prog->{deadlock}->{enable}= 1;
   $prog->instance->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql57_no_deadlock;
   Test::MockTime::set_fixed_time("2019-07-11 18:34:37 +0900", "%Y-%m-%d %H:%M:%S %z");
   $prog->check_latest_deadlock;

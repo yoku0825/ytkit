@@ -23,6 +23,7 @@ use warnings;
 use utf8;
 use base "Ytkit";
 
+use Time::Piece;
 use Ytkit::HealthCheck;
 
 my $script= sprintf("%s - Script that waiting for Seconds_Behind_Master is less than specified value", $0);
@@ -71,6 +72,9 @@ sub wait_slave
 {
   my ($self)= @_;
   my $wait_count= 0;
+  my $start_time= undef;
+  my $start_behind= undef;
+  $|= 1;
 
   while ()
   {
@@ -88,8 +92,30 @@ sub wait_slave
     }
     elsif ($healthcheck->{status}->{exit_code} eq Ytkit::HealthCheck::NAGIOS_WARNING->{exit_code})
     {
+      my $info= $healthcheck->show_slave_status->[0];
+      my $current_time= Time::Piece::localtime;
+      my $current_behind= $info->{Seconds_Behind_Master};
       $wait_count++;
-      $healthcheck->print_status if $self->{verbose};
+
+      if ($self->{verbose})
+      {
+        if (!($start_time) || !($start_behind))
+        {
+          $start_time= $current_time;
+          $start_behind= $current_behind;
+        }
+        else
+        {
+          my $second_diff= $current_time->epoch - $start_time->epoch;
+          my $catchup_rate= ($start_behind - $current_behind) / $second_diff;
+          my $estimated_sec= $catchup_rate > 0 ? $current_behind / $catchup_rate : "NaN";
+          my $estimated_time= $estimated_sec ne "NaN" ? $current_time + $estimated_sec : "Never";
+          $self->infof("  Current Seconds_Behind_Master = %d, Catching up %0.2f/sec during %d secs,\n" .
+                       "  Delay will solve in %s secs, Estimated at %s.\n",
+                       $current_behind, $catchup_rate, $second_diff,
+                       $estimated_sec, $estimated_sec ne "NaN" ? $estimated_time->strftime("%m/%d %H:%M") : "Never");
+        }
+      }
 
       if (($wait_count * $self->{sleep}) > $self->{retry_timeout})
       {

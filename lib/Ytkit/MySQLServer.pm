@@ -27,9 +27,10 @@ use DBI;
 use Time::Piece qw{ localtime };
 
 ### Timeout for i_s query.
-use constant ALRM_TIME => 3;
-use constant ALRM_MSG  => "SIGALRM";
-use constant ABORT_I_S => "Querying information_schema is too dangerous for this instance. Aborting.";
+use constant ALRM_TIME      => 3;
+use constant ALRM_MSG       => "SIGALRM";
+use constant ABORT_I_S      => "Querying information_schema is too dangerous for this instance. Aborting.";
+use constant ERRNO_INTERNAL => 9999;
 
 sub new
 {
@@ -42,6 +43,7 @@ sub new
     _opt      => $opt,
     _conn     => undef,
     _error    => undef,
+    _errno    => undef,
     _warning  => undef,
     _do_not_query_i_s => 0,
   };
@@ -71,6 +73,20 @@ sub error
   else
   {
     return $self->{_error};
+  }
+}
+
+sub errno
+{
+  my ($self, $arg)= @_;
+
+  if (defined($arg))
+  {
+    $self->{_errno}= $arg;
+  }
+  else
+  {
+    return $self->{_errno};
   }
 }
 
@@ -115,6 +131,7 @@ sub conn
     if ($@)
     {
       $self->error($@);
+      $self->errno(ERRNO_INTERNAL);
       $self->{_conn}= undef;
     }
   }
@@ -128,8 +145,7 @@ sub exec_sql
 
   if (my $conn= $self->conn)
   {
-    $self->error("");
-    $self->warning([]);
+    $self->_clear_error_buf;
     return undef if $self->error;
 
     eval
@@ -140,6 +156,7 @@ sub exec_sql
     if ($@)
     {
       $self->error(sprintf("%s (%s): %s", $sql, join(", ", @argv), $@));
+      $self->errno($conn->{mysql_errno});
       return undef;
     }
 
@@ -386,6 +403,7 @@ sub query_arrayref
       if ($self->{_do_not_query_i_s})
       {
         $self->error(ABORT_I_S);
+        $self->errno(ERRNO_INTERNAL);
         $self->croakf(ABORT_I_S);
       }
       $i_s_query= 1;
@@ -394,8 +412,7 @@ sub query_arrayref
       alarm(ALRM_TIME);
     } ### Not i_s query doesn't set alarm.
 
-    $self->error("");
-    $self->warning([]);
+    $self->_clear_error_buf;
     my $conn= $self->conn;
     return undef if $self->error;
 
@@ -417,8 +434,8 @@ sub query_arrayref
 
       }
 
-      $self->error(sprintf("%s (%s): %s", $sql, join(", ", @argv), $@));
-      $self->croakf("Error occurs during query $sql; $@");
+      $self->_set_error_buf_from_conn;
+      $self->croakf("Error occurs during query %s (%s): %s", $sql, join(", ", @argv), $@);
     }
 
     $self->check_warnings;
@@ -455,8 +472,7 @@ sub query_hashref
       alarm(ALRM_TIME);
     } ### Not i_s query doesn't set alarm.
 
-    $self->error("");
-    $self->warning("");
+    $self->_clear_error_buf;
     my $conn= $self->conn;
     return undef if $self->error;
 
@@ -477,8 +493,8 @@ sub query_hashref
         alarm(0);
       }
 
-      $self->error(sprintf("%s (%s): %s", $sql, join(", ", @argv), $@));
-      $self->croakf("Error occurs during query %s; %s", $sql, $@);
+      $self->_set_error_buf_from_conn;
+      $self->croakf("Error occurs during query %s (%s): %s", $sql, join(", ", @argv), $@);
     }
 
     $self->check_warnings;
@@ -746,6 +762,27 @@ sub reconnect
     delete($self->{_conn});
     $self->conn;
   }
+}
+
+sub _clear_error_buf
+{
+  my ($self)= @_;
+
+  $self->error("");
+  $self->errno(0);
+  $self->warning([]);
+ 
+  return 1;
+}
+
+sub _set_error_buf_from_conn
+{
+  my ($self)= @_;
+
+  $self->error($self->{_conn}->{mysql_error});
+  $self->errno($self->{_conn}->{mysql_errno});
+
+  return 1;
 }
 
 return 1;

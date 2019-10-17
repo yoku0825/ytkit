@@ -704,16 +704,7 @@ sub check_latest_deadlock
   my $latest= $self->instance->latest_deadlock;
   my $diff  = localtime() - $latest;
 
-  my $status;
-  if ($diff < $self->{deadlock}->{critical})
-  {
-    $status= NAGIOS_CRITICAL;
-  }
-  elsif ($diff < $self->{deadlock}->{warning})
-  {
-    $status= NAGIOS_WARNING;
-  }
-
+  my $status= compare_threshold_reverse($diff, $self->{deadlock});
   $self->update_status($status, sprintf(qq{LATEST DETECTED DEADLOCK has occurred at %s},
                                         $latest)) if $status;
   return 0; 

@@ -564,6 +564,21 @@ sub compare_threshold
   return NAGIOS_OK;
 }
 
+sub compare_threshold_reverse
+{
+  my ($value, $threshold)= @_;
+
+  if ($value < $threshold->{critical})
+  {
+    return NAGIOS_CRITICAL;
+  }
+  elsif ($value < $threshold->{warning})
+  {
+    return NAGIOS_WARNING;
+  }
+  return NAGIOS_OK;
+}
+
 sub show_slave_status
 {
   my ($self)= @_;

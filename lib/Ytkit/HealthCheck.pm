@@ -58,6 +58,8 @@ yt-health-check checks following MySQL status,
   Connection count.
   AUTO_INCREMENT column usage.
   read_only variable is set or not.
+  No "GTID-gap" in gtid_executed.
+  LATEST DETECTED DEADLOCK time.
 
 and returns Nagios compatible result code,
 

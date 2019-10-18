@@ -570,6 +570,35 @@ subtest "Parse SHOW ENGINE INNODB STATUS" => sub
   done_testing;
 };
 
+subtest "check uptime" => sub
+{
+  ### uptime = 404684
+  $prog->instance->{_show_status}   = $Ytkit::Test::SHOW_STATUS::VAR1;
+
+  $prog->{uptime}->{warning}= 10000000;
+  $prog->{uptime}->{critical}= 1000000;
+  $prog->{uptime}->{enable}= 1;
+  $prog->check_uptime;
+  is($prog->{status}->{str}, "CRITICAL", "uptime < critical");
+  &reset_param;
+
+  $prog->{uptime}->{warning}= 10000000;
+  $prog->{uptime}->{critical}= 400000;
+  $prog->{uptime}->{enable}= 1;
+  $prog->check_uptime;
+  is($prog->{status}->{str}, "WARNING", "uptime < warning");
+  &reset_param;
+
+  $prog->{uptime}->{warning}= 80;
+  $prog->{uptime}->{critical}= 100;
+  $prog->{uptime}->{enable}= 1;
+  $prog->check_uptime;
+  is($prog->{status}->{str}, "OK", "uptime > critical and warning");
+  &reset_param;
+
+  done_testing;
+};
+
 
 subtest "config description" => sub
 {

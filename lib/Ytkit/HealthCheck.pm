@@ -60,6 +60,7 @@ yt-health-check checks following MySQL status,
   read_only variable is set or not.
   No "GTID-gap" in gtid_executed.
   LATEST DETECTED DEADLOCK time.
+  Uptime check.
 
 and returns Nagios compatible result code,
 
@@ -113,6 +114,7 @@ sub new
     $self->check_read_only;
     $self->check_gtid_hole;
     $self->check_latest_deadlock;
+    $self->check_uptime;
   }
   elsif ($role eq "slave")
   {
@@ -123,6 +125,7 @@ sub new
     $self->{read_only}->{should_be}= 1;
     $self->check_read_only;
     $self->check_gtid_hole;
+    $self->check_uptime;
   }
   elsif ($role eq "intermidiate")
   {
@@ -135,6 +138,7 @@ sub new
     $self->check_read_only;
     $self->check_gtid_hole;
     $self->check_latest_deadlock;
+    $self->check_uptime;
   }
   elsif ($role eq "backup")
   {
@@ -710,6 +714,18 @@ sub check_latest_deadlock
   return 0; 
 }
 
+sub check_uptime
+{
+  my ($self)= @_;
+  return 0 unless $self->{uptime}->{enable};
+
+  my $uptime= $self->show_status->{Uptime}->{Value};
+  my $status= compare_threshold_reverse($uptime, $self->{uptime});
+
+  $self->update_status($status, sprintf("Uptime is too small %d", $uptime)) if $status;
+  return 0;
+}
+
 sub dump_detail
 {
   my ($self)= @_;
@@ -946,10 +962,20 @@ EOS
       critical => { default => 1,
                    text    => "Critical threshold for LATEST DETECTED DEADLOCK time (seconds)", },
     },
+    uptime =>
+    {
+      enable => { default => 1,
+                  text => "When set to 1, check Uptime from SHOW GLOBAL STATUS.", },
+      warning => { default => 300,
+                   text => "Warning threshold for Uptime(seconds)", },
+      critical => { default => 300,
+                    text => "Critical threshold for Uptime(seconds)", },
+    },
     dump_detail      => { alias   => ["dump-detail"],
                           text    => qq{When result is NOT NAGIOS_OK,\n} .
                                      qq{  output results of "SHOW PROCESSLIST", "SHOW SLAVE STATUS" } .
                                      qq{and "SHOW ENGINE INNODB STATUS"" into specified file}, }
+ 
   };
 
   my $config= Ytkit::Config->new({ %$yt_healthcheck_option, 

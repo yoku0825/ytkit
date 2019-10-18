@@ -108,9 +108,9 @@ sub wait_slave
         {
           my $second_diff= $current_time->epoch - $start_time->epoch;
           my $catchup_rate= ($start_behind - $current_behind) / $second_diff;
-          my $estimated_sec= $catchup_rate > 0 ? $current_behind / $catchup_rate : "NaN";
+          my $estimated_sec= $catchup_rate > 0 ? sprintf("%0.2f", $current_behind / $catchup_rate) : "NaN";
           my $estimated_time= $estimated_sec ne "NaN" ? $current_time + $estimated_sec : "Never";
-          $self->infof("  Current Seconds_Behind_Master = %d, Catching up %0.2f/sec during %d secs,\n" .
+          $self->infof("Current Seconds_Behind_Master = %d, Catching up %0.2f/sec during %d secs,\n" .
                        "  Delay will solve in %s secs, Estimated at %s.\n",
                        $current_behind, $catchup_rate, $second_diff,
                        $estimated_sec, $estimated_sec ne "NaN" ? $estimated_time->strftime("%m/%d %H:%M") : "Never");

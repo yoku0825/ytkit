@@ -72,7 +72,7 @@ foreach my $version (sort(keys(%$test)))
         $server->$func;
       };
     
-      ok(!($@) && !($server->error), "$func has executed without error.");
+      ok(!($@) && !($server->error), "$func has executed without error.") or diag($server->error);
     }
     done_testing;
   };

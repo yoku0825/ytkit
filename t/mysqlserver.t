@@ -231,6 +231,10 @@ subtest "Parse SHOW ENGINE INNODB STATUS" => sub
   done_testing;
 };
 
-
+#subtest "InnoDB Locking Information" => sub
+#{
+#  ### Move to xt/innodb_locking_information.t
+#  done_testing;
+#};
 
 done_testing;

@@ -31,6 +31,7 @@ use constant ALRM_TIME      => 3;
 use constant ALRM_MSG       => "SIGALRM";
 use constant ABORT_I_S      => "Querying information_schema is too dangerous for this instance. Aborting.";
 use constant ERRNO_INTERNAL => 9999;
+use constant ER_NO_SUCH_TABLE => 1146;
 
 sub new
 {
@@ -699,10 +700,78 @@ sub thread_id
   return $self->query_arrayref("SHOW SESSION VARIABLES LIKE 'pseudo_thread_id'")->[0]->{Value} // 0;
 }
 
+sub fetch_innodb_lock_waits
+{
+  my ($self)= @_;
+
+  if ($self->mysqld_version < 50100)
+  {
+    ### 5.0, 4.1, 4.0, .. are not supported.
+    $self->errno(ERRNO_INTERNAL);
+    $self->error("Unsupported version for fetch_innodb_lock_waits");
+    return undef;
+  }
+
+  my $ret;
+  eval
+  {
+    $ret= $self->_fetch_sys_innodb_lock_waits;
+  };
+
+  if ($self->errno == ER_NO_SUCH_TABLE)
+  {
+    return $self->_fetch_innodb_lock_waits_rawsql;
+  }
+  else
+  {
+    return $ret;
+  }
+}
+
+sub _fetch_innodb_lock_waits_rawsql
+{
+  my ($self)= @_;
+
+  return undef if $self->mysqld_version >= 80011;
+
+  my $sql= << 'EOS';
+SELECT 
+  waiting_trx.trx_started AS waiting_trx_started,
+  ROUND(NOW() - waiting_trx.trx_started) AS waiting_time,
+  waiting_trx.trx_mysql_thread_id AS waiting_process_id,
+  waiting_trx.trx_query AS waiting_query,
+  /*!50508 waiting_trx.trx_rows_locked, */
+  blocking_trx.trx_started AS blocking_trx_started,
+  ROUND(NOW() - blocking_trx.trx_started) AS blocking_time,
+  blocking_trx.trx_mysql_thread_id AS blocking_process_id,
+  blocking_trx.trx_query AS blocking_query,
+  /*!50508 blocking_trx.trx_rows_locked, */
+  blocking_lock.lock_mode, 
+  blocking_lock.lock_type, 
+  blocking_lock.lock_table, 
+  blocking_lock.lock_index,
+  blocking_lock.lock_data
+FROM 
+  information_schema.innodb_lock_waits INNER JOIN 
+  information_schema.innodb_locks AS blocking_lock ON innodb_lock_waits.blocking_lock_id = blocking_lock.lock_id INNER JOIN 
+  information_schema.innodb_trx AS blocking_trx ON innodb_lock_waits.blocking_trx_id = blocking_trx.trx_id INNER JOIN 
+  information_schema.innodb_trx AS waiting_trx ON innodb_lock_waits.requesting_trx_id = waiting_trx.trx_id
+EOS
+
+  return $self->query_arrayref($sql);
+}
+
+sub _fetch_sys_innodb_lock_waits
+{
+  my ($self)= @_;
+  return $self->query_arrayref("SELECT * FROM sys.innodb_lock_waits");
+}
+
 sub latest_deadlock
 {
   my ($self)= @_;
 
+  $self->_clear_error_buf;
   my $text= $self->show_engine_innodb_status->[0]->{Status};
 
   my @tmp= split(/^---+\n/m, $text);

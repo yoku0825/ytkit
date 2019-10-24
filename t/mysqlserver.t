@@ -248,5 +248,17 @@ subtest "Parse SHOW ENGINE INNODB STATUS" => sub
 #  done_testing;
 #};
 
+subtest "Resultset format functions" => sub
+{
+  is(Ytkit::MySQLServer::print_table($Ytkit::Test::SHOW_SLAVE_HOSTS::TWO_HOSTS),
+     Ytkit::Test::read_file("$Bin/data/r/print_table.r"), "print_table");
+  is(Ytkit::MySQLServer::print_vtable($Ytkit::Test::SHOW_SLAVE_HOSTS::TWO_HOSTS),
+     Ytkit::Test::read_file("$Bin/data/r/print_vtable.r"), "print_vtable");
+  done_testing;
+};
+
+
+
+
 
 done_testing;

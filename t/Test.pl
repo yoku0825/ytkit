@@ -29,4 +29,13 @@ foreach (glob("$Bin/data/*.pl"))
   require $_;
 }
 
+sub read_file
+{
+  my ($filename)= @_;
+  open(my $fh, "<", $filename);
+  my @buff= <$fh>;
+  close($fh);
+  return join("", @buff);
+}
+
 return 1;

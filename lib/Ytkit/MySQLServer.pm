@@ -854,4 +854,83 @@ sub _set_error_buf_from_conn
   return 1;
 }
 
+sub print_table
+{
+  ### Argument should be `selectall_arrayref($sql, {Slice => {}})`
+  my ($selectall_arrayref)= @_;
+
+  if (!(@$selectall_arrayref))
+  {
+    ### Empty
+    return "Empty";
+  }
+
+  my @columns= sort(keys(%{$selectall_arrayref->[0]}));
+
+  ### Evaluate width of resultset.
+  my %width= map { $_ => length($_) } @columns;
+  foreach my $row (@$selectall_arrayref)
+  {
+    foreach my $column (@columns)
+    {
+      my $length= length($row->{$column});
+      $length ||= 0;
+      $width{$column}= $length
+        if !($width{$column}) || ($width{$column} < $length);
+    }
+  }
+  my $ret;
+  
+  ### header-line
+  $ret .= sprintf("| %s |\n", join(" | ", map { my $format= sprintf("%%-%ds", $width{$_}); sprintf($format, $_); } @columns));
+  $ret .= sprintf("| %s |\n", join(" | ", map { sprintf("-" x $width{$_}); } @columns));
+
+  ### Print each line
+  foreach my $row (@$selectall_arrayref)
+  {
+    $ret .= sprintf("| %s |\n", join(" | ",
+                                map { my $format= sprintf("%%-%ds", $width{$_});
+                                      sprintf($format, $row->{$_} ? $row->{$_} : ""); } @columns));
+  }
+  return $ret;
+}
+
+sub print_vtable
+{
+  ### Argv should be `selectall_arrayref($sql, {Slice => {}})`
+  my ($selectall_arrayref)= @_;
+
+  if (!(@$selectall_arrayref))
+  {
+    ### Empty
+    return "Empty";
+  }
+
+  my @columns= sort(keys(%{$selectall_arrayref->[0]}));
+
+  ### Evaluate width of resultset.
+  my $width= 0;
+  foreach my $row (@$selectall_arrayref)
+  {
+    foreach my $column (@columns)
+    {
+      $width= length($column) if length($column) > $width;
+    }
+  }
+  my $ret;
+  my $format= sprintf("%%-%ds : %%s\n", $width);
+ 
+  ### Print each line
+  foreach my $row (@$selectall_arrayref)
+  {
+    $ret .= "*" x 40 . "\n";
+    foreach my $column (@columns)
+    {
+      $ret .= sprintf($format, $column, $row->{$column});
+    }
+  }
+  return $ret;
+}
+
+
 return 1;

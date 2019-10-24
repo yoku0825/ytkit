@@ -1,6 +1,6 @@
 Name:		ytkit
 Version:	0.1.13
-Release:	4
+Release:	5
 Summary:	ytkit is Yoku-san no Tool KIT scripts.
 
 #Group:		
@@ -9,7 +9,7 @@ URL:		https://github.com/yoku0825/ytkit/archive/%{version}.tar.gz#/%{name}-%{ver
 Source0:	%{name}-%{version}.tar.gz
 
 Requires:	perl 
-Requires:       perl(DBD::mysql) perl(Time::Piece) perl(Carp) perl(JSON) perl(Term::ReadKey)
+Requires:       perl(DBD::mysql) perl(Time::Piece) perl(Carp) perl(JSON) perl(Term::ReadKey) perl(Data::Dumper)
 AutoReq:        no
 BuildArch:      noarch
 BuildRequires:  make perl

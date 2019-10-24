@@ -6,3 +6,4 @@ requires "Test::More";
 requires "Clone";
 requires "JSON";
 requires "Term::ReadKey";
+requires "Data::Dumper";

@@ -13,7 +13,7 @@ jobs:
       - run: cpanm App::cpanminus
       - run: /usr/local/bin/cpanm --installdeps .
       - save_cache:
-          key: v0.1.11
+          key: v0.1.13-5
           paths: ~/perl5
       - run:
           command: "make test"

@@ -31,6 +31,7 @@ $ENV{HARNESS_ACTIVE}= 1;
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
 require "$Bin/Test.pl";
+Ytkit::Test->import(qw{ read_file });
 
 no warnings "once";
 

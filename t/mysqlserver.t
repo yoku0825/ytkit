@@ -26,6 +26,7 @@ use Test::More;
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
 require "$Bin/Test.pl";
+Ytkit::Test->import(qw{ read_file });
 
 no warnings "once";
 

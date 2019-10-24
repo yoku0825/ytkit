@@ -759,7 +759,7 @@ sub dump_detail
   printf($fh "\n%sSHOW PROCESSLIST%s\n\n", "=" x 10, "=" x 10);
   print_table($fh, $self->instance->show_processlist);
   printf($fh "\n%sSHOW SLAVE STATUS%s\n\n", "=" x 10, "=" x 10);
-  print_vtable_one_row($fh, $self->instance->show_slave_status);
+  print_vtable($fh, $self->instance->show_slave_status);
   printf($fh "\n%sSHOW ENGINE INNODB STATUS%s\n\n", "=" x 10, "=" x 10);
   print($fh $self->instance->show_engine_innodb_status->[0]->{Status});
   printf($fh "\n%sSHOW INNODB LOCKS%s\n\n", "=" x 10, "=" x 10);
@@ -774,73 +774,18 @@ sub print_table
   my ($fh, $ret)= @_;
   return 0 if !($fh);
 
-  if (!($ret && $ret->[0]))
-  {
-    ### Empty
-    printf($fh "Empty\n");
-    return 0;
-  }
-
-  my @columns= sort(keys(%{$ret->[0]}));
-
-  ### Evaluate width of resultset.
-  my %width= map { $_ => length($_) } @columns;
-  foreach my $row (@$ret)
-  {
-    foreach my $column (@columns)
-    {
-      my $length= length($row->{$column});
-      $length ||= 0;
-      $width{$column}= $length
-        if !($width{$column}) || ($width{$column} < $length);
-    }
-  }
-  
-  ### Print header-line
-  printf($fh "| %s |\n", join(" | ", map { my $format= sprintf("%%-%ds", $width{$_}); sprintf($format, $_); } @columns));
-  printf($fh "| %s |\n", join(" | ", map { sprintf("-" x $width{$_}); } @columns));
-
-  ### Print each line
-  foreach my $row (@$ret)
-  {
-    printf($fh "| %s |\n", join(" | ",
-                                map { my $format= sprintf("%%-%ds", $width{$_});
-                                      sprintf($format, $row->{$_} ? $row->{$_} : ""); } @columns));
-  }
+  print($fh Ytkit::MySQLServer::print_table($ret));
   return 1;
 }
 
-sub print_vtable_one_row
+sub print_vtable
 {
   ### $ret should be `selectall_arrayref($sql, {Slice => {}})`
   my ($fh, $ret)= @_;
   return 0 if !($fh);
 
-  if (!($ret && $ret->[0]))
-  {
-    ### Empty
-    printf($fh "Empty\n");
-    return 0;
-  }
-
-  ### Print only one row
-  my $row= $ret->[0];
-  my ($left_width, $right_width)= (0, 0);
-
-  foreach my $key (sort(keys(%$row)))
-  {
-    my $key_length= length($key) // 0;
-    my $val_length= length($row->{$key}) // 0;
-    $left_width = ($left_width < $key_length) ? $key_length : $left_width;
-    $right_width= ($right_width < $val_length) ? $val_length : $right_width;
-  }
-
-  while (my ($key, $value)= each(%$row))
-  {
-    $value ||= "";
-    my $format= sprintf("| %%-%ds | %%-%ds |\n", $left_width, $right_width);
-    printf($fh $format, $key, $value);
-  }
+  print($fh Ytkit::MySQLServer::print_vtable($ret));
+  return 1;
 }
 
 sub _config

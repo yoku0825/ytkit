@@ -862,7 +862,7 @@ sub print_table
   if (!(@$selectall_arrayref))
   {
     ### Empty
-    return "Empty";
+    return "Empty\n";
   }
 
   my @columns= sort(keys(%{$selectall_arrayref->[0]}));
@@ -903,7 +903,7 @@ sub print_vtable
   if (!(@$selectall_arrayref))
   {
     ### Empty
-    return "Empty";
+    return "Empty\n";
   }
 
   my @columns= sort(keys(%{$selectall_arrayref->[0]}));

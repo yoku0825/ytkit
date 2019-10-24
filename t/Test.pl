@@ -23,6 +23,9 @@ use warnings;
 use utf8;
 use FindBin qw{$Bin};
 
+use Exporter qw{ import };
+our @EXPORT= qw{ read_file };
+
 ### Load data/*.txt
 foreach (glob("$Bin/data/*.pl"))
 {

@@ -32,6 +32,7 @@ $ENV{HARNESS_ACTIVE}= 1;
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
 require "$Bin/Test.pl";
+Ytkit::Test->import(qw{ read_file });
 
 no warnings "once";
 
@@ -328,13 +329,3 @@ done_testing;
 
 
 exit 0;
-
-
-sub read_file
-{
-  my ($filename)= @_;
-  open(my $fh, "<", $filename);
-  my @buff= <$fh>;
-  close($fh);
-  return join("", @buff);
-}

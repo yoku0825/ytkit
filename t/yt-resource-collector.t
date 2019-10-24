@@ -40,13 +40,3 @@ is(ref($prog), "Ytkit::ResourceCollector", "Make instance");
 done_testing;
 
 exit 0;
-
-
-sub read_file
-{
-  my ($filename)= @_;
-  open(my $fh, "<", $filename);
-  my @buff= <$fh>;
-  close($fh);
-  return join("", @buff);
-}

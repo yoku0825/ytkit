@@ -251,7 +251,7 @@ subtest "i_s.tables" => sub
 subtest "user_grants" => sub
 {
   $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
-  $prog->instance->{_select_user_list}= $Ytkit::Test::SELECT_user_list::VAR1;
+  $prog->instance->{_select_user_list}= $Ytkit::Test::SELECT_user_list::one_user;
 
   ### show_grants clears cache each time.
   $prog->instance->{_show_grants}= $Ytkit::Test::SHOW_GRANTS::VAR1;

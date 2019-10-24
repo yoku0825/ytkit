@@ -1,6 +1,6 @@
 package Ytkit::Test::SELECT_user_list;
 
-$VAR1 = [
+$one_user = [
           {
             'user' => 'mysql.sys',
             'host' => 'localhost'

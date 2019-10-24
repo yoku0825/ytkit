@@ -118,8 +118,8 @@ subtest "select_is_table_by_size" => sub
 
 subtest "select_user_list" => sub
 {
-  $server->{_select_user_list}= $Ytkit::Test::SELECT_user_list::VAR1;
-  is_deeply($server->select_user_list, $Ytkit::Test::SELECT_user_list::VAR1,
+  $server->{_select_user_list}= $Ytkit::Test::SELECT_user_list::one_user;
+  is_deeply($server->select_user_list, $Ytkit::Test::SELECT_user_list::one_user,
             "SELECT FROM mysql.user");
   $server->clear_cache;
 };
@@ -160,6 +160,7 @@ subtest "pseudo_thread_id" => sub
 {
   $server->{_thread_id}= $Ytkit::Test::SHOW_VARIABLES::show_session_variables_like_pseudo_thread_id;
   is($server->thread_id, 72, "pseudo_thread_id");
+  $server->clear_cache;
   done_testing;
 };
 
@@ -168,14 +169,17 @@ subtest "Set information_schema_stats_expiry" => sub
   $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql57_ps_on;
   $server->{_should_set_stats_expiry}= $Ytkit::Test::SHOW_VARIABLES::stats_expiry_empty;
   ok(!($server->should_set_stats_expiry), "5.7 doesn't have information_schema_stats_expiry.");
+  $server->clear_cache;
 
   $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80;
   $server->{_should_set_stats_expiry}= $Ytkit::Test::SHOW_VARIABLES::stats_expiry_nonzero;
   ok($server->should_set_stats_expiry, "8.0 and information_schema_stats_expiry <> 0.");
+  $server->clear_cache;
 
   $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80;
   $server->{_should_set_stats_expiry}= $Ytkit::Test::SHOW_VARIABLES::stats_expiry_zero;
   ok(!($server->should_set_stats_expiry), "8.0 and information_schema_stats_expiry = 0.");
+  $server->clear_cache;
  
   done_testing;
 };
@@ -186,6 +190,7 @@ subtest "Parse SHOW ENGINE INNODB STATUS" => sub
   {
     $server->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql50;
     is($server->latest_deadlock->epoch, 1562551919, "Parse LATEST DETECTED DEADLOCK");
+    $server->clear_cache;
     done_testing;
   };
 
@@ -193,6 +198,7 @@ subtest "Parse SHOW ENGINE INNODB STATUS" => sub
   {
     $server->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql51;
     is($server->latest_deadlock->epoch, 1562563203, "Parse LATEST DETECTED DEADLOCK");
+    $server->clear_cache;
     done_testing;
   };
 
@@ -200,6 +206,7 @@ subtest "Parse SHOW ENGINE INNODB STATUS" => sub
   {
     $server->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql55;
     is($server->latest_deadlock->epoch, 1562563601, "Parse LATEST DETECTED DEADLOCK");
+    $server->clear_cache;
     done_testing;
   };
  
@@ -207,6 +214,7 @@ subtest "Parse SHOW ENGINE INNODB STATUS" => sub
   {
     $server->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql56;
     is($server->latest_deadlock->epoch, 1562563782, "Parse LATEST DETECTED DEADLOCK");
+    $server->clear_cache;
     done_testing;
   };
  
@@ -214,9 +222,11 @@ subtest "Parse SHOW ENGINE INNODB STATUS" => sub
   {
     $server->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql57;
     is($server->latest_deadlock->epoch, 1562837618, "Parse LATEST DETECTED DEADLOCK");
+    $server->clear_cache;
 
     $server->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql57_no_deadlock;
     is($server->latest_deadlock->epoch, 0, "Parse LATEST DETECTED DEADLOCK but doesn't exist");
+    $server->clear_cache;
  
     done_testing;
   };
@@ -225,6 +235,7 @@ subtest "Parse SHOW ENGINE INNODB STATUS" => sub
   {
     $server->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql80;
     is($server->latest_deadlock->epoch, 1562838160, "Parse LATEST DETECTED DEADLOCK");
+    $server->clear_cache;
     done_testing;
   };
  

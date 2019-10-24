@@ -756,35 +756,8 @@ sub dump_detail
          $self->{status}->{str}, $self->hostname,
          $self->{output}, $self->{role},
          localtime->cdate);
-  printf($fh "\n%sSHOW PROCESSLIST%s\n\n", "=" x 10, "=" x 10);
-  print_table($fh, $self->instance->show_processlist);
-  printf($fh "\n%sSHOW SLAVE STATUS%s\n\n", "=" x 10, "=" x 10);
-  print_vtable($fh, $self->instance->show_slave_status);
-  printf($fh "\n%sSHOW ENGINE INNODB STATUS%s\n\n", "=" x 10, "=" x 10);
-  print($fh $self->instance->show_engine_innodb_status->[0]->{Status});
-  printf($fh "\n%sSHOW INNODB LOCKS%s\n\n", "=" x 10, "=" x 10);
-  print_table($fh, $self->instance->fetch_innodb_lock_waits);
+  printf($fh $self->instance->print_information);
 
-  return 1;
-}
-
-sub print_table
-{
-  ### $ret should be `selectall_arrayref($sql, {Slice => {}})`
-  my ($fh, $ret)= @_;
-  return 0 if !($fh);
-
-  print($fh Ytkit::MySQLServer::print_table($ret));
-  return 1;
-}
-
-sub print_vtable
-{
-  ### $ret should be `selectall_arrayref($sql, {Slice => {}})`
-  my ($fh, $ret)= @_;
-  return 0 if !($fh);
-
-  print($fh Ytkit::MySQLServer::print_vtable($ret));
   return 1;
 }
 

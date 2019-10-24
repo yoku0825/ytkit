@@ -854,7 +854,25 @@ sub _set_error_buf_from_conn
   return 1;
 }
 
-sub print_table
+sub print_information
+{
+  my ($self)= @_;
+  my $line= "=" x 10;
+  my $ret;
+
+  $ret .= sprintf("\n%sSHOW PROCESSLIST%s\n\n", $line, $line);
+  $ret .= _print_table($self->show_processlist);
+  $ret .= sprintf("\n%sSHOW SLAVE STATUS%s\n\n", $line, $line);
+  $ret .= _print_vtable($self->show_slave_status);
+  $ret .= sprintf("\n%sSHOW ENGINE INNODB STATUS%s\n\n", $line, $line);
+  $ret .= sprintf($self->show_engine_innodb_status->[0]->{Status});
+  $ret .= sprintf("\n%sSHOW INNODB LOCKS%s\n\n", $line, $line);
+  $ret .= _print_table($self->fetch_innodb_lock_waits);
+
+  return $ret;
+}
+
+sub _print_table
 {
   ### Argument should be `selectall_arrayref($sql, {Slice => {}})`
   my ($selectall_arrayref)= @_;
@@ -895,7 +913,7 @@ sub print_table
   return $ret;
 }
 
-sub print_vtable
+sub _print_vtable
 {
   ### Argv should be `selectall_arrayref($sql, {Slice => {}})`
   my ($selectall_arrayref)= @_;

@@ -732,6 +732,7 @@ sub _fetch_innodb_lock_waits_rawsql
 {
   my ($self)= @_;
 
+  ### information_schema.innodb_lock* is not on 8.0
   return undef if $self->mysqld_version >= 80011;
 
   my $sql= << 'EOS';

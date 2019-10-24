@@ -49,8 +49,8 @@ subtest "show_slave_status" => sub
 
 subtest "show_slave_hosts" => sub
 {
-  $server->{_show_slave_hosts}= $Ytkit::Test::SHOW_SLAVE_HOSTS::VAR1;
-  is_deeply($server->show_slave_hosts, $Ytkit::Test::SHOW_SLAVE_HOSTS::VAR1, "SHOW SLAVE HOSTS");
+  $server->{_show_slave_hosts}= $Ytkit::Test::SHOW_SLAVE_HOSTS::TWO_HOSTS;
+  is_deeply($server->show_slave_hosts, $Ytkit::Test::SHOW_SLAVE_HOSTS::TWO_HOSTS, "SHOW SLAVE HOSTS");
   $server->clear_cache;
 };
 
@@ -247,5 +247,6 @@ subtest "Parse SHOW ENGINE INNODB STATUS" => sub
 #  ### Move to xt/innodb_locking_information.t
 #  done_testing;
 #};
+
 
 done_testing;

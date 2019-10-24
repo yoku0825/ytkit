@@ -1,6 +1,6 @@
 package Ytkit::Test::SHOW_SLAVE_HOSTS;
 
-$VAR1 = [
+$TWO_HOSTS = [
           {
             'Slave_UUID' => '00020796-2222-2222-2222-222222222222',
             'Port' => '20796',

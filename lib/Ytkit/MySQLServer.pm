@@ -704,7 +704,7 @@ sub fetch_innodb_lock_waits
 {
   my ($self)= @_;
 
-  if ($self->mysqld_version < 50100)
+  if ($self->mysqld_version < 50138)
   {
     ### 5.0, 4.1, 4.0, .. are not supported.
     $self->errno(ERRNO_INTERNAL);
@@ -720,12 +720,20 @@ sub fetch_innodb_lock_waits
 
   if ($self->errno == ER_NO_SUCH_TABLE)
   {
-    return $self->_fetch_innodb_lock_waits_rawsql;
+    eval
+    {
+      $ret= $self->_fetch_innodb_lock_waits_rawsql;
+    };
+
+    if ($@)
+    {
+      ### 5.1 builtin-InnoDB doesn't provide INNODB_TRX
+      $self->errno(ERRNO_INTERNAL);
+      $self->error("Unsupported version for fetch_innodb_lock_waits");
+      return undef;
+    }
   }
-  else
-  {
-    return $ret;
-  }
+  return $ret;
 }
 
 sub _fetch_innodb_lock_waits_rawsql

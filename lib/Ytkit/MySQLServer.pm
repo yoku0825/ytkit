@@ -718,7 +718,7 @@ sub fetch_innodb_lock_waits
     $ret= $self->_fetch_sys_innodb_lock_waits;
   };
 
-  if ($self->errno == ER_NO_SUCH_TABLE)
+  if ($self->errno)
   {
     eval
     {

@@ -25,7 +25,7 @@ test:
 	prove
 
 .PHONY: fatpack
-fatpack: setup yt-alter-progress yt-binlog-groupby yt-collect yt-data-dumper yt-healthcheck yt-innostat yt-querystat yt-resource-collector yt-wait-replication
+fatpack: setup yt-alter-progress yt-binlog-groupby yt-collect yt-data-dumper yt-healthcheck yt-innostat yt-querystat yt-resource-collector yt-wait-replication yt-print-information
 
 fatinstall:
 	cp fatpack/* $(INSTALL)/bin
@@ -70,4 +70,7 @@ yt-resource-collector: bin/yt-resource-collector lib/Ytkit/Collect.pm lib/Ytkit/
 	$(fatpack)
 
 yt-wait-replication: bin/yt-wait-replication lib/Ytkit/WaitReplication.pm lib/Ytkit/HealthCheck.pm $(MANDATORY_PACKAGE)
+	$(fatpack)
+
+yt-print-information: bin/yt-print-information $(MANDATORY_PACKAGE)
 	$(fatpack)

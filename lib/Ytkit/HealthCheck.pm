@@ -756,7 +756,7 @@ sub dump_detail
          $self->{status}->{str}, $self->hostname,
          $self->{output}, $self->{role},
          localtime->cdate);
-  printf($fh $self->instance->print_information);
+  printf($fh "%s\n", $self->instance->print_information);
 
   return 1;
 }

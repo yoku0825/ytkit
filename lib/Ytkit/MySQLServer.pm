@@ -874,9 +874,9 @@ sub print_information
   $ret .= sprintf("\n%sSHOW SLAVE STATUS%s\n\n", $line, $line);
   $ret .= _print_vtable($self->show_slave_status);
   $ret .= sprintf("\n%sSHOW ENGINE INNODB STATUS%s\n\n", $line, $line);
-  $ret .= sprintf($self->show_engine_innodb_status->[0]->{Status});
+  $ret .= $self->show_engine_innodb_status->[0]->{Status};
   $ret .= sprintf("\n%sSHOW INNODB LOCKS%s\n\n", $line, $line);
-  $ret .= _print_table($self->fetch_innodb_lock_waits);
+  $ret .= _print_vtable($self->fetch_innodb_lock_waits);
 
   return $ret;
 }

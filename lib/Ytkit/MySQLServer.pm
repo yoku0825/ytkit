@@ -953,7 +953,7 @@ sub _print_vtable
     $ret .= "*" x 40 . "\n";
     foreach my $column (@columns)
     {
-      $ret .= sprintf($format, $column, $row->{$column});
+      $ret .= sprintf($format, $column, $row->{$column} // "");
     }
   }
   return $ret;

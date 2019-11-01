@@ -92,6 +92,7 @@ sub wait_slave
     }
     elsif ($healthcheck->{status}->{exit_code} eq Ytkit::HealthCheck::NAGIOS_WARNING->{exit_code})
     {
+      ### TODO: Support Multi-Source Replication.
       my $info= $healthcheck->show_slave_status->[0];
       my $current_time= Time::Piece::localtime;
       my $current_behind= $info->{Seconds_Behind_Master};

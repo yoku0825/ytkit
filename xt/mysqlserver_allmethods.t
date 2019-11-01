@@ -59,7 +59,9 @@ foreach my $version (sort(keys(%$test)))
 
     my $file_path= "$Bin/../lib/Ytkit/MySQLServer.pm";
     my @method   = `grep "^sub" $file_path | awk '{print \$2}'`;
-    my @ignore   = qw{ conn new DESTROY query_arrayref query_hashref warning error show_grants exec_sql valueof clear_cache };
+    my @ignore   = qw{ conn new DESTROY query_arrayref query_hashref 
+                       warning error show_grants exec_sql valueof 
+                       errno _print_table _print_vtable clear_cache };
     
     foreach my $func (@method)
     {

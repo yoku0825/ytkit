@@ -886,7 +886,7 @@ sub _print_table
   ### Argument should be `selectall_arrayref($sql, {Slice => {}})`
   my ($selectall_arrayref)= @_;
 
-  if (!(@$selectall_arrayref))
+  if (!($selectall_arrayref) || !(@$selectall_arrayref))
   {
     ### Empty
     return "Empty\n";
@@ -927,7 +927,7 @@ sub _print_vtable
   ### Argv should be `selectall_arrayref($sql, {Slice => {}})`
   my ($selectall_arrayref)= @_;
 
-  if (!(@$selectall_arrayref))
+  if (!($selectall_arrayref) || !(@$selectall_arrayref))
   {
     ### Empty
     return "Empty\n";

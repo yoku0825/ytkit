@@ -137,6 +137,7 @@ sub ask_password
   print "\n";
   chomp($password);
   $self->{_config}->{result}->{password}= $password;
+  $self->{password}= $password;
 }
 
 sub infof

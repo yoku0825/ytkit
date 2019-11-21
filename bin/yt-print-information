@@ -29,8 +29,11 @@ use Ytkit::MySQLServer;
 
 my $config= Ytkit::Config->new($Ytkit::Config::CONNECT_OPTION);
 $config->parse_argv(@ARGV);
+my $dummy= { _config => $config, %{$config->{result}} };
+bless $dummy => "Ytkit";
+$dummy->handle_help;
 
-my $server= Ytkit::MySQLServer->new($config->{result});
+my $server= Ytkit::MySQLServer->new($dummy);
 print $server->print_information;
 
 exit 0;

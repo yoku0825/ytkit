@@ -18,7 +18,7 @@ setup:
 .PHONY: install
 install:
 	cp bin/* $(INSTALL)/bin/
-	cp lib/* $(INSTALL)/share/perl5/
+	cp -r lib/* $(INSTALL)/share/perl5/
 
 .PHONY: test
 test:

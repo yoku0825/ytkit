@@ -76,16 +76,18 @@ sub new
 
   ### Normalize { parent => { child => { option_hash } } } style
   ###  to { parent_child => { option_hash } } style.
-  while (my ($parent_key, $child)= each(%$definition))
+  foreach my $parent_key (sort(keys(%$definition)))
   {
+    my $child= $definition->{$parent_key};
     my $option;
     if (ref($child) eq "HASH")
     {
       ### Empty-hash "{ parent_key => {} }" comes here.
       $child->{alias}= [$parent_key] if !(%$child);
 
-      while (my ($child_key, $child_value)= each(%$child))
+      foreach my $child_key (sort(keys(%$child)))
       {
+        my $child_value= $child->{$child_key};
         if (ref($child_value) eq "HASH")
         {
           ### { parent_key => { child_key => { default => .., } } } style.

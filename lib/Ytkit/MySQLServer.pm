@@ -1,7 +1,7 @@
 package Ytkit::MySQLServer;
 
 ########################################################################
-# Copyright (C) 2018, 2019  yoku0825
+# Copyright (C) 2018, 2020  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -308,6 +308,13 @@ ORDER BY
 EOS
   $sql .= sprintf(" LIMIT %d", $limit) if $limit;
  
+  return $self->query_arrayref($sql);
+}
+
+sub select_ps_threads
+{
+  my ($self)= @_;
+  my $sql= "SELECT * FROM performance_schema.threads"; ### Need lower column-names?
   return $self->query_arrayref($sql);
 }
 
@@ -877,6 +884,8 @@ sub print_information
   $ret .= $self->show_engine_innodb_status->[0]->{Status};
   $ret .= sprintf("\n%sSHOW INNODB LOCKS%s\n\n", $line, $line);
   $ret .= _print_vtable($self->fetch_innodb_lock_waits);
+  $ret .= sprintf("\n%sperformance_schema.threads%s\n\n", $line, $line);
+  $ret .= _print_table($self->select_ps_threads);
 
   return $ret;
 }

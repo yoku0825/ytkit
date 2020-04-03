@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  test:
+  test_on_centos7:
     docker:
       - image: centos:7
     working_directory: ~/ytkit
@@ -24,4 +24,4 @@ workflows:
   version: 2
   test:
     jobs:
-      - test
+      - test_on_centos7

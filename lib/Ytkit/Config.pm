@@ -26,6 +26,7 @@ use Carp qw{ carp croak };
 use Ytkit::Config::Option;
 
 my $_version= "0.1.14";
+$ENV{ytkit_verbose}= 1;
 
 our $CONNECT_OPTION=
 {
@@ -59,10 +60,12 @@ our $COMMON_OPTION=
             noarg => 1 },
   verbose => { alias => ["verbose", "v"],
                text  => "Verbose output mode",
-               noarg => 1 },
+               noarg => 1,
+               isa   => sub { $ENV{ytkit_verbose}++; } },
   silent  => { alias => ["silent", "s", "quiet", "q"],
                text  => "No output any messages",
-               noarg => 1 },
+               noarg => 1,
+               isa   => sub { $ENV{ytkit_verbose}= 0; } },
   version => { alias => ["version", "V"],
                text  => "Show ytkit version",
                noarg => 1 },

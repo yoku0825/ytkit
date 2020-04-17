@@ -1,7 +1,7 @@
 package Ytkit;
 
 ########################################################################
-# Copyright (C) 2018, 2019  yoku0825
+# Copyright (C) 2018, 2020  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -144,73 +144,123 @@ sub infof
 {
   my ($self, $format, @argv)= @_;
 
-  if ($self->{silent})
+  ### For backward-compatibility ($ytkit->infof style calling)
+  if (ref($self) eq "Ytkit")
   {
-    return undef;
+    if ($self->{silent})
+    {
+      return undef;
+    }
   }
   else
   {
-    my $msg= sprintf($format, @argv);
-    print(STDOUT $msg) if !($ENV{HARNESS_ACTIVE});
-    return $msg;
+    ### Called without class (Just infof($format, @argv))
+    push(@argv, $format);
+    $format= $self;
+    return undef if !($ENV{ytkit_verbose});
   }
+
+  my $msg= sprintf($format, @argv);
+  print(STDOUT $msg) if !($ENV{HARNESS_ACTIVE});
+  return $msg;
+
 }
 
 sub notef
 {
   my ($self, $format, @argv)= @_;
 
-  if ($self->{silent})
+  ### For backward-compatibility ($ytkit->infof style calling)
+  if (ref($self) eq "Ytkit")
   {
-    return undef;
+    if ($self->{silent})
+    {
+      return undef;
+    }
   }
   else
   {
-    my $msg= sprintf($format, @argv);
-    print(STDERR $msg) if !($ENV{HARNESS_ACTIVE});
-    return $msg;
+    ### Called without class (Just infof($format, @argv))
+    push(@argv, $format);
+    $format= $self;
+    return undef if !($ENV{ytkit_verbose});
   }
+ 
+  my $msg= sprintf($format, @argv);
+  print(STDERR $msg) if !($ENV{HARNESS_ACTIVE});
+  return $msg;
 }
 
 sub debugf
 {
   my ($self, $format, @argv)= @_;
 
-  if (!($self->{verbose}))
+  ### For backward-compatibility ($ytkit->infof style calling)
+  if (ref($self) eq "Ytkit")
   {
-    return undef;
+    if (!($self->{verbose}))
+    {
+      return undef;
+    }
   }
   else
   {
-    my $msg= sprintf($format, @argv);
-    print(STDERR $msg) if !($ENV{HARNESS_ACTIVE});
-    return $msg;
+    ### Called without class (Just infof($format, @argv))
+    push(@argv, $format);
+    $format= $self;
+    return undef if $ENV{ytkit_verbose} < 2;
   }
+
+  my $msg= sprintf($format, @argv);
+  print(STDERR $msg) if !($ENV{HARNESS_ACTIVE});
+  return $msg;
 }
 
 sub croakf
 {
   my ($self, $format, @argv)= @_;
 
+  ### For backward-compatibility ($ytkit->infof style calling)
+  if (ref($self) eq "Ytkit")
+  {
+    ### Nothing to do.
+  } 
+  else
+  {
+    ### Called without class (Just infof($format, @argv))
+    push(@argv, $format);
+    $format= $self;
+  }
+ 
   ### Do not handle by --silent
   my $msg= sprintf($format, @argv);
   croak($msg);
+  return $msg;
 }
 
 sub carpf
 {
   my ($self, $format, @argv)= @_;
 
-  if ($self->{silent})
+  ### For backward-compatibility ($ytkit->infof style calling)
+  if (ref($self) eq "Ytkit")
   {
-    return undef;
+    if ($self->{silent})
+    {
+      return undef;
+    }
   }
   else
   {
-    my $msg= sprintf($format, @argv);
-    carp($msg) if !($ENV{HARNESS_ACTIVE});
-    return $msg;
+    ### Called without class (Just infof($format, @argv))
+    push(@argv, $format);
+    $format= $self;
+    return undef if !($ENV{ytkit_verbose});
   }
+ 
+  my $msg= sprintf($format, @argv);
+  carp($msg) if !($ENV{HARNESS_ACTIVE});
+  return $msg;
 }
 
 return 1;

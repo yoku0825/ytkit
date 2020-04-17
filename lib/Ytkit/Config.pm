@@ -1,7 +1,7 @@
 package Ytkit::Config;
 
 ########################################################################
-# Copyright (C) 2017, 2019  yoku0825
+# Copyright (C) 2017, 2020  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -274,7 +274,8 @@ sub _extract_for_usage
   }
   else
   {
-    if ($opt->{isa})
+    ### Don't display functional isa 
+    if ($opt->{isa} && ref($opt->{isa}) ne "CODE")
     {
       $arg= sprintf("=%s", ref($opt->{isa}) eq "ARRAY" ? 
                              "[" . join(", ", @{$opt->{isa}}) . "]" :

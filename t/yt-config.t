@@ -240,6 +240,39 @@ subtest "new Ytkit::Config interface" => sub
     done_testing;
   };
   
+  subtest "test for CODEref in isa" => sub
+  {
+    my $option_struct=
+    {
+      increment_env => {
+                         isa => sub
+                                {
+                                  if ($ENV{ytkit_test})
+                                  {
+                                    $ENV{ytkit_test}++;
+                                  }
+                                  else
+                                  {
+                                    $ENV{ytkit_test}= 1;
+                                  }
+                                },
+                         alias => ["t"],
+                        },
+    };
+    
+    my @test_argv= (qq{-t=value},);
+    my $expected_opt= { increment_env => "value", };
+    
+    my $config= Ytkit::Config->new($option_struct);
+    $config->parse_argv(@test_argv);
+    is($ENV{ytkit_test}, 1, "Set by option");
+    $config->parse_argv(@test_argv);
+    is($ENV{ytkit_test}, 2, "Incremented by option");
+    is_deeply($config->{result}, $expected_opt, "Option value is set even if isa is CODEref");
+    
+    done_testing;
+  };
+
   done_testing;
 };
 

@@ -1,7 +1,7 @@
 package Ytkit::Config::Option;
 
 ########################################################################
-# Copyright (C) 2018  yoku0825
+# Copyright (C) 2018, 2020  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -128,6 +128,10 @@ sub _check_isa
   {
     ### Evaluate regexp
     return $value =~ $isa;
+  }
+  elsif (ref($isa) eq "CODE")
+  {
+    return &$isa;
   }
 }
 

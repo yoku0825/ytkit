@@ -82,7 +82,7 @@ sub handle_help
     ### script doesn't allow bare argument.
     $self->carpf("You give unknown argument(s) [%s]\n\n",
                  join(" ", @{$self->{_config}->{left_argv}}));
-    $self->notef($self->usage);
+    _notef($self->usage);
     exit 3;
   }
   elsif ($self->{ask_pass})

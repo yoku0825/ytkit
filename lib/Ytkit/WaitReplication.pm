@@ -134,7 +134,7 @@ sub wait_slave
     else
     {
       ### yt-healthcheck can't connect server or I/O and/or SQL thread has stopped.
-      $self->debugf("yt-healthcheck returns Unexpected return-code. aborting.\n");
+      _debugf("yt-healthcheck returns Unexpected return-code. aborting.\n");
       $healthcheck->print_status;
       $self->croakf($healthcheck->{output});
     }

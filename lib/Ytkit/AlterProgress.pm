@@ -23,6 +23,7 @@ use warnings;
 use utf8;
 use base "Ytkit";
 
+use Ytkit::IO;
 use Ytkit::MySQLServer;
 
 my $synopsis= q{  $ yt-alter-progress --host=mysql_host --port=mysql_port } .
@@ -122,7 +123,7 @@ sub _search_instruments
       ### Update ENABLED = YES, TIMED = YES
       my $sql= sprintf("UPDATE performance_schema.setup_instruments SET enabled = 'YES', timed = 'YES' WHERE name = %s",
                        $self->instance->quote($row->{name}));
-      $self->debugf("yt-alter-progress updates setup_instruments: { %s) }\n", $sql);
+      _debugf("yt-alter-progress updates setup_instruments: { %s) }\n", $sql);
       push(@ret, $sql);
     }
   }
@@ -155,7 +156,7 @@ sub _search_consumers
       ### Update ENABLED = YES, TIMED = YES
       my $sql= sprintf("UPDATE performance_schema.setup_consumers SET enabled = 'YES' WHERE name = %s",
                        $self->instance->quote($row->{name}));
-      $self->debugf("yt-alter-progress updates setup_consumers { %s }\n", $sql);
+      _debugf("yt-alter-progress updates setup_consumers { %s }\n", $sql);
       push(@ret, $sql);
     }
   }
@@ -168,7 +169,7 @@ sub restore_setting
 
   foreach my $sql (@{$self->_restore_setting_sql})
   {
-    $self->debugf("yt-alter-progress restores performance_schema table { %s }\n", $sql);
+    _debugf("yt-alter-progress restores performance_schema table { %s }\n", $sql);
     $self->instance->exec_sql($sql);
   }
   return 1;

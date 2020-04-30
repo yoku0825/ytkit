@@ -420,7 +420,7 @@ sub query_arrayref
         _debugf("_do_not_query_i_s is flagged");
         $self->error(ABORT_I_S);
         $self->errno(ERRNO_INTERNAL);
-        $self->croakf(ABORT_I_S);
+        _croakf(ABORT_I_S);
       }
       $i_s_query= 1;
       
@@ -435,7 +435,7 @@ sub query_arrayref
     eval
     {
       _debugf("Querying: %s (%s)", $sql, join(", ", @argv));
-      local $SIG{ALRM}= sub { $self->croakf(ALRM_MSG) };
+      local $SIG{ALRM}= sub { _croakf(ALRM_MSG) };
       $self->{"_" . ${caller_name}}= $conn->selectall_arrayref($sql, {Slice => {}}, @argv);
     };
 
@@ -452,7 +452,7 @@ sub query_arrayref
       }
 
       $self->_set_error_buf_from_conn;
-      $self->croakf("Error occurs during query %s (%s): %s", $sql, join(", ", @argv), $@);
+      _croakf("Error occurs during query %s (%s): %s", $sql, join(", ", @argv), $@);
     }
 
     $self->check_warnings;
@@ -481,7 +481,7 @@ sub query_hashref
     if ($sql =~ /\binformation_schema\.(?:tables|columns)/i)
     {
       ### If already timed out i_s query, then stop script.
-      $self->croakf("Querying information_schema is too dangerous for this instance. Aborting.")
+      _croakf("Querying information_schema is too dangerous for this instance. Aborting.")
         if $self->{_do_not_query_i_s};
       $i_s_query= 1;
       
@@ -495,7 +495,7 @@ sub query_hashref
 
     eval
     {
-      local $SIG{ALRM}= sub { $self->croakf(ALRM_MSG) };
+      local $SIG{ALRM}= sub { _croakf(ALRM_MSG) };
       _debugf("Querying: %s (%s)", $sql, join(", ", @argv));
       $self->{"_" . ${caller_name}}= $conn->selectall_hashref($sql, [$key], @argv);
     };
@@ -512,7 +512,7 @@ sub query_hashref
       }
 
       $self->_set_error_buf_from_conn;
-      $self->croakf("Error occurs during query %s (%s): %s", $sql, join(", ", @argv), $@);
+      _croakf("Error occurs during query %s (%s): %s", $sql, join(", ", @argv), $@);
     }
 
     $self->check_warnings;

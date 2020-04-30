@@ -81,7 +81,7 @@ sub wait_slave
   {
     ### Report CRITICAL only when I/O and/or SQL threads have stopped.
     my $healthcheck= Ytkit::HealthCheck->new(@{$self->{healthcheck_opt}});
-    $self->croakf($healthcheck->{output}) 
+    _croakf($healthcheck->{output}) 
       if $healthcheck->{status}->{exit_code} eq Ytkit::HealthCheck::NAGIOS_CRITICAL->{exit_code};
 
     $healthcheck->check_slave_status;
@@ -122,7 +122,7 @@ sub wait_slave
       if (($wait_count * $self->{sleep}) > $self->{retry_timeout})
       {
         ### Retry out.
-        $self->croakf("Retrying %d times each %d seconds but Seconds_Behind_Master still exceeds %d.",
+        _croakf("Retrying %d times each %d seconds but Seconds_Behind_Master still exceeds %d.",
                       $wait_count, $self->{sleep}, $self->{seconds_behind_master});
       }
       else
@@ -136,7 +136,7 @@ sub wait_slave
       ### yt-healthcheck can't connect server or I/O and/or SQL thread has stopped.
       _debugf("yt-healthcheck returns Unexpected return-code. aborting.\n");
       $healthcheck->print_status;
-      $self->croakf($healthcheck->{output});
+      _croakf($healthcheck->{output});
     }
   }
 }

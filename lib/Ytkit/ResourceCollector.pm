@@ -1,7 +1,7 @@
 package Ytkit::ResourceCollector;
 
 ########################################################################
-# Copyright (C) 2018, 2019  yoku0825
+# Copyright (C) 2018, 2020  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -26,6 +26,7 @@ use IO::File;
 use base "Ytkit";
 
 use Ytkit::Collect;
+use Ytkit::IO;
 
 my $synopsis= q{ $ yt-resource-collector --config=/path/to/conf --record-path=/tmp/resource --auto-restart=0 };
 my $script= sprintf("%s - Launch yt-collect processes following by conf-file", $0);
@@ -105,7 +106,7 @@ sub collect
   }
   else
   {
-    $self->croakf("Can't read config_file %s", $config_file);
+    _croakf("Can't read config_file %s", $config_file);
   }
 }
 

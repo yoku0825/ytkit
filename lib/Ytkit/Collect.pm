@@ -26,6 +26,7 @@ use IO::File;
 use JSON qw{ to_json };
 use base "Ytkit";
 
+use Ytkit::IO;
 use Ytkit::MySQLServer;
 
 my $synopsis= q{ $ yt-collect --host=mysql_host --port=mysql_port } .
@@ -512,7 +513,7 @@ sub print_low
   else
   {
     ### Unknown output-type
-    $self->croakf("Unknown --output = %s", $self->{output});
+    _croakf("Unknown --output = %s", $self->{output});
   }
 }
 

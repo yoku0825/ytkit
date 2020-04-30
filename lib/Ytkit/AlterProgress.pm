@@ -83,15 +83,15 @@ sub checking_requirement
   ### We needs MySQL >= 5.7.6
   if ($self->instance->mysqld_version < 50706)
   {
-    $self->croakf("yt-alter-progress needs MySQL Version >= 5.7.6 but Server version is %d",
-                  $self->instance->mysqld_version) if !($ENV{HARNESS_ACTIVE});
+    _croakf("yt-alter-progress needs MySQL Version >= 5.7.6 but Server version is %d",
+            $self->instance->mysqld_version) if !($ENV{HARNESS_ACTIVE});
     return 0;
   }
 
   ### and performance_schema = ON
   if (!($self->instance->p_s_on))
   {
-    $self->croakf("yt-alter-progress needs performance_schema = ON but actually off")
+    _croakf("yt-alter-progress needs performance_schema = ON but actually off")
       if !($ENV{HARNESS_ACTIVE});
     return 0;
   }

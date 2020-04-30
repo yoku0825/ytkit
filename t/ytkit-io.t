@@ -34,8 +34,8 @@ subtest "Output message functions" => sub
 {
   subtest "no --silent and no --verbose" => sub
   {
-    $ENV{ytkit_verbose}= 1;
-    ok(_infof("TEST"), "infof vs default should be printed");
+    $ENV{ytkit_verbose}= Ytkit::IO::NORMAL;
+    ok(!(_infof("TEST")), "infof vs default should not be printed");
     ok(_notef("TEST"), "notef vs default should be printed");
     ok(_carpf("TEST"), "carpf vs default should be printed");
     ok(!(_debugf("TEST")), "debugf vs default should not be printed");
@@ -51,7 +51,7 @@ subtest "Output message functions" => sub
 
   subtest "--silent and no --verbose" => sub
   {
-    $ENV{ytkit_verbose}= 0;
+    $ENV{ytkit_verbose}= Ytkit::IO::SILENT;
     ok(!(_infof("TEST")), "infof vs --silent should not be printed");
     ok(!(_notef("TEST")), "notef vs --silent should not be printed");
     ok(!(_carpf("TEST")), "carpf vs --silent should not be printed");
@@ -68,11 +68,11 @@ subtest "Output message functions" => sub
 
   subtest "no --silent and --verbose" => sub
   {
-    $ENV{ytkit_verbose}= 2;
+    $ENV{ytkit_verbose}= Ytkit::IO::VERBOSE;
     ok(_infof("TEST"), "infof vs --verbose should be printed");
     ok(_notef("TEST"), "notef vs --verbose should be printed");
     ok(_carpf("TEST"), "carpf vs --verbose should be printed");
-    ok(_debugf("TEST"), "debugf vs --verbose should be printed");
+    ok(!(_debugf("TEST")), "debugf vs --verbose should not be printed");
 
     eval
     {
@@ -82,6 +82,24 @@ subtest "Output message functions" => sub
 
     done_testing;
   };
+
+  subtest "--verbose --verbose (twice)" => sub
+  {
+    $ENV{ytkit_verbose}= Ytkit::IO::DEBUG;
+    ok(_infof("TEST"), "infof vs --verbose should be printed");
+    ok(_notef("TEST"), "notef vs --verbose should be printed");
+    ok(_carpf("TEST"), "carpf vs --verbose should be printed");
+    ok(_debugf("TEST"), "debugf vs --verbose should be printed");
+
+    eval
+    {
+      _croakf("TEST");
+    };
+    ok($@, "croakf vs --verbose --verbose should be croaked");
+
+    done_testing;
+  };
+
 };
 
 subtest "Issue #31" => sub
@@ -92,7 +110,7 @@ subtest "Issue #31" => sub
   {
     ok(0, "Include \% character should not raise warnings");
   };
-  ok(_infof("%s:%d", "%Y", 3306));
+  ok(_notef("%s:%d", "%Y", 3306));
   done_testing;
 };
 

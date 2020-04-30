@@ -99,24 +99,21 @@ sub wait_slave
       my $current_behind= $info->{Seconds_Behind_Master};
       $wait_count++;
 
-      if ($self->{verbose})
+      if (!($start_time) || !($start_behind))
       {
-        if (!($start_time) || !($start_behind))
-        {
-          $start_time= $current_time;
-          $start_behind= $current_behind;
-        }
-        else
-        {
-          my $second_diff= $current_time->epoch - $start_time->epoch;
-          my $catchup_rate= ($start_behind - $current_behind) / $second_diff;
-          my $estimated_sec= $catchup_rate > 0 ? sprintf("%0.2f", $current_behind / $catchup_rate) : "NaN";
-          my $estimated_time= $estimated_sec ne "NaN" ? $current_time + $estimated_sec : "Never";
-          _infof("Current Seconds_Behind_Master = %d, Catching up %0.2f/sec during %d secs,\n" .
-                 "  Delay will solve in %s secs, Estimated at %s.\n",
-                 $current_behind, $catchup_rate, $second_diff,
-                 $estimated_sec, $estimated_sec ne "NaN" ? $estimated_time->strftime("%m/%d %H:%M") : "Never");
-        }
+        $start_time= $current_time;
+        $start_behind= $current_behind;
+      }
+      else
+      {
+        my $second_diff= $current_time->epoch - $start_time->epoch;
+        my $catchup_rate= ($start_behind - $current_behind) / $second_diff;
+        my $estimated_sec= $catchup_rate > 0 ? sprintf("%0.2f", $current_behind / $catchup_rate) : "NaN";
+        my $estimated_time= $estimated_sec ne "NaN" ? $current_time + $estimated_sec : "Never";
+        _infof("Current Seconds_Behind_Master = %d, Catching up %0.2f/sec during %d secs,\n" .
+               "  Delay will solve in %s secs, Estimated at %s.\n",
+               $current_behind, $catchup_rate, $second_diff,
+               $estimated_sec, $estimated_sec ne "NaN" ? $estimated_time->strftime("%m/%d %H:%M") : "Never");
       }
 
       if (($wait_count * $self->{sleep}) > $self->{retry_timeout})

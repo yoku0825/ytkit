@@ -67,14 +67,14 @@ sub handle_help
 
   if ($self->{help})
   {
-    $self->{silent}= 0;
-    _infof($self->help);
+    $ENV{ytkit_verbose}= Ytkit::IO::NORMAL;
+    _notef($self->help);
     exit 0;
   }
   elsif ($self->{version})
   {
-    $self->{silent}= 0;
-    _infof($self->version);
+    $ENV{ytkit_verbose}= Ytkit::IO::NORMAL;
+    _notef($self->version);
     exit 0;
   }
   elsif (@{$self->{_config}->{left_argv}} && $self->{_config}->{_allow_extra_argv} == 0)

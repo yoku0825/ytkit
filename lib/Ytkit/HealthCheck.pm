@@ -223,7 +223,7 @@ sub hostname
 sub print_status
 {
   my ($self)= @_;
-  _infof("%s on %s: %s (%s)\n%s",
+  _notef("%s on %s: %s (%s)\n%s",
          $self->{status}->{str}, $self->hostname,
          $self->{output}, $self->{role},
          $self->{dump_detail} && $self->{status}->{exit_code} ne NAGIOS_OK->{exit_code} ? 

@@ -27,27 +27,35 @@ use Term::ReadKey;
 use base "Exporter";
 our @EXPORT= qw{ _infof _notef _carpf _croakf _debugf };
 
-sub _infof
+use constant
+{
+  SILENT => 0,
+  NORMAL => 1,
+  VERBOSE => 2,
+  DEBUG => 3,
+};
+
+sub _notef ### NORMAL, VERBOSE, DEBUG (Not --silent)
 {
   my ($format, @argv)= @_;
 
-  return undef if $ENV{ytkit_verbose} < 1;
+  return undef if $ENV{ytkit_verbose} < NORMAL;
   return __out_stdout($format, @argv);
 }
 
-sub _notef
+sub _infof ### VERBOSE, DEBUG (Only --verbose)
 {
   my ($format, @argv)= @_;
 
-  return undef if $ENV{ytkit_verbose} < 1;
-  return __out_stderr($format, @argv);
+  return undef if $ENV{ytkit_verbose} < VERBOSE;
+  return __out_stdout($format, @argv);
 }
 
-sub _debugf
+sub _debugf ### DEBUG (Only --verbose --verbose (twice))
 {
   my ($format, @argv)= @_;
 
-  return undef if $ENV{ytkit_verbose} < 2;
+  return undef if $ENV{ytkit_verbose} < DEBUG;
   return __out_stderr("DEBUG: " . $format . "\n", @argv);
 }
 
@@ -60,11 +68,11 @@ sub _croakf
   return $msg; ### Maybe this is not returned.
 }
 
-sub _carpf
+sub _carpf ### NORMAL, VERBOSE, DEBUG (Not --silent)
 {
   my ($format, @argv)= @_;
 
-  return undef if $ENV{ytkit_verbose} < 1;
+  return undef if $ENV{ytkit_verbose} < NORMAL;
   my $msg= sprintf($format, @argv);
   carp($msg) if !($ENV{HARNESS_ACTIVE});
   return $msg;

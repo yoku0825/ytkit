@@ -96,4 +96,29 @@ sub __out_stderr
   return $msg;
 }
 
+sub __extract_ref
+{
+  my ($element)= @_;
+  return $element if !$element;
+  my @ret;
+
+  if (ref($element) eq "HASH")
+  {
+    foreach (sort(keys(%$element)))
+    {
+      push(@ret, sprintf("%s => %s", $_, __extract_ref($element->{$_})));
+    }
+    return sprintf("{%s}", join(", ", @ret));
+  }
+  elsif (ref($element) eq "ARRAY")
+  {
+    foreach (@$element)
+    {
+      push(@ret, __extract_ref($_));
+    }
+    return sprintf("[%s]", join(", ", @ret));
+  }
+  return $element;
+}
+
 return 1;

@@ -99,7 +99,27 @@ subtest "Output message functions" => sub
 
     done_testing;
   };
+};
 
+subtest "Extract ARRAYref and HASHref" => sub
+{
+  my $simple_arrayref= ["a", "b", "c", "d"];
+  is(Ytkit::IO::__extract_ref($simple_arrayref), q|[a, b, c, d]|, "Simple ARRAYref");
+
+  my $simple_hashref= { a => "b", c => "d" };
+  is(Ytkit::IO::__extract_ref($simple_hashref), q|{a => b, c => d}|, "Simple HASHref");
+
+  my $nested_arrayref= ["a", "b", "c", "d", ["e", "f", ["g"]]];
+  is(Ytkit::IO::__extract_ref($nested_arrayref), q|[a, b, c, d, [e, f, [g]]]|, "Nested ARRAYref");
+
+  my $nested_hashref= { a => "b", c => { d => { e => "f", g => "h" }, i => "j" } };
+  is(Ytkit::IO::__extract_ref($nested_hashref), q|{a => b, c => {d => {e => f, g => h}, i => j}}|, "Nested HASHref");
+
+  my $mixed= { a => "b", c => ["d", "e", "f"], g => "h" };
+  is(Ytkit::IO::__extract_ref($mixed), q|{a => b, c => [d, e, f], g => h}|, "Mixed reference");
+
+
+  done_testing;
 };
 
 subtest "Issue #31" => sub

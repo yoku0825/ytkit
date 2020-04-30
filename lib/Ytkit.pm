@@ -80,8 +80,8 @@ sub handle_help
   elsif (@{$self->{_config}->{left_argv}} && $self->{_config}->{_allow_extra_argv} == 0)
   {
     ### script doesn't allow bare argument.
-    $self->carpf("You give unknown argument(s) [%s]\n\n",
-                 join(" ", @{$self->{_config}->{left_argv}}));
+    _carpf("You give unknown argument(s) [%s]\n\n",
+           join(" ", @{$self->{_config}->{left_argv}}));
     _notef($self->usage);
     exit 3;
   }
@@ -100,7 +100,7 @@ sub fix_common_options
     ### --silent and --verbose are exclusive
     $self->{silent}= 0;
     $ENV{ytkit_verbose}= 2;
-    $self->carpf("Can't set both --silent and --verbose. Failling back to only --verbose");
+    _carpf("Can't set both --silent and --verbose. Failling back to only --verbose");
     return 1;
   }
   return 0;
@@ -142,77 +142,6 @@ sub ask_password
   chomp($password);
   $self->{_config}->{result}->{password}= $password;
   $self->{password}= $password;
-}
-
-sub infof
-{
-  my ($self, $format, @argv)= @_;
-
-  ### For backward-compatibility ($ytkit->infof style calling)
-  if (ref($self) =~ /Ytkit/)
-  {
-    if ($self->{silent})
-    {
-      return undef;
-    }
-    return _infof($format, @argv);
-  }
-}
-
-sub notef
-{
-  my ($self, $format, @argv)= @_;
-
-  ### For backward-compatibility ($ytkit->infof style calling)
-  if (ref($self) =~ /Ytkit/)
-  {
-    if ($self->{silent})
-    {
-      return undef;
-    }
-    return _notef($format, @argv);
-  }
-}
-
-sub debugf
-{
-  my ($self, $format, @argv)= @_;
-
-  ### For backward-compatibility ($ytkit->infof style calling)
-  if (ref($self) =~ /Ytkit/)
-  {
-    if (!($self->{verbose}))
-    {
-      return undef;
-    }
-    return _debugf($format, @argv);
-  }
-}
-
-sub croakf
-{
-  my ($self, $format, @argv)= @_;
-
-  ### For backward-compatibility ($ytkit->infof style calling)
-  if (ref($self) =~ /Ytkit/)
-  {
-    return _croakf($format, @argv);
-  } 
-}
-
-sub carpf
-{
-  my ($self, $format, @argv)= @_;
-
-  ### For backward-compatibility ($ytkit->infof style calling)
-  if (ref($self) =~ /Ytkit/)
-  {
-    if ($self->{silent})
-    {
-      return undef;
-    }
-    return _carpf($format, @argv);
-  }
 }
 
 return 1;

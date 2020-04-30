@@ -81,7 +81,7 @@ sub collect
 
         while ()
         {
-          $self->carpf("Starting to connect to $instance") if !($ENV{HARNESS_ACTIVE});
+          _carpf("Starting to connect to $instance");
 
           eval
           {
@@ -89,7 +89,7 @@ sub collect
             $prog->collect;
           };
 
-          $self->carpf("%s has been disconnected. (%s)", $instance, $@) if !($ENV{HARNESS_ACTIVE});
+          _carpf("%s has been disconnected. (%s)", $instance, $@);
 
           ### --auto-restart=0, break loop to exit.
           last if !($self->{auto_restart});

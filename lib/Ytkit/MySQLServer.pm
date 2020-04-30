@@ -25,6 +25,7 @@ use utf8;
 use base "Ytkit";
 use DBI;
 use Time::Piece qw{ localtime };
+use Ytkit::IO;
 
 ### Timeout for i_s query.
 use constant ALRM_TIME      => 3;
@@ -59,6 +60,7 @@ sub DESTROY
   return undef if !($self->{_conn});
   eval
   {
+    _debugf("Ytkit::MySQLServer is destroyed.");
     $self->conn->disconnect;
   };
 }
@@ -119,6 +121,7 @@ sub conn
 
     eval
     {
+      _debugf("Connect to %s@%s", $opt->{user}, $dsn);
       $self->{_conn}= DBI->connect($dsn, $opt->{user}, $opt->{password},
                                    { mysql_enable_utf8     => 1,
                                      mysql_connect_timeout => $opt->{timeout},
@@ -131,6 +134,7 @@ sub conn
 
     if ($@)
     {
+      _debugf("Connection failure %s", $@);
       $self->error($@);
       $self->errno(ERRNO_INTERNAL);
       $self->{_conn}= undef;
@@ -151,12 +155,15 @@ sub exec_sql
 
     eval
     {
+      _debugf("Execute %s (%s)", $sql, join(", ", @argv));
       $ret= $conn->do($sql, $opt, @argv);
     };
 
     if ($@)
     {
-      $self->error(sprintf("%s (%s): %s", $sql, join(", ", @argv), $@));
+      my $err_msg= sprintf("%s (%s): %s", $sql, join(", ", @argv), $@);
+      _debugf($err_msg);
+      $self->error($err_msg);
       $self->errno($conn->{mysql_errno});
       return undef;
     }
@@ -410,6 +417,7 @@ sub query_arrayref
       ### If already timed out i_s query, then stop script.
       if ($self->{_do_not_query_i_s})
       {
+        _debugf("_do_not_query_i_s is flagged");
         $self->error(ABORT_I_S);
         $self->errno(ERRNO_INTERNAL);
         $self->croakf(ABORT_I_S);
@@ -426,6 +434,7 @@ sub query_arrayref
 
     eval
     {
+      _debugf("Querying: %s (%s)", $sql, join(", ", @argv));
       local $SIG{ALRM}= sub { $self->croakf(ALRM_MSG) };
       $self->{"_" . ${caller_name}}= $conn->selectall_arrayref($sql, {Slice => {}}, @argv);
     };
@@ -438,8 +447,8 @@ sub query_arrayref
       if ($i_s_query)
       {
         ### When got timeout for i_s query, abort and should be handled by upper-layer.
+        _debugf("Turn on _do_not_query_i_s");
         $self->{_do_not_query_i_s}= 1;
-
       }
 
       $self->_set_error_buf_from_conn;
@@ -487,6 +496,7 @@ sub query_hashref
     eval
     {
       local $SIG{ALRM}= sub { $self->croakf(ALRM_MSG) };
+      _debugf("Querying: %s (%s)", $sql, join(", ", @argv));
       $self->{"_" . ${caller_name}}= $conn->selectall_hashref($sql, [$key], @argv);
     };
 
@@ -518,8 +528,9 @@ sub check_warnings
   eval
   {
     $warn= $self->conn->selectall_arrayref("SHOW WARNINGS");
+    _debugf($warn) if @$warn;
   };
-  $self->warning($warn) if $warn;
+  $self->warning($warn) if @$warn;
 } 
 
 sub clear_cache
@@ -842,6 +853,7 @@ sub reconnect
   {
     eval
     {
+      _debugf("Disconnect.");
       $self->conn->disconnect;
     };
     delete($self->{_conn});

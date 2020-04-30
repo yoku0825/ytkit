@@ -27,6 +27,9 @@ use Term::ReadKey;
 use Ytkit::Config;
 use Ytkit::Config::File;
 use Ytkit::MySQLServer;
+use Ytkit::IO;
+
+$ENV{ytkit_verbose}= 1;
 
 sub instance
 {
@@ -96,6 +99,7 @@ sub fix_common_options
   {
     ### --silent and --verbose are exclusive
     $self->{silent}= 0;
+    $ENV{ytkit_verbose}= 2;
     $self->carpf("Can't set both --silent and --verbose. Failling back to only --verbose");
     return 1;
   }
@@ -145,25 +149,14 @@ sub infof
   my ($self, $format, @argv)= @_;
 
   ### For backward-compatibility ($ytkit->infof style calling)
-  if (ref($self) eq "Ytkit")
+  if (ref($self) =~ /Ytkit/)
   {
     if ($self->{silent})
     {
       return undef;
     }
+    return _infof($format, @argv);
   }
-  else
-  {
-    ### Called without class (Just infof($format, @argv))
-    push(@argv, $format);
-    $format= $self;
-    return undef if !($ENV{ytkit_verbose});
-  }
-
-  my $msg= sprintf($format, @argv);
-  print(STDOUT $msg) if !($ENV{HARNESS_ACTIVE});
-  return $msg;
-
 }
 
 sub notef
@@ -171,24 +164,14 @@ sub notef
   my ($self, $format, @argv)= @_;
 
   ### For backward-compatibility ($ytkit->infof style calling)
-  if (ref($self) eq "Ytkit")
+  if (ref($self) =~ /Ytkit/)
   {
     if ($self->{silent})
     {
       return undef;
     }
+    return _notef($format, @argv);
   }
-  else
-  {
-    ### Called without class (Just infof($format, @argv))
-    push(@argv, $format);
-    $format= $self;
-    return undef if !($ENV{ytkit_verbose});
-  }
- 
-  my $msg= sprintf($format, @argv);
-  print(STDERR $msg) if !($ENV{HARNESS_ACTIVE});
-  return $msg;
 }
 
 sub debugf
@@ -196,24 +179,14 @@ sub debugf
   my ($self, $format, @argv)= @_;
 
   ### For backward-compatibility ($ytkit->infof style calling)
-  if (ref($self) eq "Ytkit")
+  if (ref($self) =~ /Ytkit/)
   {
     if (!($self->{verbose}))
     {
       return undef;
     }
+    return _debugf($format, @argv);
   }
-  else
-  {
-    ### Called without class (Just infof($format, @argv))
-    push(@argv, $format);
-    $format= $self;
-    return undef if $ENV{ytkit_verbose} < 2;
-  }
-
-  my $msg= sprintf($format, @argv);
-  print(STDERR $msg) if !($ENV{HARNESS_ACTIVE});
-  return $msg;
 }
 
 sub croakf
@@ -221,21 +194,10 @@ sub croakf
   my ($self, $format, @argv)= @_;
 
   ### For backward-compatibility ($ytkit->infof style calling)
-  if (ref($self) eq "Ytkit")
+  if (ref($self) =~ /Ytkit/)
   {
-    ### Nothing to do.
+    return _croakf($format, @argv);
   } 
-  else
-  {
-    ### Called without class (Just infof($format, @argv))
-    push(@argv, $format);
-    $format= $self;
-  }
- 
-  ### Do not handle by --silent
-  my $msg= sprintf($format, @argv);
-  croak($msg);
-  return $msg;
 }
 
 sub carpf
@@ -243,24 +205,14 @@ sub carpf
   my ($self, $format, @argv)= @_;
 
   ### For backward-compatibility ($ytkit->infof style calling)
-  if (ref($self) eq "Ytkit")
+  if (ref($self) =~ /Ytkit/)
   {
     if ($self->{silent})
     {
       return undef;
     }
+    return _carpf($format, @argv);
   }
-  else
-  {
-    ### Called without class (Just infof($format, @argv))
-    push(@argv, $format);
-    $format= $self;
-    return undef if !($ENV{ytkit_verbose});
-  }
- 
-  my $msg= sprintf($format, @argv);
-  carp($msg) if !($ENV{HARNESS_ACTIVE});
-  return $msg;
 }
 
 return 1;

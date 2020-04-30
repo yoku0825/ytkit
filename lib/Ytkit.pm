@@ -68,13 +68,13 @@ sub handle_help
   if ($self->{help})
   {
     $self->{silent}= 0;
-    $self->infof($self->help);
+    _infof($self->help);
     exit 0;
   }
   elsif ($self->{version})
   {
     $self->{silent}= 0;
-    $self->infof($self->version);
+    _infof($self->version);
     exit 0;
   }
   elsif (@{$self->{_config}->{left_argv}} && $self->{_config}->{_allow_extra_argv} == 0)

@@ -1,7 +1,7 @@
 package Ytkit::WaitReplication;
 
 ########################################################################
-# Copyright (C) 2018, 2019  yoku0825
+# Copyright (C) 2018, 2020  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,6 +25,7 @@ use base "Ytkit";
 
 use Time::Piece;
 use Ytkit::HealthCheck;
+use Ytkit::IO;
 
 my $script= sprintf("%s - Script that waiting for Seconds_Behind_Master is less than specified value", $0);
 my $description= << "EOS";
@@ -111,10 +112,10 @@ sub wait_slave
           my $catchup_rate= ($start_behind - $current_behind) / $second_diff;
           my $estimated_sec= $catchup_rate > 0 ? sprintf("%0.2f", $current_behind / $catchup_rate) : "NaN";
           my $estimated_time= $estimated_sec ne "NaN" ? $current_time + $estimated_sec : "Never";
-          $self->infof("Current Seconds_Behind_Master = %d, Catching up %0.2f/sec during %d secs,\n" .
-                       "  Delay will solve in %s secs, Estimated at %s.\n",
-                       $current_behind, $catchup_rate, $second_diff,
-                       $estimated_sec, $estimated_sec ne "NaN" ? $estimated_time->strftime("%m/%d %H:%M") : "Never");
+          _infof("Current Seconds_Behind_Master = %d, Catching up %0.2f/sec during %d secs,\n" .
+                 "  Delay will solve in %s secs, Estimated at %s.\n",
+                 $current_behind, $catchup_rate, $second_diff,
+                 $estimated_sec, $estimated_sec ne "NaN" ? $estimated_time->strftime("%m/%d %H:%M") : "Never");
         }
       }
 

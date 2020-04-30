@@ -28,6 +28,7 @@ use base "Ytkit";
 use IO::File;
 use Time::Piece qw{ localtime };
 use Ytkit::MySQLServer;
+use Ytkit::IO;
 
 ### return code for Nagios-compats.
 use constant NAGIOS_OK       => { exit_code => 0, str => "OK" };
@@ -222,12 +223,12 @@ sub hostname
 sub print_status
 {
   my ($self)= @_;
-  $self->infof("%s on %s: %s (%s)\n%s",
-               $self->{status}->{str}, $self->hostname,
-               $self->{output}, $self->{role},
-               $self->{dump_detail} && $self->{status}->{exit_code} ne NAGIOS_OK->{exit_code} ? 
-                 "-  Details in " . $self->{dump_detail} : 
-                 "");
+  _infof("%s on %s: %s (%s)\n%s",
+         $self->{status}->{str}, $self->hostname,
+         $self->{output}, $self->{role},
+         $self->{dump_detail} && $self->{status}->{exit_code} ne NAGIOS_OK->{exit_code} ? 
+           "-  Details in " . $self->{dump_detail} : 
+           "");
 }
 
 sub check_long_query
@@ -746,7 +747,7 @@ sub dump_detail
   if ($@ || !($fh))
   {
     ### Falling down to STDERR
-    $self->notef("Couldn't open %s, falling back to STDERR\n", $self->{dump_detail});
+    _notef("Couldn't open %s, falling back to STDERR\n", $self->{dump_detail});
     $fh= IO::Handle->new_from_fd(2, "w");
   }
   binmode $fh, ":utf8";

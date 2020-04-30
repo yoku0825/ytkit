@@ -21,8 +21,8 @@ package Ytkit::Config;
 use strict;
 use warnings;
 use utf8;
-use Carp qw{ carp croak };
 
+use Ytkit::IO;
 use Ytkit::Config::Option;
 
 my $_version= "0.1.14";
@@ -366,7 +366,7 @@ sub load_config
 
   if (!(-r $config_file))
   {
-    carp("$config_file isn't readable or not found");
+    _carpf("$config_file isn't readable or not found");
     return $opt;
   }
 

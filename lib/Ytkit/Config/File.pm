@@ -21,7 +21,7 @@ package Ytkit::Config::File;
 use strict;
 use warnings;
 use utf8;
-use Carp qw{ carp croak };
+use Ytkit::IO;
 
 sub new
 {
@@ -29,7 +29,7 @@ sub new
 
   if (!(-r $file))
   {
-    carp("Can't read from $file");
+    _carpf("Can't read from $file");
     return undef;
   }
 

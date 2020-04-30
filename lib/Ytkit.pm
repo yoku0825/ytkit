@@ -21,7 +21,6 @@ package Ytkit;
 use strict;
 use warnings;
 use utf8;
-use Carp qw{ carp croak };
 use Term::ReadKey;
 
 use Ytkit::Config;
@@ -122,7 +121,7 @@ sub test_connect
   {
     ### die if can't connect to MySQL.
     my $msg= sprintf("MySQL Connection failed. %s", $self->instance->error);
-    croak($msg) if !($ENV{HARNESS_ACTIVE});
+    _croakf($msg) if !($ENV{HARNESS_ACTIVE});
 
     ### For test.
     return $self;

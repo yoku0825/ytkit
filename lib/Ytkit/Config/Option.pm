@@ -21,7 +21,7 @@ package Ytkit::Config::Option;
 use strict;
 use warnings;
 use utf8;
-use Carp qw{carp};
+use Ytkit::IO;
 
 sub new
 {
@@ -107,7 +107,7 @@ sub set_value
                          "[" . join(", ", @{$self->{isa}}) . "]" :
                          $self->{isa});
 
-      carp($msg) if !($ENV{HARNESS_ACTIVE});
+      _carpf($msg) if !($ENV{HARNESS_ACTIVE});
     }
   }
   return 1;

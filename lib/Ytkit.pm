@@ -98,8 +98,7 @@ sub fix_common_options
   if ($self->{silent} && $self->{verbose})
   {
     ### --silent and --verbose are exclusive
-    $self->{silent}= 0;
-    $ENV{ytkit_verbose}= 2;
+    $ENV{ytkit_verbose}= Ytkit::IO::VERBOSE;
     _carpf("Can't set both --silent and --verbose. Failling back to only --verbose");
     return 1;
   }

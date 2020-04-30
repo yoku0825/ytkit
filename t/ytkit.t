@@ -30,6 +30,7 @@ require "$Bin/Test.pl";
 no warnings "once";
 
 use_ok("Ytkit");
+use Ytkit::IO;
 
 subtest "Adjust between --silent and --verbose" => sub
 {
@@ -39,38 +40,36 @@ subtest "Adjust between --silent and --verbose" => sub
   subtest "No --silent and no --verbose" => sub
   {
     @{$ytkit}{"silent", "verbose"}= (0, 0);
-    $ENV{ytkit_verbose}= 1;
+    $ENV{ytkit_verbose}= Ytkit::IO::NORMAL;
     ok(!($ytkit->fix_common_options), "Not adjust options");
-    is($ENV{ytkit_verbose}, 1, "Not adjust ENV{ytkit_verbose}");
+    is($ENV{ytkit_verbose}, Ytkit::IO::NORMAL, "Not adjust ENV{ytkit_verbose}");
     done_testing;
   };
 
   subtest "--silent and no --verbose" => sub
   {
     @{$ytkit}{"silent", "verbose"}= (1, 0);
-    $ENV{ytkit_verbose}= 0;
+    $ENV{ytkit_verbose}= Ytkit::IO::SILENT;
     ok(!($ytkit->fix_common_options), "Not adjust");
-    is($ENV{ytkit_verbose}, 0, "Not adjust ENV{ytkit_verbose}");
+    is($ENV{ytkit_verbose}, Ytkit::IO::SILENT, "Not adjust ENV{ytkit_verbose}");
     done_testing;
   };
 
   subtest "no --silent and --verbose" => sub
   {
     @{$ytkit}{"silent", "verbose"}= (0, 1);
-    $ENV{ytkit_verbose}= 2;
+    $ENV{ytkit_verbose}= Ytkit::IO::VERBOSE;
     ok(!($ytkit->fix_common_options), "Not adjust");
-    is($ENV{ytkit_verbose}, 2, "Not adjust ENV{ytkit_verbose}");
+    is($ENV{ytkit_verbose}, Ytkit::IO::VERBOSE, "Not adjust ENV{ytkit_verbose}");
     done_testing;
   };
 
   subtest "--silent and --verbose" => sub
   {
     @{$ytkit}{"silent", "verbose"}= (1, 1);
-    $ENV{ytkit_verbose}= 1;
+    $ENV{ytkit_verbose}= Ytkit::IO::NORMAL;
     ok($ytkit->fix_common_options, "Adjust to no --silent and --verbose");
-    is($ENV{ytkit_verbose}, 2, "Adjust ENV{ytkit_verbose} (same as --verbose)");
-    is($ytkit->{silent}, 0, "Turn off --silent");
-    is($ytkit->{verbose}, 1, "Keep --verbose");
+    is($ENV{ytkit_verbose}, Ytkit::IO::VERBOSE, "Adjust ENV{ytkit_verbose} (same as --verbose)");
     ### After that, as same as "no --silent and --verbose"
     done_testing;
   };

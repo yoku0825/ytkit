@@ -122,7 +122,7 @@ sub conn
     eval
     {
       _debugf("Connect to %s@%s", $opt->{user}, $dsn);
-      $self->{_conn}= DBI->connect($dsn, $opt->{user}, $opt->{password},
+      $self->{_conn}= DBI->connect($dsn, $opt->{user}, $ENV{MYSQL_PWD},
                                    { mysql_enable_utf8     => 1,
                                      mysql_connect_timeout => $opt->{timeout},
                                      mysql_write_timeout   => $opt->{timeout}, 

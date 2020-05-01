@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2017, 2018  yoku0825
+# Copyright (C) 2017, 2020  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,6 +25,7 @@ use Test::More;
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
+no warnings "once";
 
 use_ok("Ytkit::Config");
 
@@ -272,6 +273,18 @@ subtest "new Ytkit::Config interface" => sub
     
     done_testing;
   };
+
+  done_testing;
+};
+
+subtest "Built-in option handling" => sub
+{
+  $ENV{MYSQL_PWD}= "abc";
+  ok(my $config= Ytkit::Config->new({%$Ytkit::Config::CONNECT_OPTION, %$Ytkit::Config::COMMON_OPTION}),
+     "Create instance via CONNECT_OPTION + COMMON_OPTION");
+  $config->parse_argv("--password=ghi");
+  is($config->{result}->{password}, "ghi", "--password overrides MYSQL_PWD");
+  is($ENV{MYSQL_PWD}, "ghi", "--password overrides MYSQL_PWD");
 
   done_testing;
 };

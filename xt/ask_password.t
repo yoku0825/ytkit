@@ -25,19 +25,14 @@ use Test::More;
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
-use Ytkit;
-
-my $base= {};
-bless $base => "Ytkit";
+use Ytkit::IO;
 
 SKIP:
 {
   skip("Called from prove, please call from perl", 1) if $ENV{HARNESS_ACTIVE};
   subtest "Type 'aaa' to password-prompt" => sub
   {
-    $base->{_config}->{result}->{password}= "Before inputing";
-    $base->ask_password;
-    is($base->{_config}->{result}->{password}, "aaa", "Correctly overloaded");
+    is(Ytkit::IO::_ask_password, "aaa", "Correctly overloaded");
     done_testing;
   };
 }

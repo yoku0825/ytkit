@@ -127,4 +127,17 @@ sub __extract_ref
   return $element;
 }
 
+sub _ask_password
+{
+  Term::ReadKey::ReadMode("noecho");
+  print "Password: ";
+  my $password= Term::ReadKey::ReadLine;
+  Term::ReadKey::ReadMode("restore");
+  print "\n";
+  chomp($password);
+  return $password;
+}
+
+
+
 return 1;

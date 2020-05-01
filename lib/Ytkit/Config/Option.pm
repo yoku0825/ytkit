@@ -131,7 +131,7 @@ sub _check_isa
   }
   elsif (ref($isa) eq "CODE")
   {
-    &$isa;
+    &$isa($value);
     return 1;
   }
 }

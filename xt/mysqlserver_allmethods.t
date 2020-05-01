@@ -61,7 +61,8 @@ foreach my $version (sort(keys(%$test)))
     my @method   = `grep "^sub" $file_path | awk '{print \$2}'`;
     my @ignore   = qw{ conn new DESTROY query_arrayref query_hashref 
                        warning error show_grants exec_sql valueof 
-                       errno _print_table _print_vtable clear_cache };
+                       errno _print_table _print_vtable clear_cache
+                       describe_table };
     
     foreach my $func (@method)
     {

@@ -271,6 +271,12 @@ sub show_master_logs
   return $self->query_arrayref("SHOW MASTER LOGS");
 }
 
+sub describe_table
+{
+  my ($self, $table)= @_;
+  return $self->query_arrayref("DESC " . $table);
+}
+
 sub select_ps_digest
 {
   my ($self, $limit)= @_;

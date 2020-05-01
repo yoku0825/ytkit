@@ -72,7 +72,7 @@ subtest "Output message functions" => sub
     ok(_infof("TEST"), "infof vs --verbose should be printed");
     ok(_notef("TEST"), "notef vs --verbose should be printed");
     ok(_carpf("TEST"), "carpf vs --verbose should be printed");
-    ok(!(_debugf("TEST")), "debugf vs --verbose should not be printed");
+    is(_debugf("TEST"), undef, "debugf vs --verbose should not be printed");
 
     eval
     {
@@ -86,10 +86,10 @@ subtest "Output message functions" => sub
   subtest "--verbose --verbose (twice)" => sub
   {
     $ENV{ytkit_verbose}= Ytkit::IO::DEBUG;
-    ok(_infof("TEST"), "infof vs --verbose should be printed");
-    ok(_notef("TEST"), "notef vs --verbose should be printed");
-    ok(_carpf("TEST"), "carpf vs --verbose should be printed");
-    ok(_debugf("TEST"), "debugf vs --verbose should be printed");
+    is(_infof("TEST"), "TEST", "infof vs --verbose should be printed");
+    is(_notef("TEST"), "TEST", "notef vs --verbose should be printed");
+    is(_carpf("TEST"), "TEST", "carpf vs --verbose should be printed");
+    is(_debugf("TEST"), "DEBUG: TEST\n", "debugf vs --verbose should be printed");
 
     eval
     {
@@ -118,13 +118,14 @@ subtest "Extract ARRAYref and HASHref" => sub
   my $mixed= { a => "b", c => ["d", "e", "f"], g => "h" };
   is(Ytkit::IO::__extract_ref($mixed), q|{a => b, c => [d, e, f], g => h}|, "Mixed reference");
 
+  is(_notef("bbb%sqqq", $mixed), q|bbb{a => b, c => [d, e, f], g => h}qqq|, "Print via _notef");
 
   done_testing;
 };
 
 subtest "Issue #31" => sub
 {
-  $ENV{ytkit_verbose}= 1;
+  $ENV{ytkit_verbose}= Ytkit::IO::NORMAL;
 
   local $SIG{__WARN__}= sub
   {

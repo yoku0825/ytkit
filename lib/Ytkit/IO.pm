@@ -25,7 +25,7 @@ use utf8;
 use Carp qw{ carp croak };
 use Term::ReadKey;
 use base "Exporter";
-our @EXPORT= qw{ _infof _notef _carpf _croakf _debugf };
+our @EXPORT= qw{ _infof _notef _carpf _croakf _debugf _sprintf };
 
 use constant
 {
@@ -63,7 +63,7 @@ sub _croakf
 {
   my ($format, @argv)= @_;
 
-  my $msg= sprintf($format, @argv);
+  my $msg= _sprintf($format, @argv);
   croak($msg);
   return $msg; ### Maybe this is not returned.
 }
@@ -73,7 +73,7 @@ sub _carpf ### NORMAL, VERBOSE, DEBUG (Not --silent)
   my ($format, @argv)= @_;
 
   return undef if $ENV{ytkit_verbose} < NORMAL;
-  my $msg= sprintf($format, @argv);
+  my $msg= _sprintf($format, @argv);
   carp($msg) if !($ENV{HARNESS_ACTIVE});
   return $msg;
 }
@@ -82,7 +82,7 @@ sub __out_stdout
 {
   my ($format, @argv)= @_;
 
-  my $msg= sprintf($format, @argv);
+  my $msg= _sprintf($format, @argv);
   print(STDOUT $msg) if !($ENV{HARNESS_ACTIVE});
   return $msg;
 }
@@ -91,9 +91,15 @@ sub __out_stderr
 {
   my ($format, @argv)= @_;
 
-  my $msg= sprintf($format, @argv);
+  my $msg= _sprintf($format, @argv);
   print(STDERR $msg) if !($ENV{HARNESS_ACTIVE});
   return $msg;
+}
+
+sub _sprintf
+{
+  my ($format, @argv)= @_;
+  return sprintf($format, map { __extract_ref($_) } @argv);
 }
 
 sub __extract_ref

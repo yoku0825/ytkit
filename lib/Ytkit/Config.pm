@@ -26,7 +26,6 @@ use Ytkit::IO;
 use Ytkit::Config::Option;
 
 my $_version= "0.1.14";
-$ENV{ytkit_verbose}= 1;
 
 our $CONNECT_OPTION=
 {
@@ -280,9 +279,7 @@ sub _extract_for_usage
     ### Don't display functional isa 
     if ($opt->{isa} && ref($opt->{isa}) ne "CODE")
     {
-      $arg= sprintf("=%s", ref($opt->{isa}) eq "ARRAY" ? 
-                             "[" . join(", ", @{$opt->{isa}}) . "]" :
-                             $opt->{isa});
+      $arg= sprintf("=%s", _sprintf("%s", $opt->{isa}));
     }
     else
     {

@@ -29,8 +29,10 @@ use Data::Dumper qw{ Dumper };
 use Ytkit::MySQLServer;
 use Ytkit::Config;
 
-my $config= Ytkit::Config->new({ %$Ytkit::Config::CONNECT_OPTION, (query => { alias => ["e", "execute", "query"],
-                                                                              text => "Query for Data::Dumper::Dumper." }) });
+my $config= Ytkit::Config->new({ %$Ytkit::Config::CONNECT_OPTION,
+                                 %$Ytkit::Config::COMMON_OPTION,
+                                 (query => { alias => ["e", "execute", "query"],
+                                             text => "Query for Data::Dumper::Dumper." }) });
 $config->parse_argv(@ARGV);
 
 my $sql= $config->{result}->{query} // undef;

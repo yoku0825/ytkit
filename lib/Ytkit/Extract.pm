@@ -70,6 +70,10 @@ sub extract
   {
     return $self->extract_as_insert_set;
   }
+  elsif ($self->{output} eq "insert-select")
+  {
+    return $self->extract_as_insert_select;
+  }
   elsif ($self->{output} eq "replace")
   {
     return $self->extract_as_replace;
@@ -108,6 +112,17 @@ sub extract_as_insert_set
   return sprintf("INSERT INTO %s SET %s;\n",
                  $self->{table},
                  _set_type_placeholders($self->column_list));
+}
+
+sub extract_as_insert_select
+{
+  my ($self)= @_;
+  return sprintf("INSERT INTO %s (%s) SELECT %s FROM %s WHERE %s;\n",
+                 $self->{table},
+                 $self->column_list_string,
+                 $self->column_list_string,
+                 $self->{table},
+                 _primary_key_placeholders($self->{_orig_column_list}));
 }
 
 sub extract_as_replace
@@ -211,7 +226,7 @@ sub _config
                           text  => "Column name which is excluded from select_list",
                           multi => 1},
     "output" => { alias => ["output"],
-                  isa => ["select", "insert", "replace", "update", "insert-set"],
+                  isa => ["select", "insert", "replace", "update", "insert-set", "insert-select"],
                   default => "select",
                   text => "Output type of SELECT, INSERT, REPLACE, UPDATE" },
     "only_not_null" => { alias => ["only_not_null"],

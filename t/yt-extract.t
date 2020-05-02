@@ -72,9 +72,12 @@ subtest "DESC mysql.user" => sub
   is($prog->extract_as_insert,
      "INSERT INTO mysql.user (ssl_cipher, x509_issuer, x509_subject) VALUES (?, ?, ?);\n",
      "--output=insert");
-   is($prog->extract_as_insert_set,
+  is($prog->extract_as_insert_set,
      "INSERT INTO mysql.user SET ssl_cipher = ?, x509_issuer = ?, x509_subject = ?;\n",
      "--output=insert-set");
+  is($prog->extract_as_insert_select,
+     "INSERT INTO mysql.user (ssl_cipher, x509_issuer, x509_subject) SELECT ssl_cipher, x509_issuer, x509_subject FROM mysql.user WHERE Host = ? AND User = ?;\n",
+     "--output=insert-select");
   is($prog->extract_as_replace,
      "REPLACE INTO mysql.user (ssl_cipher, x509_issuer, x509_subject) VALUES (?, ?, ?);\n",
      "--output=replace");

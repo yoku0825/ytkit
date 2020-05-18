@@ -34,6 +34,7 @@ use constant
   VERBOSE => 2,
   DEBUG => 3,
 };
+$ENV{ytkit_verbose} //= NORMAL;
 
 sub _notef ### NORMAL, VERBOSE, DEBUG (Not --silent)
 {

@@ -27,8 +27,6 @@ use Ytkit::Config::File;
 use Ytkit::MySQLServer;
 use Ytkit::IO;
 
-$ENV{ytkit_verbose}= 1;
-
 sub instance
 {
   my ($self)= @_;

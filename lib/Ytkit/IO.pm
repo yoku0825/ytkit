@@ -57,7 +57,7 @@ sub _debugf ### DEBUG (Only --verbose --verbose (twice))
   my ($format, @argv)= @_;
 
   return undef if $ENV{ytkit_verbose} < DEBUG;
-  return __out_stderr("DEBUG: " . $format . "\n", @argv);
+  return __out_stderr("DEBUG: %s\n", _sprintf($format, @argv));
 }
 
 sub _croakf
@@ -100,6 +100,12 @@ sub __out_stderr
 sub _sprintf
 {
   my ($format, @argv)= @_;
+  if (!(@argv))
+  {
+    ### Only pass 1 argv without format.
+    push(@argv, $format);
+    $format= "%s";
+  }
   return sprintf($format, map { __extract_ref($_) } @argv);
 }
 

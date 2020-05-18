@@ -1,7 +1,7 @@
 package Ytkit::BinlogGroupby;
 
 ########################################################################
-# Copyright (C) 2014, 2019  yoku0825
+# Copyright (C) 2014, 2020  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -136,6 +136,7 @@ sub parse
   ### parsing dml-line (only parse simple INSERT, UPDATE, DELETE, REPLACE)
   elsif ($line =~ SBR_REGEX || $line =~ RBR_REGEX)
   {
+    _debugf($line);
     my ($dml, $table)= (uc($1), lc($2));
     $table =~ s/`//g;
 
@@ -152,6 +153,8 @@ sub parse
                  table       => $table,
                  statement   => $dml,
                  exec_time   => $self->{exec_time} };
+
+    _debugf({ %$event, previous_time => $self->{previous_time} });
 
     if ($self->{time_string} && $dml && $table)
     {
@@ -182,9 +185,9 @@ sub output
   my ($self)= @_;
   my @ret= ();
 
-  _debugf("binlog entries between %s and %s\n",
-          sprintf($self->{print_format}, $self->{first_seen} // ""),
-          sprintf($self->{print_format}, $self->{last_seen} // ""));
+  _infof("binlog entries between %s and %s\n",
+         sprintf($self->{print_format}, $self->{first_seen} // ""),
+         sprintf($self->{print_format}, $self->{last_seen} // ""));
 
   return $self->{_counter}->result;
 }
@@ -254,6 +257,7 @@ sub set_parser
     $parse = undef;
     $format= undef;
   }
+  _debugf("Parse REGEXP: %s", $parse);
   $self->{header_parser}= $parse;
   $self->{print_format} = $format;
 }

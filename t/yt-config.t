@@ -277,6 +277,43 @@ subtest "new Ytkit::Config interface" => sub
   done_testing;
 };
 
+subtest "Mandatory option" => sub
+{
+  my $option_struct=
+  {
+    no_mandatory_option => { alias => ["no_mandatory_option"] },
+    mandatory_option => { alias => ["mandatory_option"], mandatory => 1 },
+    mandatory_with_default => { alias => ["mandatory_with_default"], mandatory => 1, default => "def" },
+    mandatory_array => { alias => ["mandatory_array"], mandatory => 1, multi => 1 },
+  };
+  
+  my @test_argv= ();
+  my $config= Ytkit::Config->new($option_struct);
+  eval
+  {
+    $config->parse_argv(@test_argv); ### Empty array
+  };
+  ok($@, "Failed mandatory");
+
+  push(@test_argv, "--mandatory_option=test");
+  eval
+  {
+    $config->parse_argv(@test_argv);
+  };
+  ok($@, "Not enough(lack of --mandatory_array)");
+
+  push(@test_argv, "--mandatory_array=test");
+  eval
+  {
+    $config->parse_argv(@test_argv);
+  };
+  ### mandatory but have default is through check_mandatory_option()
+  ok(!($@), "Success");
+
+  done_testing;
+};
+ 
+
 subtest "Built-in option handling" => sub
 {
   $ENV{MYSQL_PWD}= "abc";

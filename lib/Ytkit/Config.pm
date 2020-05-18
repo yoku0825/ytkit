@@ -239,6 +239,45 @@ sub parse_argv
   $self->{result}= $ret;
   $self->{left_argv}= \@left_argv;
 
+  if ($self->check_mandatory_option)
+  {
+    return 1;
+  }
+  else
+  {
+    _croakf("mandatory option(s) not set.");
+  }
+}
+
+sub check_mandatory_option
+{
+  my ($self)= @_;
+
+  while (my ($key, $value)= each(%{$self->{buffer}}))
+  {
+    if (ref($value) eq "Ytkit::Config::Option")
+    {
+      if (!($value->check_mandatory))
+      {
+        _carpf("%s is mandatory option but not set", $key);
+        return 0;
+      }
+    }
+    else
+    {
+      ### Recursive
+      while (my ($child_key, $child_value)= each(%$value))
+      {
+        if (!($child_value->check_mandatory))
+        {
+          _carpf("%s is mandatory option but not set", $child_key);
+          return 0;
+        }
+      }
+    }
+  }
+
+  ### All options are correctly set.
   return 1;
 }
 

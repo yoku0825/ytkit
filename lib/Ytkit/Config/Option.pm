@@ -46,11 +46,26 @@ sub new
       alias   => _normalize_hyphen($opt->{alias}) // undef,
       default => $opt->{default} // undef,
       text    => $opt->{text} // "FIXME: This option doesn't have description",
+      mandatory => $opt->{mandatory} // undef,
     }
   }
 
   bless $self => $class;
   return $self;
+}
+
+sub check_mandatory
+{
+  my ($self)= @_;
+  return 1 if !($self->{mandatory});
+
+  ### Empty
+  return 0 if !($self->{value});
+  ### Empty array
+  return 0 if ref($self->{value}) eq "ARRAY" && !(@{$self->{value}});
+
+  ### mandatory && has value
+  return 1;
 }
 
 sub _normalize_hyphen

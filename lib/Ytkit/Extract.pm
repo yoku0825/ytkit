@@ -221,7 +221,8 @@ sub _config
   my $own_option=
   {
     "table" => { alias => ["table", "t", "tables"],
-                 text => q{Fully qualified table name(like d1.t1) for extract.} },
+                 text => q{Fully qualified table name(like d1.t1) for extract.},
+                 mandatory => 1 },
     "exclude_column" => { alias => ["exclude", "exclude_column", "without", "exclude_columns" ],
                           text  => "Column name which is excluded from select_list",
                           multi => 1},

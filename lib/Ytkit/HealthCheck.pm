@@ -362,7 +362,7 @@ sub check_autoinc_usage
     foreach my $row (@{$self->select_autoinc_usage})
     {
       ### Calculate max value of autoinc from datatype.
-      my ($type, $unsigned)= $row->{column_type} =~ /^([a-z]+)\(.+\)(\s+(unsigned))?/;
+      my ($type, $unsigned)= $row->{column_type} =~ /^([a-z]+)(?:\(.+\))?(\s+(unsigned))?/;
       my $max= 2 ** (BYTES->{$type} * 8 - ($unsigned ? 0 : 1));
       my $ratio= ($row->{auto_increment} / $max) * 100;
 

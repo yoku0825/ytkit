@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2017, 2019  yoku0825
+# Copyright (C) 2017, 2020  yoku0825
 # Copyright (C) 2018        hacchuu0119
 #
 # This program is free software; you can redistribute it and/or
@@ -596,6 +596,26 @@ subtest "check uptime" => sub
   is($prog->{status}->{str}, "OK", "uptime > critical and warning");
   &reset_param;
 
+  done_testing;
+};
+
+subtest "Issue 40" => sub
+{
+  $prog->{autoinc_usage}->{warning}= 50;
+  $prog->{autoinc_usage}->{critical}= 90;
+  $prog->{autoinc_usage}->{enable}= 1;
+
+  ### MySQL 8.0.18 and earlier, "bigint(20) unsigned" style.
+  $prog->instance->{_select_autoinc_usage}= $Ytkit::Test::ISSUE40::before8019;
+  $prog->check_autoinc_usage;
+  is($prog->{status}->{str}, "OK", "8.0.18 and earlier style");
+
+  ### MySQL 8.0.19 and later, "bigint unsigned" style.
+  $prog->instance->{_select_autoinc_usage}= $Ytkit::Test::ISSUE40::after8019;
+  $prog->check_autoinc_usage;
+  is($prog->{status}->{str}, "OK", "8.0.19 and later style");
+
+  &reset_param;
   done_testing;
 };
 

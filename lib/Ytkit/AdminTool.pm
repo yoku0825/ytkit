@@ -34,7 +34,7 @@ FIXME
 EOS
 my $allow_extra_arvg= 1;
 my $config= _config();
-my $subcommand= [qw{ initialize force-initialize upgrade }];
+my $subcommand= [qw{ initialize upgrade }];
 
 sub new
 {
@@ -55,13 +55,6 @@ sub new
   elsif (grep { $self->{_command} eq $_ } @$subcommand)
   {
     $self->test_connect;
-
-    if ($self->{_command} eq "force-initialize")
-    {
-      $self->instance->exec_sql("DROP DATABASE IF EXISTS admintool");
-      ### Treat initialize after DROP DATABASE
-      $self->{_command}= "initialize";
-    }
 
     if ($self->{_command} eq "initialize")
     {

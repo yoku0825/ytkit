@@ -65,12 +65,11 @@ sub run
   _croakf("From-database %s does not exist.", $src) if !(grep { $src eq $_ } $self->fetch_dbname);
   _croakf("To-database %s already exists.", $dst) if grep { $dst eq $_ } $self->fetch_dbname;
 
-  _croakf("%s has TRIGGERS, not supporting.", $src) if $self->fetch_trigger_count;
-  _croakf("%s has Foreign Keys, not supporting.", $src) if $self->fetch_fk_count;
-  _croakf("%s has ROUTINES, not supporting.", $src) if $self->fetch_routine_count;
-  _croakf("%s has VIEWS, not supporting.", $src) if $self->fetch_view_count;
-  _croakf("%s has EVENTS, not supporting.", $src) if $self->fetch_event_count;
-
+  _croak_or_carp(_sprintf("%s has TRIGGERS, not supporting.", $src), $self->{ignore_trigger}) if $self->fetch_trigger_count;
+  _croak_or_carp(_sprintf("%s has Foreign Keys, not supporting.", $src), $self->{ignore_fk}) if $self->fetch_fk_count;
+  _croak_or_carp(_sprintf("%s has ROUTINES, not supporting.", $src), $self->{ignore_routine}) if $self->fetch_routine_count;
+  _croak_or_carp(_sprintf("%s has VIEWS, not supporting.", $src), $self->{ignore_view}) if $self->fetch_view_count;
+  _croak_or_carp(_sprintf("%s has EVENTS, not supporting.", $src), $self->{ignore_event}) if $self->fetch_event_count;
 
   $self->_do_or_echo('CREATE DATABASE `%s`', $dst);
   
@@ -80,6 +79,20 @@ sub run
   }
   
   $self->_do_or_echo('DROP DATABASE `%s`', $src);
+}
+
+sub _croak_or_carp
+{
+  my ($msg, $ignore)= @_;
+
+  if ($ignore)
+  {
+    _carpf($msg);
+  }
+  else
+  {
+    _croakf($msg);
+  }
 }
 
 sub fetch_tablename
@@ -164,6 +177,26 @@ sub _config
     to => { alias => ["destination", "dest", "dst", "to"],
               text  => "Database-name moving to",
               mandatory => 1 },
+    ignore_trigger => { alias => ["ignore-trigger", "ignore-triggers"],
+                        text  => "Force RENAME if --to has TRIGGERS.",
+                        noarg => 1,
+                        default => 0 },
+    ignore_event => { alias => ["ignore-event", "ignore-events"],
+                        text  => "Force RENAME if --to has EVENTS.",
+                        noarg => 1,
+                        default => 0 },
+    ignore_routine => { alias => ["ignore-routine", "ignore-routines"],
+                        text  => "Force RENAME if --to has ROUTINES.",
+                        noarg => 1,
+                        default => 0 },
+    ignore_fk => { alias => ["ignore-fk"],
+                   text  => "Force RENAME if --to has ROUTINES.",
+                   noarg => 1,
+                   default => 0 },
+    ignore_view => { alias => ["ignore-view", "ignore-views"],
+                   text  => "Force RENAME if --to has VIEWS.",
+                   noarg => 1,
+                   default => 0 },
     force => { alias => ["force", "f"],
                text => "Force RENAME if --to has TRIGGERS, EVENTS, ROUTINES, VIEWS, and Foreign Keys.",
                noarg => 1,

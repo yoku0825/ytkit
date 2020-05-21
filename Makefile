@@ -25,7 +25,7 @@ test:
 	prove
 
 .PHONY: fatpack
-fatpack: setup yt-alter-progress yt-binlog-groupby yt-collect yt-data-dumper yt-healthcheck yt-innostat yt-querystat yt-resource-collector yt-wait-replication yt-print-information yt-rename-database
+fatpack: setup yt-alter-progress yt-binlog-groupby yt-collect yt-data-dumper yt-healthcheck yt-innostat yt-querystat yt-resource-collector yt-wait-replication yt-print-information yt-extract yt-rename-database
 
 fatinstall:
 	cp fatpack/* $(INSTALL)/bin
@@ -43,7 +43,7 @@ define fatpack
 	rm -r fatlib
 endef
 
-MANDATORY_PACKAGE=lib/Ytkit/Config.pm lib/Ytkit/MySQLServer.pm lib/Ytkit/Config/File.pm lib/Ytkit/Config/Option.pm
+MANDATORY_PACKAGE=lib/Ytkit/Config.pm lib/Ytkit/MySQLServer.pm lib/Ytkit/Config/File.pm lib/Ytkit/Config/Option.pm lib/Ytkit/IO.pm
 
 yt-alter-progress: bin/yt-alter-progress lib/Ytkit/AlterProgress.pm $(MANDATORY_PACKAGE)
 	$(fatpack)
@@ -73,6 +73,9 @@ yt-wait-replication: bin/yt-wait-replication lib/Ytkit/WaitReplication.pm lib/Yt
 	$(fatpack)
 
 yt-print-information: bin/yt-print-information $(MANDATORY_PACKAGE)
+	$(fatpack)
+
+yt-extract: bin/yt-extract lib/Ytkit/Extract.pm $(MANDATORY_PACKAGE)
 	$(fatpack)
 
 yt-rename-database: bin/yt-rename-database lib/Ytkit/RenameDatabase.pm $(MANDATORY_PACKAGE)

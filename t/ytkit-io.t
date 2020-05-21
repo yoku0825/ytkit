@@ -30,7 +30,7 @@ require "$Bin/Test.pl";
 use Ytkit::IO;
 no warnings "once";
 
-subtest "Output message functions" => sub
+subtest "Output message functions without --force" => sub
 {
   subtest "no --silent and no --verbose" => sub
   {
@@ -99,6 +99,59 @@ subtest "Output message functions" => sub
 
     done_testing;
   };
+};
+
+subtest "Output message functions with --force(only effects _croakf)" => sub
+{
+  $ENV{ytkit_force}= 1;
+  subtest "no --silent and no --verbose" => sub
+  {
+    $ENV{ytkit_verbose}= Ytkit::IO::NORMAL;
+    ok(!(_infof("TEST")), "infof vs default should not be printed");
+    ok(_notef("TEST"), "notef vs default should be printed");
+    ok(_carpf("TEST"), "carpf vs default should be printed");
+    ok(!(_debugf("TEST")), "debugf vs default should not be printed");
+    ok(_croakf("TEST"), "croakf treats as carp");
+
+    done_testing;
+  };
+
+  subtest "--silent and no --verbose" => sub
+  {
+    $ENV{ytkit_verbose}= Ytkit::IO::SILENT;
+    ok(!(_infof("TEST")), "infof vs --silent should not be printed");
+    ok(!(_notef("TEST")), "notef vs --silent should not be printed");
+    ok(!(_carpf("TEST")), "carpf vs --silent should not be printed");
+    ok(!(_debugf("TEST")), "debugf vs --silent should not be printed");
+    ok(_croakf("TEST"), "croakf treats as carp");
+
+    done_testing;
+  };
+
+  subtest "no --silent and --verbose" => sub
+  {
+    $ENV{ytkit_verbose}= Ytkit::IO::VERBOSE;
+    ok(_infof("TEST"), "infof vs --verbose should be printed");
+    ok(_notef("TEST"), "notef vs --verbose should be printed");
+    ok(_carpf("TEST"), "carpf vs --verbose should be printed");
+    is(_debugf("TEST"), undef, "debugf vs --verbose should not be printed");
+    ok(_croakf("TEST"), "croakf treats as carp");
+
+    done_testing;
+  };
+
+  subtest "--verbose --verbose (twice)" => sub
+  {
+    $ENV{ytkit_verbose}= Ytkit::IO::DEBUG;
+    is(_infof("TEST"), "TEST", "infof vs --verbose should be printed");
+    is(_notef("TEST"), "TEST", "notef vs --verbose should be printed");
+    is(_carpf("TEST"), "TEST", "carpf vs --verbose should be printed");
+    is(_debugf("TEST"), "DEBUG: TEST\n", "debugf vs --verbose should be printed");
+    ok(_croakf("TEST"), "croakf treats as carp");
+
+    done_testing;
+  };
+  $ENV{ytkit_force}= 0;
 };
 
 subtest "Extract ARRAYref and HASHref" => sub

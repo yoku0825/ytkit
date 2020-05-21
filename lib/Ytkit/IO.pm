@@ -35,6 +35,7 @@ use constant
   DEBUG => 3,
 };
 $ENV{ytkit_verbose} //= NORMAL;
+$ENV{ytkit_force} //= 0;
 
 sub _notef ### NORMAL, VERBOSE, DEBUG (Not --silent)
 {
@@ -65,7 +66,16 @@ sub _croakf
   my ($format, @argv)= @_;
 
   my $msg= _sprintf($format, @argv);
-  croak($msg);
+
+  if ($ENV{ytkit_force})
+  {
+    ### with --force, falling back carp.
+    carp($msg) if !($ENV{HARNESS_ACTIVE});
+  }
+  else
+  {
+    croak($msg);
+  }
   return $msg; ### Maybe this is not returned.
 }
 

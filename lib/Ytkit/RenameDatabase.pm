@@ -27,9 +27,12 @@ use Ytkit::IO;
 
 my $synopsis= q{  $ yt-rename-database --host=mysql_host --port=mysql_port } .
               q{--user=mysql_account --password=mysql_password --from=d1 --to=d2 };
-my $script= sprintf("%s - Show SELECT statement which is extracted '*'", $0);
+my $script= sprintf("%s - Emulate RENAME DATABASE <from> TO <to>", $0);
 my $description= << "EOS";
-Emulate 'RENMAE DATABASE <from> TO <to>'
+Emulate 'RENMAE DATABASE <from> TO <to>' as RENAME TABLE statements.
+
+If you have TRIGGERS, ROUTINES, EVENTS, VIEWS and Foreign Keys in from-schema,
+please do NOT use this script because this doesn't care them.
 EOS
 my $allow_extra_arvg= 0;
 my $config= _config();
@@ -62,6 +65,13 @@ sub run
   _croakf("From-database %s does not exist.", $src) if !(grep { $src eq $_ } $self->fetch_dbname);
   _croakf("To-database %s already exists.", $dst) if grep { $dst eq $_ } $self->fetch_dbname;
 
+  _croakf("%s has TRIGGERS, not supporting.", $src) if $self->fetch_trigger_count;
+  _croakf("%s has Foreign Keys, not supporting.", $src) if $self->fetch_fk_count;
+  _croakf("%s has ROUTINES, not supporting.", $src) if $self->fetch_routine_count;
+  _croakf("%s has VIEWS, not supporting.", $src) if $self->fetch_view_count;
+  _croakf("%s has EVENTS, not supporting.", $src) if $self->fetch_event_count;
+
+
   $self->_do_or_echo('CREATE DATABASE `%s`', $dst);
   
   foreach ($self->fetch_tablename)
@@ -84,6 +94,41 @@ sub fetch_dbname
   my ($self)= @_;
   my $sql= "SELECT schema_name AS schema_name FROM information_schema.schemata";
   return map { $_->{schema_name} } @{$self->instance->query_arrayref($sql)}
+}
+
+sub fetch_trigger_count
+{
+  my ($self)= @_;
+  my $sql= "SELECT COUNT(*) AS c FROM information_schema.triggers WHERE trigger_schema = ?";
+  return $self->instance->query_arrayref($sql, $self->{from})->[0]->{c};
+}
+
+sub fetch_fk_count
+{
+  my ($self)= @_;
+  my $sql= "SELECT COUNT(*) AS c FROM information_schema.referential_constraints WHERE constraint_schema = ? OR unique_constraint_schema = ?";
+  return $self->instance->query_arrayref($sql, $self->{from}, $self->{from})->[0]->{c};
+}
+
+sub fetch_routine_count
+{
+  my ($self)= @_;
+  my $sql= "SELECT COUNT(*) AS c FROM information_schema.routines WHERE routine_schema = ?";
+  return $self->instance->query_arrayref($sql, $self->{from})->[0]->{c};
+}
+
+sub fetch_view_count
+{
+  my ($self)= @_;
+  my $sql= "SELECT COUNT(*) AS c FROM information_schema.views WHERE table_schema = ?";
+  return $self->instance->query_arrayref($sql, $self->{from})->[0]->{c};
+}
+
+sub fetch_event_count
+{
+   my ($self)= @_;
+  my $sql= "SELECT COUNT(*) AS c FROM information_schema.events WHERE event_schema = ?";
+  return $self->instance->query_arrayref($sql, $self->{from})->[0]->{c};
 }
 
 sub _do_or_echo
@@ -119,6 +164,11 @@ sub _config
     to => { alias => ["destination", "dest", "dst", "to"],
               text  => "Database-name moving to",
               mandatory => 1 },
+    force => { alias => ["force", "f"],
+               text => "Force RENAME if --to has TRIGGERS, EVENTS, ROUTINES, VIEWS, and Foreign Keys.",
+               noarg => 1,
+               default => 0,
+               isa => sub { $ENV{ytkit_force}= 1; }},
   };
 
   my $config= Ytkit::Config->new({ %$own_option, 

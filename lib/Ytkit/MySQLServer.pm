@@ -438,12 +438,13 @@ sub query_arrayref
     my $conn= $self->conn;
     return undef if $self->error;
 
+    my $buff;
     eval
     {
-      _debugf("Querying: %s (%s)", $sql, join(", ", @argv));
       local $SIG{ALRM}= sub { _croakf(ALRM_MSG) };
-      $self->{"_" . ${caller_name}}= $conn->selectall_arrayref($sql, {Slice => {}}, @argv);
+      $buff= $self->_real_query_arrayref($sql, @argv);
     };
+    $self->{"_" . ${caller_name}}= $buff;
 
     ### Disable alarm.
     alarm(0);
@@ -464,6 +465,22 @@ sub query_arrayref
     $self->check_warnings;
   }
   return $self->{"_" . ${caller_name}};
+}
+
+sub _real_query_arrayref
+{
+  my ($self, $sql, @argv)= @_;
+
+  _debugf("Querying: %s (%s)", $sql, join(", ", @argv));
+  return $self->conn->selectall_arrayref($sql, {Slice => {}}, @argv);
+}
+
+sub _real_query_hashref
+{
+  my ($self, $sql, $key, @argv)= @_;
+
+  _debugf("Querying: %s (%s)", $sql, join(", ", @argv));
+  return $self->conn->selectall_hashref($sql, [$key], @argv);
 }
 
 sub query_hashref
@@ -499,12 +516,13 @@ sub query_hashref
     my $conn= $self->conn;
     return undef if $self->error;
 
+    my $buff;
     eval
     {
       local $SIG{ALRM}= sub { _croakf(ALRM_MSG) };
-      _debugf("Querying: %s (%s)", $sql, join(", ", @argv));
-      $self->{"_" . ${caller_name}}= $conn->selectall_hashref($sql, [$key], @argv);
+      $buff= $self->_real_query_hashref($sql, $key, @argv);
     };
+    $self->{"_" . ${caller_name}}= $buff;
 
     if ($@)
     {
@@ -732,7 +750,7 @@ sub fetch_innodb_lock_waits
   {
     ### 5.0, 4.1, 4.0, .. are not supported.
     $self->errno(ERRNO_INTERNAL);
-    $self->error("Unsupported version for fetch_innodb_lock_waits");
+    $self->error(_sprintf("Unsupported version %s for fetch_innodb_lock_waits", $self->mysqld_version));
     return undef;
   }
 

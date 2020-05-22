@@ -34,7 +34,7 @@ my $test=
   #"5.0.96" => { mysqld => "/usr/mysql/5.0.96/libexec/mysqld", mysql_install_db => "/usr/mysql/5.0.96/bin/mysql_install_db" },
   #"5.1.72" => { mysqld => "/usr/mysql/5.1.73/libexec/mysqld", mysql_install_db => "/usr/mysql/5.1.73/bin/mysql_install_db" },
   #"5.5.62" => { mysqld => "/usr/mysql/5.5.62/bin/mysqld", mysql_install_db => "/usr/mysql/5.5.62/scripts/mysql_install_db" },
-  #"5.6.48" => { mysqld => "/usr/mysql/5.6.48/bin/mysqld", mysql_install_db => "/usr/mysql/5.6.46/scripts/mysql_install_db" },
+  "5.6.48" => { mysqld => "/usr/mysql/5.6.48/bin/mysqld", mysql_install_db => "/usr/mysql/5.6.48/scripts/mysql_install_db" },
   "5.7.30" => { mysqld => "/usr/mysql/5.7.30/bin/mysqld" },
   "8.0.20" => { mysqld => "/usr/mysql/8.0.20/bin/mysqld" },
 };
@@ -61,14 +61,14 @@ foreach my $version (sort(keys(%$test)))
     my @method   = `grep "^sub" $file_path | awk '{print \$2}'`;
     my @ignore   = qw{ conn new DESTROY query_arrayref query_hashref 
                        warning error show_grants exec_sql valueof 
-                       errno _print_table _print_vtable clear_cache
-                       describe_table };
+                       errno clear_cache describe_table }; ### Almost cases are 'need argument(s)'
     
     foreach my $func (@method)
     {
       chomp($func);
       next if !($func);
       next if grep { $func eq $_ } @ignore;
+      next if substr($func, 0, 1) eq "_"; ### private methods
     
       eval
       {

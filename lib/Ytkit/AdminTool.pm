@@ -49,33 +49,45 @@ sub new
   bless $self => $class;
   $self->handle_help;
 
-  if (!($self->{_command}))
+  return $self;
+}
+
+sub run
+{
+  my ($self)= @_;
+  my @argv= @{$self->{_config}->{left_argv}};
+  my $command= shift(@argv);
+
+  if (!($command))
   {
     _croakf("yt-admin have to specify SUBCOMMAND(%s)", $subcommand);
   }
-  elsif (grep { $self->{_command} eq $_ } @$subcommand)
+  elsif (grep { $command eq $_ } @$subcommand)
   {
     $self->test_connect;
 
-    if ($self->{_command} eq "initialize")
+    if ($command eq "initialize")
     {
       $self->create_database_admintool;
-      ### Treat upgrade after CREATE DATABAse
-      $self->{_command}= "upgrade";
+      ### Treat "upgrade" after CREATE DATABASE
+      $command= "upgrade";
     }
 
-    if ($self->{_command} eq "upgrade")
+    if ($command eq "upgrade")
     {
       ### Re-create adminview
       $self->create_database_adminview;
     }
+    else
+    {
+      ### another commands
+      $self->commands(@argv);
+    }
   }
   else
   {
-    _croakf("Unknown SUBCOMMAND %s (should be one of %s)", $self->{_command}, $subcommand);
+    _croakf("Unknown SUBCOMMAND %s (should be one of %s)", $command, $subcommand);
   }
-
-  return $self;
 }
 
 sub create_database_admintool

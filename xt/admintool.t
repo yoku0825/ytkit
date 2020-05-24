@@ -43,13 +43,13 @@ subtest "Testing via 8.0" => sub
                                    "--user=root",
                                    "initialize");
   my $schema_count= "SELECT COUNT(*) AS c FROM information_schema.schemata WHERE schema_name IN ('admintool', 'adminview')";
-  is($admin->instance->query_arrayref($schema_count)->[0]->{c}, 2, "Schema created");
-$DB::single= 1;
+  is($admin->instance->_real_query_arrayref($schema_count)->[0]->{c}, 2, "Schema created");
+
   my $admintool_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'admintool'";
-  is($admin->instance->query_arrayref($admintool_count)->[0]->{c}, 9, "admintool tables");
+  is($admin->instance->_real_query_arrayref($admintool_count)->[0]->{c}, 9, "admintool tables");
 
   my $adminview_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'adminview'";
-  is($admin->instance->query_arrayref($admintool_count)->[0]->{c}, 15, "adminview tables");
+  is($admin->instance->_real_query_arrayref($adminview_count)->[0]->{c}, 15, "adminview tables");
 
   done_testing;
 };
@@ -62,13 +62,13 @@ subtest "Testing via 5.7" => sub
                                    "--user=root",
                                    "initialize");
   my $schema_count= "SELECT COUNT(*) AS c FROM information_schema.schemata WHERE schema_name IN ('admintool', 'adminview')";
-  is($admin->instance->query_arrayref($schema_count)->[0]->{c}, 2, "Schema created");
+  is($admin->instance->_real_query_arrayref($schema_count)->[0]->{c}, 2, "Schema created");
 
   my $admintool_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'admintool'";
-  is($admin->instance->query_arrayref($admintool_count)->[0]->{c}, 9, "admintool tables");
+  is($admin->instance->_real_query_arrayref($admintool_count)->[0]->{c}, 9, "admintool tables");
 
   my $adminview_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'adminview'";
-  is($admin->instance->query_arrayref($admintool_count)->[0]->{c}, 11, "adminview tables");
+  is($admin->instance->_real_query_arrayref($adminview_count)->[0]->{c}, 11, "adminview tables");
 
   done_testing;
 };

@@ -321,6 +321,25 @@ CREATE SQL SECURITY INVOKER VIEW `variable_list` AS
 EOS
 ;
 
+my $daily_table_status_list= << 'EOS'
+CREATE SQL SECURITY INVOKER VIEW `daily_table_status_list` AS 
+  SELECT CAST(`table_status_list`.`last_update` AS DATE) AS `_date`,
+         `table_status_list`.`hostname` AS `hostname`,
+         `table_status_list`.`ipaddr` AS `ipaddr`,
+         `table_status_list`.`port` AS `port`,
+         `table_status_list`.`datadir` AS `datadir`,
+         `table_status_list`.`table_schema` AS `table_schema`,
+         `table_status_list`.`table_name` AS `table_name`,
+         AVG(`table_status_list`.`table_rows`) AS `table_rows`,
+         AVG(`table_status_list`.`data_length`) AS `data_length`,
+         AVG(`table_status_list`.`index_length`) AS `index_length`,
+         AVG(`table_status_list`.`data_free`) AS `data_free`
+  FROM `table_status_list`
+  GROUP BY `_date`, `hostname`, `ipaddr`, `port`, `datadir`, `table_schema`, `table_name`
+EOS
+;
+
+
 ### adminview_schema (for 8.0.11 and later)
 my $recent_status_list= << 'EOS'
 CREATE SQL SECURITY INVOKER VIEW `recent_status_list` AS
@@ -419,7 +438,7 @@ sub adminview_schema
 {
   return [$datadir_list, $hostname_list, $version_list, $instance_list, $grant_list,
           $is_metrics_list, $ps_digest_list, $ps_table_list, $status_list, $table_status_list,
-          $variable_list];
+          $variable_list, $daily_table_status_list];
 }
 
 sub adminview_schema_ex

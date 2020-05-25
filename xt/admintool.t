@@ -50,7 +50,7 @@ subtest "Testing via 8.0" => sub
   is($admin->instance->_real_query_arrayref($admintool_count)->[0]->{c}, 9, "admintool tables");
 
   my $adminview_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'adminview'";
-  is($admin->instance->_real_query_arrayref($adminview_count)->[0]->{c}, 15, "adminview tables");
+  is($admin->instance->_real_query_arrayref($adminview_count)->[0]->{c}, 16, "adminview tables");
 
   done_testing;
 };
@@ -70,7 +70,7 @@ subtest "Testing via 5.7" => sub
   is($admin->instance->_real_query_arrayref($admintool_count)->[0]->{c}, 9, "admintool tables");
 
   my $adminview_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'adminview'";
-  is($admin->instance->_real_query_arrayref($adminview_count)->[0]->{c}, 11, "adminview tables");
+  is($admin->instance->_real_query_arrayref($adminview_count)->[0]->{c}, 12, "adminview tables");
 
   done_testing;
 };

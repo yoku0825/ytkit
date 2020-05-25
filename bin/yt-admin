@@ -29,7 +29,7 @@ use Ytkit::AdminTool;
 
 if (my $prog= Ytkit::AdminTool->new(@ARGV))
 {
-  #$prog->result;
+  $prog->run;
 }
 else
 {

@@ -22,6 +22,8 @@ use strict;
 use warnings;
 use utf8;
 
+
+### admintool_schema
 my $instance_info= << 'EOS'
 CREATE TABLE `instance_info` (
   `ipaddr` varchar(15) NOT NULL,
@@ -163,12 +165,8 @@ CREATE TABLE `status_info` (
 EOS
 ;
 
-sub admintool_schema
-{
-  return [$instance_info, $variable_info, $table_status_info, $grant_info, $is_innodb_metrics,
-          $ps_digest_info, $ps_table_info, $slave_info, $status_info];
-}
 
+### adminview_schema(common)
 my $datadir_list= << 'EOS'
 CREATE SQL SECURITY INVOKER VIEW `datadir_list` AS
   SELECT `admintool`.`variable_info`.`ipaddr` AS `ipaddr`,
@@ -323,13 +321,7 @@ CREATE SQL SECURITY INVOKER VIEW `variable_list` AS
 EOS
 ;
 
-sub adminview_schema
-{
-  return [$datadir_list, $hostname_list, $version_list, $instance_list, $grant_list,
-          $is_metrics_list, $ps_digest_list, $ps_table_list, $status_list, $table_status_list,
-          $variable_list];
-}
-
+### adminview_schema (for 8.0.11 and later)
 my $recent_status_list= << 'EOS'
 CREATE SQL SECURITY INVOKER VIEW `recent_status_list` AS
   WITH ranked_status_list AS (
@@ -414,10 +406,27 @@ CREATE SQL SECURITY INVOKER VIEW `last_90_days_calendar` AS
 EOS
 ;
 
+
+
+
+sub admintool_schema
+{
+  return [$instance_info, $variable_info, $table_status_info, $grant_info, $is_innodb_metrics,
+          $ps_digest_info, $ps_table_info, $slave_info, $status_info];
+}
+
+sub adminview_schema
+{
+  return [$datadir_list, $hostname_list, $version_list, $instance_list, $grant_list,
+          $is_metrics_list, $ps_digest_list, $ps_table_list, $status_list, $table_status_list,
+          $variable_list];
+}
+
 sub adminview_schema_ex
 {
   ### For 8.0.11 and later.
   return [$recent_status_list, $recent_table_status_list, $last_30_days_calendar, $last_90_days_calendar];
 }
+
 
 return 1;

@@ -35,7 +35,7 @@ FIXME
 EOS
 my $allow_extra_arvg= 1;
 my $config= _config();
-my $subcommand= [qw{ initialize upgrade }];
+my $subcommand= [qw{ initialize upgrade register }];
 
 sub new
 {
@@ -69,19 +69,35 @@ sub run
     if ($command eq "initialize")
     {
       $self->create_database_admintool;
-      ### Treat "upgrade" after CREATE DATABASE
-      $command= "upgrade";
+      $self->create_database_adminview;
     }
-
-    if ($command eq "upgrade")
+    elsif ($command eq "upgrade")
     {
       ### Re-create adminview
       $self->create_database_adminview;
     }
+    elsif ($command eq "register")
+    {
+      ### register expects "ipaddr:port" or "ipaddr" (port is 3306 implicitly)
+      foreach (@argv)
+      {
+        _debugf($_);
+        my ($ipaddr, $port)= $_ =~ /^([^:]+)(?::)?(\d+)?$/;
+        _croakf("Invalid host (%s)", $_) if !($ipaddr);
+        $port //= 3306;
+        _infof("Registering Host: %s, Port: %d", $ipaddr, $port);
+
+        ### INSERT INTO admintool.instance_info
+        $self->instance->exec_sql("INSERT INTO admintool.instance_info " .
+                                  "(ipaddr, port, last_update, monitoring_enable, last_status) " .
+                                  "VALUES (?, ?, NOW(), DEFAULT, DEFAULT)", undef,
+                                  $ipaddr, $port);
+      }
+    }
     else
     {
-      ### another commands
-      $self->commands(@argv);
+      ### If you're here, $subcommand and implementation is inconsistent.
+      _croakf("Unimplemented SUBCOMMAND(%s), this may be BUG", $command);
     }
   }
   else
@@ -142,14 +158,14 @@ sub create_database_adminview
   }
 }
 
-
-
-
-
 sub _config
 {
   my $own_option=
   {
+    monitor_user => { alias => ["monitor_user"],
+                      text  => "MySQL Username for healthcheck, collect, etc." },
+    monitor_password => { alias => ["monitor_password"],
+                          text  => "Passowrd correspond for --monitor-user" },
   };
 
   my $config= Ytkit::Config->new({ %$own_option, 

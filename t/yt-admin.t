@@ -32,9 +32,9 @@ no warnings "once";
 use_ok("Ytkit::AdminTool");
 use Ytkit::IO;
 
-is(scalar(@{Ytkit::AdminTool::DDL::admintool_schema()}), 9, "9 tables in admintool");
+is(scalar(@{Ytkit::AdminTool::DDL::admintool_schema()}), 10, "10 tables in admintool");
 is(scalar(@{Ytkit::AdminTool::DDL::adminview_schema()}), 12, "12 views in adminview");
-is(scalar(@{Ytkit::AdminTool::DDL::adminview_schema_ex()}), 4, "4 views in adminview(8.0 only)");
+is(scalar(@{Ytkit::AdminTool::DDL::adminview_schema_ex()}), 6, "6 views in adminview(8.0 only)");
 
 
 done_testing;

@@ -42,15 +42,16 @@ subtest "Testing via 8.0" => sub
                                    "--socket",  $mysqld->base_dir . "/tmp/mysql.sock",
                                    "--user=root",
                                    "initialize");
+$DB::single= 1;
   $admin->run;
   my $schema_count= "SELECT COUNT(*) AS c FROM information_schema.schemata WHERE schema_name IN ('admintool', 'adminview')";
   is($admin->instance->_real_query_arrayref($schema_count)->[0]->{c}, 2, "Schema created");
 
   my $admintool_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'admintool'";
-  is($admin->instance->_real_query_arrayref($admintool_count)->[0]->{c}, 9, "Create admintool tables");
+  is($admin->instance->_real_query_arrayref($admintool_count)->[0]->{c}, 10, "Create admintool tables");
 
   my $adminview_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'adminview'";
-  is($admin->instance->_real_query_arrayref($adminview_count)->[0]->{c}, 16, "Create adminview tables");
+  is($admin->instance->_real_query_arrayref($adminview_count)->[0]->{c}, 18, "Create adminview tables");
 
   done_testing;
 };
@@ -67,7 +68,7 @@ subtest "Testing via 5.7" => sub
   is($admin->instance->_real_query_arrayref($schema_count)->[0]->{c}, 2, "Schema created");
 
   my $admintool_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'admintool'";
-  is($admin->instance->_real_query_arrayref($admintool_count)->[0]->{c}, 9, "Create admintool tables");
+  is($admin->instance->_real_query_arrayref($admintool_count)->[0]->{c}, 10, "Create admintool tables");
 
   my $adminview_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'adminview'";
   is($admin->instance->_real_query_arrayref($adminview_count)->[0]->{c}, 12, "Create adminview tables");

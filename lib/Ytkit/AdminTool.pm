@@ -92,6 +92,7 @@ sub run
                                   "(ipaddr, port, last_update, monitoring_enable, last_status) " .
                                   "VALUES (?, ?, NOW(), DEFAULT, DEFAULT)", undef,
                                   $ipaddr, $port);
+        $self->instance->raise_if_error;
       }
     }
     else
@@ -124,9 +125,28 @@ sub create_database_admintool
     foreach (@{Ytkit::AdminTool::DDL::admintool_schema()})
     {
       $self->instance->exec_sql($_);
-      _croakf($self->instance->error) if $self->instance->error;
-      _carpf($self->instance->warning) if @{$self->instance->warning};
+      $self->instance->raise_if_error;
     }
+
+    ### INSERT initial data
+    my $initial_data=
+    {
+      healthcheck => [qw{ role
+                          uptime_enable uptime_warning uptime_critial
+                          slave_status_enable slave_status_warning slave_status_critial
+                          long_query_enable long_query_warning long_query_critial
+                          long_query_min_warning_thread long_query_min_critial_thread long_query_exclude_host
+                          connection_count_enable connection_count_warning connection_count_critial
+                          autoinc_usage_enable autoinc_usage_warning autoinc_usage_critial } ],
+      collect => [qw{ table_size_enable table_size_limit
+                      table_latency_enable table_latency_limit
+                      show_status_enable
+                      show_variables_enable
+                      show_slave_enable
+                      show_grants_enable
+                      query_latency_enable query_latency_limit
+                      innodb_metrics_enable } ],
+    };
   }
 }
 
@@ -142,8 +162,7 @@ sub create_database_adminview
   foreach (@{Ytkit::AdminTool::DDL::adminview_schema()})
   {
     $self->instance->exec_sql($_);
-    _croakf($self->instance->error) if $self->instance->error;
-    _carpf($self->instance->warning) if @{$self->instance->warning};
+    $self->instance->raise_if_error;
   }
 
   ### Only 8.0 can use WITH RECURSIVE and WINDOW functions
@@ -152,8 +171,7 @@ sub create_database_adminview
     foreach (@{Ytkit::AdminTool::DDL::adminview_schema_ex()})
     {
       $self->instance->exec_sql($_);
-      _croakf($self->instance->error) if $self->instance->error;
-      _carpf($self->instance->warning) if @{$self->instance->warning};
+      $self->instance->raise_if_error;
     }
   }
 }

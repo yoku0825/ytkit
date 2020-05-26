@@ -111,6 +111,8 @@ sub create_database_admintool
 {
   my ($self)= @_;
 
+  _notef("Starting initializing");
+  _infof("Starting CREATE DATABASE admintool");
   $self->instance->exec_sql("CREATE DATABASE IF NOT EXISTS admintool");
 
   if (@{$self->instance->warning})
@@ -121,33 +123,45 @@ sub create_database_admintool
   }
   else
   {
+    _infof("Starting CREATE TABLE in admintool");
     $self->instance->exec_sql("USE admintool");
     foreach (@{Ytkit::AdminTool::DDL::admintool_schema()})
     {
       $self->instance->exec_sql($_);
       $self->instance->raise_if_error;
     }
+    _infof("Finished CREATE TABLE in admintool");
 
-    ### INSERT initial data
-    my $initial_data=
-    {
-      healthcheck => [qw{ role
-                          uptime_enable uptime_warning uptime_critial
-                          slave_status_enable slave_status_warning slave_status_critial
-                          long_query_enable long_query_warning long_query_critial
-                          long_query_min_warning_thread long_query_min_critial_thread long_query_exclude_host
-                          connection_count_enable connection_count_warning connection_count_critial
-                          autoinc_usage_enable autoinc_usage_warning autoinc_usage_critial } ],
-      collect => [qw{ table_size_enable table_size_limit
-                      table_latency_enable table_latency_limit
-                      show_status_enable
-                      show_variables_enable
-                      show_slave_enable
-                      show_grants_enable
-                      query_latency_enable query_latency_limit
-                      innodb_metrics_enable } ],
-    };
+    _infof("Starting to fill initial data");
+    $self->fill_initial_data;
+    _infof("Finished to fill initial data");
+
+   _notef("Finished initializing");
   }
+}
+
+sub fill_initial_data
+{
+  my ($self)= @_;
+
+  my $initial_data=
+  {
+    healthcheck => [qw{ role
+                        uptime_enable uptime_warning uptime_critial
+                        slave_status_enable slave_status_warning slave_status_critial
+                        long_query_enable long_query_warning long_query_critial
+                        long_query_min_warning_thread long_query_min_critial_thread long_query_exclude_host
+                        connection_count_enable connection_count_warning connection_count_critial
+                        autoinc_usage_enable autoinc_usage_warning autoinc_usage_critial } ],
+    collect => [qw{ table_size_enable table_size_limit
+                    table_latency_enable table_latency_limit
+                    show_status_enable
+                    show_variables_enable
+                    show_slave_enable
+                    show_grants_enable
+                    query_latency_enable query_latency_limit
+                    innodb_metrics_enable } ],
+  };
 }
 
 sub create_database_adminview
@@ -155,10 +169,13 @@ sub create_database_adminview
   my ($self)= @_;
 
   ### Always Re-CREATE
+  _notef("Starting to upgrade adminview");
+  _infof("Starting (Re-)CREATE DATABASE adminview");
   $self->instance->exec_sql("DROP DATABASE IF EXISTS adminview");
   $self->instance->exec_sql("CREATE DATABASE adminview");
 
   $self->instance->exec_sql("USE adminview");
+  _infof("Starting CREATE VIEW in adminview");
   foreach (@{Ytkit::AdminTool::DDL::adminview_schema()})
   {
     $self->instance->exec_sql($_);
@@ -174,6 +191,9 @@ sub create_database_adminview
       $self->instance->raise_if_error;
     }
   }
+  _infof("Finished CREATE VIEW in adminview");
+  _infof("Finished (Re-)CREATE DATABASE adminview");
+  _notef("Finished to upgrade adminview");
 }
 
 sub _config

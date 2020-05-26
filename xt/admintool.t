@@ -42,7 +42,7 @@ subtest "Testing via 8.0" => sub
                                    "--socket",  $mysqld->base_dir . "/tmp/mysql.sock",
                                    "--user=root",
                                    "initialize");
-$DB::single= 1;
+
   $admin->run;
   my $schema_count= "SELECT COUNT(*) AS c FROM information_schema.schemata WHERE schema_name IN ('admintool', 'adminview')";
   is($admin->instance->_real_query_arrayref($schema_count)->[0]->{c}, 2, "Schema created");

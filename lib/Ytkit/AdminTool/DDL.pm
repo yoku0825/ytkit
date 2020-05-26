@@ -438,6 +438,8 @@ my $table_status_list_analyze_30= << 'EOS'
 CREATE SQL SECURITY INVOKER VIEW `table_status_list_analyze_30` AS
   SELECT `last_30_days_calendar`.`_date` AS `_date`,
          `daily_table_status_list`.`hostname` AS `hostname`,
+         `daily_table_status_list`.`ipaddr` AS `ipaddr`,
+         `daily_table_status_list`.`port` AS `port`,
          `daily_table_status_list`.`datadir` AS `datadir`,
          `daily_table_status_list`.`table_schema` AS `table_schema`,
          `daily_table_status_list`.`table_name` AS `table_name`,
@@ -457,6 +459,8 @@ my $table_status_list_analyze_90= << 'EOS'
 CREATE SQL SECURITY INVOKER VIEW `table_status_list_analyze_90` AS
   SELECT `last_90_days_calendar`.`_date` AS `_date`,
          `daily_table_status_list`.`hostname` AS `hostname`,
+         `daily_table_status_list`.`ipaddr` AS `ipaddr`,
+         `daily_table_status_list`.`port` AS `port`,
          `daily_table_status_list`.`datadir` AS `datadir`,
          `daily_table_status_list`.`table_schema` AS `table_schema`,
          `daily_table_status_list`.`table_name` AS `table_name`,

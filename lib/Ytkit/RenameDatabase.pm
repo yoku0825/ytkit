@@ -153,8 +153,7 @@ sub _do_or_echo
   {
     _infof("Executing '%s'\n", $sql);
     $self->instance->exec_sql($sql);
-    _croakf($self->instance->error) if $self->instance->error;
-    _carpf($self->instance->warning) if @{$self->instance->warning};
+    $self->instance->raise_if_error;
   }
   else
   {

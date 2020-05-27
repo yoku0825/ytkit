@@ -61,7 +61,7 @@ subtest "Output message functions without --force" => sub
 
     eval
     {
-      _croakf("TEST\n");
+      _croakf(TEST_STR);
     };
     ok($@, "croakf vs --silent should be croaked");
 
@@ -91,7 +91,7 @@ subtest "Output message functions without --force" => sub
     is(_infof(TEST_STR), TEST_STR, "infof vs --verbose should be printed");
     is(_notef(TEST_STR), TEST_STR, "notef vs --verbose should be printed");
     is(_carpf(TEST_STR), TEST_STR, "carpf vs --verbose should be printed");
-    is(_debugf("TEST"), DEBUG_STR, "debugf vs --verbose should be printed");
+    is(_debugf(TEST_STR), DEBUG_STR, "debugf vs --verbose should be printed");
 
     eval
     {
@@ -136,7 +136,7 @@ subtest "Output message functions with --force(only effects _croakf)" => sub
     is(_infof(TEST_STR), TEST_STR, "infof vs --verbose should be printed");
     is(_notef(TEST_STR), TEST_STR, "notef vs --verbose should be printed");
     is(_carpf(TEST_STR), TEST_STR, "carpf vs --verbose should be printed");
-    is(_debugf("TEST"), undef, "debugf vs --verbose should not be printed");
+    is(_debugf(TEST_STR), undef, "debugf vs --verbose should not be printed");
     is(_croakf(TEST_STR), TEST_STR, "croakf treats as carp");
 
     done_testing;
@@ -148,7 +148,7 @@ subtest "Output message functions with --force(only effects _croakf)" => sub
     is(_infof(TEST_STR), TEST_STR, "infof vs --verbose should be printed");
     is(_notef(TEST_STR), TEST_STR, "notef vs --verbose should be printed");
     is(_carpf(TEST_STR), TEST_STR, "carpf vs --verbose should be printed");
-    is(_debugf("TEST"), DEBUG_STR, "debugf vs --verbose should be printed");
+    is(_debugf(TEST_STR), DEBUG_STR, "debugf vs --verbose should be printed");
     is(_croakf(TEST_STR), TEST_STR, "croakf treats as carp");
 
     done_testing;
@@ -173,7 +173,7 @@ subtest "Extract ARRAYref and HASHref" => sub
   my $mixed= { a => "b", c => ["d", "e", "f"], g => "h" };
   is(Ytkit::IO::__extract_ref($mixed), q|{a => b, c => [d, e, f], g => h}|, "Mixed reference");
 
-  is(_notef("bbb%sqqq", $mixed), q|bbb{a => b, c => [d, e, f], g => h}qqq|, "Print via _notef");
+  is(_notef("bbb%sqqq", $mixed), qq|bbb{a => b, c => [d, e, f], g => h}qqq\n|, "Print via _notef");
 
   done_testing;
 };

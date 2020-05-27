@@ -58,7 +58,7 @@ sub _debugf ### DEBUG (Only --verbose --verbose (twice))
   my ($format, @argv)= @_;
 
   return undef if $ENV{ytkit_verbose} < DEBUG;
-  return __out_stderr("DEBUG: %s\n", _sprintf($format, @argv));
+  return __out_stderr("DEBUG: %s", _sprintf($format, @argv));
 }
 
 sub _croakf
@@ -94,6 +94,7 @@ sub __out_stdout
   my ($format, @argv)= @_;
 
   my $msg= _sprintf($format, @argv);
+  $msg .= "\n" if (substr($msg, -1, 1) ne "\n");
   print(STDOUT $msg) if !($ENV{HARNESS_ACTIVE});
   return $msg;
 }
@@ -103,6 +104,7 @@ sub __out_stderr
   my ($format, @argv)= @_;
 
   my $msg= _sprintf($format, @argv);
+  $msg .= "\n" if (substr($msg, -1, 1) ne "\n");
   print(STDERR $msg) if !($ENV{HARNESS_ACTIVE});
   return $msg;
 }

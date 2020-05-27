@@ -28,6 +28,8 @@ use lib "$Bin/../lib";
 require "$Bin/Test.pl";
 
 use Ytkit::IO;
+use constant TEST_STR => "TEST\n";
+use constant DEBUG_STR => "DEBUG: TEST\n";
 no warnings "once";
 
 subtest "Output message functions without --force" => sub
@@ -35,14 +37,14 @@ subtest "Output message functions without --force" => sub
   subtest "no --silent and no --verbose" => sub
   {
     $ENV{ytkit_verbose}= Ytkit::IO::NORMAL;
-    ok(!(_infof("TEST")), "infof vs default should not be printed");
-    ok(_notef("TEST"), "notef vs default should be printed");
-    ok(_carpf("TEST"), "carpf vs default should be printed");
-    ok(!(_debugf("TEST")), "debugf vs default should not be printed");
+    is(_infof(TEST_STR), undef, "infof vs default should not be printed");
+    is(_notef(TEST_STR), TEST_STR, "notef vs default should be printed");
+    is(_carpf(TEST_STR), TEST_STR, "carpf vs default should be printed");
+    is(_debugf(TEST_STR), undef, "debugf vs default should not be printed");
 
     eval
     {
-      _croakf("TEST");
+      _croakf(TEST_STR);
     };
     ok($@, "croakf vs default should be croaked");
 
@@ -52,14 +54,14 @@ subtest "Output message functions without --force" => sub
   subtest "--silent and no --verbose" => sub
   {
     $ENV{ytkit_verbose}= Ytkit::IO::SILENT;
-    ok(!(_infof("TEST")), "infof vs --silent should not be printed");
-    ok(!(_notef("TEST")), "notef vs --silent should not be printed");
-    ok(!(_carpf("TEST")), "carpf vs --silent should not be printed");
-    ok(!(_debugf("TEST")), "debugf vs --silent should not be printed");
+    is(_infof(TEST_STR), undef, "infof vs --silent should not be printed");
+    is(_notef(TEST_STR), undef, "notef vs --silent should not be printed");
+    is(_carpf(TEST_STR), undef, "carpf vs --silent should not be printed");
+    is(_debugf(TEST_STR), undef, "debugf vs --silent should not be printed");
 
     eval
     {
-      _croakf("TEST");
+      _croakf("TEST\n");
     };
     ok($@, "croakf vs --silent should be croaked");
 
@@ -69,14 +71,14 @@ subtest "Output message functions without --force" => sub
   subtest "no --silent and --verbose" => sub
   {
     $ENV{ytkit_verbose}= Ytkit::IO::VERBOSE;
-    ok(_infof("TEST"), "infof vs --verbose should be printed");
-    ok(_notef("TEST"), "notef vs --verbose should be printed");
-    ok(_carpf("TEST"), "carpf vs --verbose should be printed");
-    is(_debugf("TEST"), undef, "debugf vs --verbose should not be printed");
+    is(_infof(TEST_STR), TEST_STR, "infof vs --verbose should be printed");
+    is(_notef(TEST_STR), TEST_STR, "notef vs --verbose should be printed");
+    is(_carpf(TEST_STR), TEST_STR, "carpf vs --verbose should be printed");
+    is(_debugf(TEST_STR), undef, "debugf vs --verbose should not be printed");
 
     eval
     {
-      _croakf("TEST");
+      _croakf(TEST_STR);
     };
     ok($@, "croakf vs --verbose should be croaked");
 
@@ -86,14 +88,14 @@ subtest "Output message functions without --force" => sub
   subtest "--verbose --verbose (twice)" => sub
   {
     $ENV{ytkit_verbose}= Ytkit::IO::DEBUG;
-    is(_infof("TEST"), "TEST", "infof vs --verbose should be printed");
-    is(_notef("TEST"), "TEST", "notef vs --verbose should be printed");
-    is(_carpf("TEST"), "TEST", "carpf vs --verbose should be printed");
-    is(_debugf("TEST"), "DEBUG: TEST\n", "debugf vs --verbose should be printed");
+    is(_infof(TEST_STR), TEST_STR, "infof vs --verbose should be printed");
+    is(_notef(TEST_STR), TEST_STR, "notef vs --verbose should be printed");
+    is(_carpf(TEST_STR), TEST_STR, "carpf vs --verbose should be printed");
+    is(_debugf("TEST"), DEBUG_STR, "debugf vs --verbose should be printed");
 
     eval
     {
-      _croakf("TEST");
+      _croakf(TEST_STR);
     };
     ok($@, "croakf vs --verbose --verbose should be croaked");
 
@@ -107,11 +109,11 @@ subtest "Output message functions with --force(only effects _croakf)" => sub
   subtest "no --silent and no --verbose" => sub
   {
     $ENV{ytkit_verbose}= Ytkit::IO::NORMAL;
-    ok(!(_infof("TEST")), "infof vs default should not be printed");
-    ok(_notef("TEST"), "notef vs default should be printed");
-    ok(_carpf("TEST"), "carpf vs default should be printed");
-    ok(!(_debugf("TEST")), "debugf vs default should not be printed");
-    ok(_croakf("TEST"), "croakf treats as carp");
+    is(_infof(TEST_STR), undef, "infof vs default should not be printed");
+    is(_notef(TEST_STR), TEST_STR, "notef vs default should be printed");
+    is(_carpf(TEST_STR), TEST_STR, "carpf vs default should be printed");
+    is(_debugf(TEST_STR), undef, "debugf vs default should not be printed");
+    is(_croakf(TEST_STR), TEST_STR, "croakf treats as carp");
 
     done_testing;
   };
@@ -119,11 +121,11 @@ subtest "Output message functions with --force(only effects _croakf)" => sub
   subtest "--silent and no --verbose" => sub
   {
     $ENV{ytkit_verbose}= Ytkit::IO::SILENT;
-    ok(!(_infof("TEST")), "infof vs --silent should not be printed");
-    ok(!(_notef("TEST")), "notef vs --silent should not be printed");
-    ok(!(_carpf("TEST")), "carpf vs --silent should not be printed");
-    ok(!(_debugf("TEST")), "debugf vs --silent should not be printed");
-    ok(_croakf("TEST"), "croakf treats as carp");
+    is(_infof(TEST_STR), undef, "infof vs --silent should not be printed");
+    is(_notef(TEST_STR), undef, "notef vs --silent should not be printed");
+    is(_carpf(TEST_STR), undef, "carpf vs --silent should not be printed");
+    is(_debugf(TEST_STR), undef, "debugf vs --silent should not be printed");
+    is(_croakf(TEST_STR), TEST_STR, "croakf treats as carp(Not die but printed)");
 
     done_testing;
   };
@@ -131,11 +133,11 @@ subtest "Output message functions with --force(only effects _croakf)" => sub
   subtest "no --silent and --verbose" => sub
   {
     $ENV{ytkit_verbose}= Ytkit::IO::VERBOSE;
-    ok(_infof("TEST"), "infof vs --verbose should be printed");
-    ok(_notef("TEST"), "notef vs --verbose should be printed");
-    ok(_carpf("TEST"), "carpf vs --verbose should be printed");
+    is(_infof(TEST_STR), TEST_STR, "infof vs --verbose should be printed");
+    is(_notef(TEST_STR), TEST_STR, "notef vs --verbose should be printed");
+    is(_carpf(TEST_STR), TEST_STR, "carpf vs --verbose should be printed");
     is(_debugf("TEST"), undef, "debugf vs --verbose should not be printed");
-    ok(_croakf("TEST"), "croakf treats as carp");
+    is(_croakf(TEST_STR), TEST_STR, "croakf treats as carp");
 
     done_testing;
   };
@@ -143,11 +145,11 @@ subtest "Output message functions with --force(only effects _croakf)" => sub
   subtest "--verbose --verbose (twice)" => sub
   {
     $ENV{ytkit_verbose}= Ytkit::IO::DEBUG;
-    is(_infof("TEST"), "TEST", "infof vs --verbose should be printed");
-    is(_notef("TEST"), "TEST", "notef vs --verbose should be printed");
-    is(_carpf("TEST"), "TEST", "carpf vs --verbose should be printed");
-    is(_debugf("TEST"), "DEBUG: TEST\n", "debugf vs --verbose should be printed");
-    ok(_croakf("TEST"), "croakf treats as carp");
+    is(_infof(TEST_STR), TEST_STR, "infof vs --verbose should be printed");
+    is(_notef(TEST_STR), TEST_STR, "notef vs --verbose should be printed");
+    is(_carpf(TEST_STR), TEST_STR, "carpf vs --verbose should be printed");
+    is(_debugf("TEST"), DEBUG_STR, "debugf vs --verbose should be printed");
+    is(_croakf(TEST_STR), TEST_STR, "croakf treats as carp");
 
     done_testing;
   };

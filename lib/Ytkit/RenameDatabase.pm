@@ -60,7 +60,7 @@ sub run
   my $src= $self->{from};
   my $dst= $self->{to};
 
-  _notef("Emulating RENAME DATABASE %s TO %s\n", $src, $dst);
+  _notef("-- Emulating RENAME DATABASE %s TO %s\n", $src, $dst);
 
   _croakf("From-database %s does not exist.", $src) if !(grep { $src eq $_ } $self->fetch_dbname);
   _croakf("To-database %s already exists.", $dst) if grep { $dst eq $_ } $self->fetch_dbname;

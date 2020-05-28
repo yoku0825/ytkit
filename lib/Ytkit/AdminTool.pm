@@ -26,6 +26,7 @@ use base "Ytkit";
 use Ytkit::IO;
 use Ytkit::MySQLServer;
 use Ytkit::AdminTool::DDL;
+use Ytkit::Collect;
 
 my $synopsis= q{  $ yt-admin --host=mysql_host --port=mysql_port } .
               q{--user=mysql_account --password=mysql_password SUBCOMMAND};
@@ -86,13 +87,17 @@ sub run
         _croakf("Invalid host (%s)", $_) if !($ipaddr);
         $port //= 3306;
         _infof("Registering Host: %s, Port: %d", $ipaddr, $port);
+        my $instance= $self->instance;
 
         ### INSERT INTO admintool.instance_info
-        $self->instance->exec_sql("INSERT INTO admintool.instance_info " .
-                                  "(ipaddr, port, last_update, monitoring_enable, last_status) " .
-                                  "VALUES (?, ?, NOW(), DEFAULT, DEFAULT)", undef,
-                                  $ipaddr, $port);
-        $self->instance->raise_if_error;
+        $instance->exec_sql("INSERT INTO admintool.instance_info " .
+                            "(ipaddr, port, last_update, monitoring_enable, last_status) " .
+                            "VALUES (?, ?, NOW(), DEFAULT, DEFAULT)", undef,
+                            $ipaddr, $port);
+        $instance->raise_if_error;
+
+        ### Initial information fetching
+        my $buff= $self->initial_collect($ipaddr, $port);
       }
     }
     else
@@ -194,6 +199,35 @@ sub create_database_adminview
   _infof("Finished CREATE VIEW in adminview");
   _infof("Finished (Re-)CREATE DATABASE adminview");
   _notef("Finished to upgrade adminview");
+}
+
+
+sub _collect
+{
+  my $collect= Ytkit::Collect->new("--host", $ipaddr,
+                                   "--port", $port,
+                                   "--user", $self->{monitor_user} // "''",
+                                   "--password", $self->{monitor_password} // "''",
+                                   "--output=sql",
+                                   "--sql-update",
+                                   "--interval=0",
+                                   "--count=1");
+  return $collect->collect;
+}
+
+sub purge_old_records
+{
+  my ($self)= @_;
+
+  foreach my $table (qw{ is_innodb_metrics ps_digest_info ps_table_info status_info table_status_info })
+  {
+    ### DELETE all records before 1 year ago
+    my $purge_by_yearly= _sprintf("DELETE FROM admintool.%s USE INDEX(idx_lastupdate) " .
+                                  "WHERE last_update < CURDATE() - INTERVAL 1 YEAR", $table);
+    $self->instance->exec_sql($purge_by_yearly);
+
+
+
 }
 
 sub _config

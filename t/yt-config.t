@@ -285,12 +285,13 @@ subtest "Mandatory option" => sub
     mandatory_option => { alias => ["mandatory_option"], mandatory => 1 },
     mandatory_with_default => { alias => ["mandatory_with_default"], mandatory => 1, default => "def" },
     mandatory_array => { alias => ["mandatory_array"], mandatory => 1, multi => 1 },
+    %$Ytkit::Config::COMMON_OPTION,
   };
   
   my @test_argv= ();
-  my $config= Ytkit::Config->new($option_struct);
   eval
   {
+    my $config= Ytkit::Config->new($option_struct);
     $config->parse_argv(@test_argv); ### Empty array
   };
   ok($@, "Failed mandatory");
@@ -298,6 +299,7 @@ subtest "Mandatory option" => sub
   push(@test_argv, "--mandatory_option=test");
   eval
   {
+    my $config= Ytkit::Config->new($option_struct);
     $config->parse_argv(@test_argv);
   };
   ok($@, "Not enough(lack of --mandatory_array)");
@@ -305,10 +307,22 @@ subtest "Mandatory option" => sub
   push(@test_argv, "--mandatory_array=test");
   eval
   {
+    my $config= Ytkit::Config->new($option_struct);
     $config->parse_argv(@test_argv);
   };
   ### mandatory but have default is through check_mandatory_option()
   ok(!($@), "Success");
+
+  ### Bug: --help doesn't handle correctly when script has "mandatory" option.
+  ### https://github.com/yoku0825/ytkit/issues/42
+  @test_argv= ("--help");
+  eval
+  {
+    my $config= Ytkit::Config->new($option_struct);
+    $config->parse_argv(@test_argv);
+  };
+  ok(!($@), "--help without mandatory option is not croaked");
+
 
   done_testing;
 };

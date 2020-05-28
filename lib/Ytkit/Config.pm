@@ -243,6 +243,9 @@ sub parse_argv
   $self->{result}= $ret;
   $self->{left_argv}= \@left_argv;
 
+  ### Issue#42, some options are on, skip check_mandatory_option
+  return 1 if ($self->{result}->{help} || $self->{result}->{version});
+
   if ($self->check_mandatory_option)
   {
     return 1;

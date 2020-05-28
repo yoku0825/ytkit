@@ -63,14 +63,12 @@ sub handle_help
 
   if ($self->{help})
   {
-    $ENV{ytkit_verbose}= Ytkit::IO::NORMAL;
-    _notef($self->help);
+    _printf($self->help);
     exit 0;
   }
   elsif ($self->{version})
   {
-    $ENV{ytkit_verbose}= Ytkit::IO::NORMAL;
-    _notef($self->version);
+    _printf($self->version);
     exit 0;
   }
   elsif (@{$self->{_config}->{left_argv}} && $self->{_config}->{_allow_extra_argv} == 0)
@@ -78,7 +76,7 @@ sub handle_help
     ### script doesn't allow bare argument.
     _carpf("You give unknown argument(s) [%s]\n\n",
            join(" ", @{$self->{_config}->{left_argv}}));
-    _notef($self->usage);
+    _printf($self->usage);
     exit 3;
   }
 }

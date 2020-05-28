@@ -25,7 +25,7 @@ use utf8;
 use Carp qw{ carp croak };
 use Term::ReadKey;
 use base "Exporter";
-our @EXPORT= qw{ _infof _notef _carpf _croakf _debugf _sprintf };
+our @EXPORT= qw{ _infof _notef _carpf _croakf _debugf _sprintf _printf };
 
 use constant
 {
@@ -107,6 +107,12 @@ sub __out_stderr
   $msg .= "\n" if (substr($msg, -1, 1) ne "\n");
   print(STDERR $msg) if !($ENV{HARNESS_ACTIVE});
   return $msg;
+}
+
+sub _printf
+{
+  my ($format, @argv)= @_;
+  return __out_stderr($format, @argv);
 }
 
 sub _sprintf

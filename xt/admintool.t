@@ -38,40 +38,42 @@ my $test=
 subtest "Testing via 8.0" => sub
 {
   my $mysqld= Test::mysqld->new($test->{"8.0"});
-  my $admin= Ytkit::AdminTool->new("--host=localhost",
-                                   "--socket",  $mysqld->base_dir . "/tmp/mysql.sock",
-                                   "--user=root",
-                                   "initialize");
+  my $initialize= Ytkit::AdminTool->new("--host=localhost",
+                                        "--socket",  $mysqld->base_dir . "/tmp/mysql.sock",
+                                        "--user=root",
+                                        "initialize");
 
-  $admin->run;
+  $initialize->run;
+  my $instance= $initialize->instance;
   my $schema_count= "SELECT COUNT(*) AS c FROM information_schema.schemata WHERE schema_name IN ('admintool', 'adminview')";
-  is($admin->instance->_real_query_arrayref($schema_count)->[0]->{c}, 2, "Schema created");
+  is($initialize->instance->_real_query_arrayref($schema_count)->[0]->{c}, 2, "Schema created");
 
   my $admintool_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'admintool'";
-  is($admin->instance->_real_query_arrayref($admintool_count)->[0]->{c}, 10, "Create admintool tables");
+  is($instance->_real_query_arrayref($admintool_count)->[0]->{c}, 10, "Create admintool tables");
 
   my $adminview_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'adminview'";
-  is($admin->instance->_real_query_arrayref($adminview_count)->[0]->{c}, 18, "Create adminview tables");
+  is($instance->_real_query_arrayref($adminview_count)->[0]->{c}, 18, "Create adminview tables");
 
-  done_testing;
+
 };
 
 subtest "Testing via 5.7" => sub
 {
   my $mysqld= Test::mysqld->new($test->{"5.7"});
-  my $admin= Ytkit::AdminTool->new("--host=localhost",
-                                   "--socket",  $mysqld->base_dir . "/tmp/mysql.sock",
-                                   "--user=root",
-                                   "initialize");
-  $admin->run;
+  my $initialize= Ytkit::AdminTool->new("--host=localhost",
+                                        "--socket",  $mysqld->base_dir . "/tmp/mysql.sock",
+                                        "--user=root",
+                                        "initialize");
+  $initialize->run;
+  my $instance= $initialize->instance;
   my $schema_count= "SELECT COUNT(*) AS c FROM information_schema.schemata WHERE schema_name IN ('admintool', 'adminview')";
-  is($admin->instance->_real_query_arrayref($schema_count)->[0]->{c}, 2, "Schema created");
+  is($instance->_real_query_arrayref($schema_count)->[0]->{c}, 2, "Schema created");
 
   my $admintool_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'admintool'";
-  is($admin->instance->_real_query_arrayref($admintool_count)->[0]->{c}, 10, "Create admintool tables");
+  is($instance->_real_query_arrayref($admintool_count)->[0]->{c}, 10, "Create admintool tables");
 
   my $adminview_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'adminview'";
-  is($admin->instance->_real_query_arrayref($adminview_count)->[0]->{c}, 12, "Create adminview tables");
+  is($instance->_real_query_arrayref($adminview_count)->[0]->{c}, 12, "Create adminview tables");
 
   done_testing;
 };

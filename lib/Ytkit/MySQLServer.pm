@@ -115,6 +115,14 @@ sub raise_if_error
   _carpf($self->warning) if @{$self->warning};
 }
 
+sub warn_if_error
+{
+  my ($self)= @_;
+
+  _carpf($self->error) if $self->error;
+  _carpf($self->warning) if @{$self->warning};
+}
+
 sub conn
 {
   my ($self)= @_;

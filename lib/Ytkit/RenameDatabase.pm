@@ -65,11 +65,16 @@ sub run
   _croakf("From-database %s does not exist.", $src) if !(grep { $src eq $_ } $self->fetch_dbname);
   _croakf("To-database %s already exists.", $dst) if grep { $dst eq $_ } $self->fetch_dbname;
 
-  _croak_or_carp(_sprintf("%s has TRIGGERS, not supporting.", $src), $self->{ignore_trigger}) if $self->fetch_trigger_count;
-  _croak_or_carp(_sprintf("%s has Foreign Keys, not supporting.", $src), $self->{ignore_fk}) if $self->fetch_fk_count;
-  _croak_or_carp(_sprintf("%s has ROUTINES, not supporting.", $src), $self->{ignore_routine}) if $self->fetch_routine_count;
-  _croak_or_carp(_sprintf("%s has VIEWS, not supporting.", $src), $self->{ignore_view}) if $self->fetch_view_count;
-  _croak_or_carp(_sprintf("%s has EVENTS, not supporting.", $src), $self->{ignore_event}) if $self->fetch_event_count;
+  _croak_or_carp(_sprintf("%s has TRIGGERS, not supporting.(For *forcing-execution*, use --ignore-trigger or --force)", $src),
+                 $self->{ignore_trigger}) if $self->fetch_trigger_count;
+  _croak_or_carp(_sprintf("%s has Foreign Keys, not supporting.(For *forcing-execution*, use --ignore-fk or --force)", $src),
+                 $self->{ignore_fk}) if $self->fetch_fk_count;
+  _croak_or_carp(_sprintf("%s has ROUTINES, not supporting.(For *forcing-execution*, use --ignore-routine or --force)", $src),
+                 $self->{ignore_routine}) if $self->fetch_routine_count;
+  _croak_or_carp(_sprintf("%s has VIEWS, not supporting.(For *forcing-execution*, use --ignore-view or --force)", $src),
+                 $self->{ignore_view}) if $self->fetch_view_count;
+  _croak_or_carp(_sprintf("%s has EVENTS, not supporting.(For *forcing-execution*, use --ignore-event or --force)", $src),
+                 $self->{ignore_event}) if $self->fetch_event_count;
 
   $self->_do_or_echo('CREATE DATABASE `%s`', $dst);
   

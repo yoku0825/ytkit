@@ -163,7 +163,7 @@ sub _do_or_echo
   else
   {
     _notef("-- I'm dry-run mode. Specify --execute if you wish to execute statements by script.");
-    _notef($sql . ";\n");
+    Ytkit::IO::__out_stdout($sql . ";\n");
   }
 }
 

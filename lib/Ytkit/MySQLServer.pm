@@ -111,7 +111,7 @@ sub raise_if_error
 {
   my ($self)= @_;
 
-  _croak($self->error) if $self->error;
+  _croakf($self->error) if $self->error;
   _carpf($self->warning) if @{$self->warning};
 }
 

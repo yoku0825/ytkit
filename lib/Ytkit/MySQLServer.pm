@@ -123,6 +123,26 @@ sub warn_if_error
   _carpf($self->warning) if @{$self->warning};
 }
 
+sub exec_sql_with_croak
+{
+  my ($self, $sql, $opt, @argv)= @_;
+  $self->exec_sql($sql, $opt, @argv);
+  $self->raise_if_error;
+}
+
+sub exec_sql_with_carp
+{
+  my ($self, $sql, $opt, @argv)= @_;
+  $self->exec_sql($sql, $opt, @argv);
+  $self->warn_if_error;
+}
+
+sub use
+{
+  my ($self, $schema)= @_;
+  $self->exec_sql_with_croak("USE $schema");
+}
+
 sub conn
 {
   my ($self)= @_;

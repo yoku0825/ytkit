@@ -61,7 +61,8 @@ foreach my $version (sort(keys(%$test)))
     my @method   = `grep "^sub" $file_path | awk '{print \$2}'`;
     my @ignore   = qw{ conn new DESTROY query_arrayref query_hashref 
                        warning error show_grants exec_sql valueof 
-                       errno clear_cache describe_table raise_if_error warn_if_error }; ### Almost cases are 'need argument(s)'
+                       errno clear_cache describe_table raise_if_error warn_if_error
+                       exec_sql_with_croak exec_sql_with_carp use }; ### Almost cases are 'need argument(s)'
     
     foreach my $func (@method)
     {

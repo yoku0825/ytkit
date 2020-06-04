@@ -206,21 +206,18 @@ sub full_collect
 {
   my ($self, $ipaddr, $port)= @_;
   my $instance= $self->instance;
-  $instance->exec_sql("USE admintool");
+  $instance->use("admintool");
 
   my $collect= $self->_make_collector($ipaddr, $port);
 
   ### admintool.variable_info
-  $instance->exec_sql($collect->print_show_variables);
-  $instance->warn_if_error;
+  $instance->exec_sql_with_carp($collect->print_show_variables);
 
   ### admintool.slave_info
   ### - INSERTing slave_info should be after DELETE.
   ###   Because old info could be remained when slave has promoted to master.
-  $instance->exec_sql("DELETE FROM admintool.slave_info WHERE (ipaddr, port) = (?, ?)", undef, $ipaddr, $port);
-  $instance->warn_if_error;
-  $instance->exec_sql($collect->print_show_slave);
-  $instance->warn_if_error;
+  $instance->exec_sql_with_carp("DELETE FROM admintool.slave_info WHERE (ipaddr, port) = (?, ?)", undef, $ipaddr, $port);
+  $instance->exec_sql_with_carp($collect->print_show_slave);
 
 }
 

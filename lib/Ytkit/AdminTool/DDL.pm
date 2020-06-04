@@ -408,16 +408,16 @@ CREATE SQL SECURITY INVOKER VIEW `recent_table_status_list` AS
 EOS
 ;
 
-my $last_30_days_calendar= << 'EOS'
-CREATE SQL SECURITY INVOKER VIEW `last_30_days_calendar` AS
-  WITH RECURSIVE `last_30_days_calendar` AS (
+my $last_33_days_calendar= << 'EOS'
+CREATE SQL SECURITY INVOKER VIEW `last_33_days_calendar` AS
+  WITH RECURSIVE `last_33_days_calendar` AS (
     SELECT CURDATE() AS `_date`
     UNION ALL
-    SELECT `last_30_days_calendar`.`_date` - INTERVAL 1 DAY AS `_date`
-    FROM `last_30_days_calendar`
-    WHERE `last_30_days_calendar`.`_date` > CURDATE() - INTERVAL 29 DAY)
-  SELECT `last_30_days_calendar`.`_date` AS `_date`
-  FROM `last_30_days_calendar`
+    SELECT `last_33_days_calendar`.`_date` - INTERVAL 1 DAY AS `_date`
+    FROM `last_33_days_calendar`
+    WHERE `last_33_days_calendar`.`_date` > CURDATE() - INTERVAL 29 DAY)
+  SELECT `last_33_days_calendar`.`_date` AS `_date`
+  FROM `last_33_days_calendar`
 EOS
 ;
 
@@ -434,9 +434,9 @@ CREATE SQL SECURITY INVOKER VIEW `last_90_days_calendar` AS
 EOS
 ;
 
-my $table_status_list_analyze_30= << 'EOS'
-CREATE SQL SECURITY INVOKER VIEW `table_status_list_analyze_30` AS
-  SELECT `last_30_days_calendar`.`_date` AS `_date`,
+my $table_status_list_analyze_33= << 'EOS'
+CREATE SQL SECURITY INVOKER VIEW `table_status_list_analyze_33` AS
+  SELECT `last_33_days_calendar`.`_date` AS `_date`,
          `daily_table_status_list`.`hostname` AS `hostname`,
          `daily_table_status_list`.`ipaddr` AS `ipaddr`,
          `daily_table_status_list`.`port` AS `port`,
@@ -448,7 +448,7 @@ CREATE SQL SECURITY INVOKER VIEW `table_status_list_analyze_30` AS
          FIRST_VALUE(`daily_table_status_list`.`table_rows`) OVER `w_all` AS `_first`,
          LAST_VALUE(`daily_table_status_list`.`table_rows`) OVER `w_all` AS `_last`,
          (`daily_table_status_list`.`table_rows` - LAG(`daily_table_status_list`.`table_rows`) OVER `w`) AS `_diff`
-  FROM `last_30_days_calendar` JOIN `daily_table_status_list` USING(_date)
+  FROM `last_33_days_calendar` JOIN `daily_table_status_list` USING(_date)
   WINDOW `w` AS (PARTITION BY hostname, datadir, table_schema, table_name ORDER BY _date),
          `w7` AS (`w` ROWS BETWEEN 7 PRECEDING AND CURRENT ROW) ,
          `w_all` AS (`w` RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
@@ -493,7 +493,7 @@ sub adminview_schema
 sub adminview_schema_ex
 {
   ### For 8.0.11 and later.
-  return [$recent_status_list, $recent_table_status_list, $last_30_days_calendar, $last_90_days_calendar, $table_status_list_analyze_30,
+  return [$recent_status_list, $recent_table_status_list, $last_33_days_calendar, $last_90_days_calendar, $table_status_list_analyze_33,
           $table_status_list_analyze_90];
 }
 

@@ -157,8 +157,7 @@ sub _do_or_echo
   if ($self->{execute} == 1)
   {
     _infof("Executing '%s'\n", $sql);
-    $self->instance->exec_sql($sql);
-    $self->instance->raise_if_error;
+    $self->instance->exec_sql_with_croak($sql);
   }
   else
   {

@@ -1,0 +1,121 @@
+#!/usr/bin/perl
+
+#########################################################################
+# Copyright (C) 2020  yoku0825
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU General Public License
+# as published by the Free Software Foundation; either version 2
+# of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+########################################################################
+
+use strict;
+use warnings;
+use utf8;
+use Test::More;
+
+use FindBin qw{$Bin};
+use lib "$Bin/../lib";
+use Test::mysqld;
+
+use Ytkit::MySQLServer;
+
+use constant
+{
+  QUERY_SUCCESS => "SELECT 1",
+  QUERY_WARNING => "SET profiling = 1 /* Verified at 8.0.20 */",
+  QUERY_ERROR   => "SELECT Syntax-error",
+};
+
+
+my $mysqld= Test::mysqld->new;
+
+my $server= Ytkit::MySQLServer->new({ host   => "localhost",
+                                      socket => $mysqld->base_dir . "/tmp/mysql.sock",
+                                      user   => "root" });
+$server->conn;
+ok(!($server->error), "Connect to mysqld");
+
+subtest "Query without error" => sub
+{
+  my $warn_count= 0;
+  local $SIG{__WARN__}= sub
+  {
+    $warn_count++;
+  };
+
+  eval
+  {
+    $server->exec_sql(QUERY_SUCCESS);
+    $server->exec_sql_with_croak(QUERY_SUCCESS);
+    $server->exec_sql_with_carp(QUERY_SUCCESS);
+  };
+
+  ok(!($@), "Didn't croak");
+  is($warn_count, 0, "Carp should not be called");
+
+  done_testing;
+};
+
+subtest "Query with warnings" => sub
+{
+  my $warn_count= 0;
+  local $SIG{__WARN__}= sub
+  {
+    $warn_count++;
+  };
+
+  eval
+  {
+    $server->exec_sql(QUERY_WARNING);
+    $server->exec_sql_with_croak(QUERY_WARNING);
+    $server->exec_sql_with_carp(QUERY_WARNING);
+  };
+
+  ok(!($@), "Didn't croak");
+  is($warn_count, 2, "Carp was called from exec_sql_with_croak and exec_sql_with_carp");
+
+  done_testing;
+};
+
+subtest "Query with error" => sub
+{
+  my $warn_count= 0;
+  local $SIG{__WARN__}= sub
+  {
+    $warn_count++;
+  };
+
+  eval
+  {
+    $server->exec_sql(QUERY_ERROR);
+  };
+  ok(!($@), "Didn't croak");
+
+  eval
+  {
+    $server->exec_sql_with_croak(QUERY_ERROR);
+  };
+  ok($@, "Should be croak");
+
+  eval
+  {
+    $server->exec_sql_with_carp(QUERY_ERROR);
+  };
+
+  ok(!($@), "Didn't croak");
+  is($warn_count, 1, "Carp was called from exec_sql_with_carp");
+
+  done_testing;
+};
+
+done_testing;

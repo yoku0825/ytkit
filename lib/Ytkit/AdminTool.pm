@@ -34,6 +34,7 @@ my $script= sprintf("%s - Database-schema for cooperation working of ytkit scrip
 my $description= << "EOS";
 FIXME
 EOS
+
 my $allow_extra_arvg= 1;
 my $config= _config();
 my $subcommand= [qw{ initialize upgrade register }];
@@ -97,7 +98,7 @@ sub run
         $instance->raise_if_error;
 
         ### Initial information fetching
-        my $buff= $self->initial_collect($ipaddr, $port);
+        my $buff= $self->full_collect($ipaddr, $port);
       }
     }
     else
@@ -201,18 +202,51 @@ sub create_database_adminview
   _notef("Finished to upgrade adminview");
 }
 
-
-sub _collect
+sub full_collect
 {
-  my $collect= Ytkit::Collect->new("--host", $ipaddr,
-                                   "--port", $port,
-                                   "--user", $self->{monitor_user} // "''",
-                                   "--password", $self->{monitor_password} // "''",
-                                   "--output=sql",
-                                   "--sql-update",
-                                   "--interval=0",
-                                   "--count=1");
-  return $collect->collect;
+  my ($self, $ipaddr, $port)= @_;
+  my $instance= $self->instance;
+  $instance->exec_sql("USE admintool");
+
+  my $collect= $self->_make_collector($ipaddr, $port);
+
+  ### admintool.variable_info
+  $instance->exec_sql($collect->print_show_variables);
+  $instance->warn_if_error;
+
+  ### admintool.slave_info
+  ### - INSERTing slave_info should be after DELETE.
+  ###   Because old info could be remained when slave has promoted to master.
+  $instance->exec_sql("DELETE FROM admintool.slave_info WHERE (ipaddr, port) = (?, ?)", undef, $ipaddr, $port);
+  $instance->warn_if_error;
+  $instance->exec_sql($collect->print_show_slave);
+  $instance->warn_if_error;
+
+}
+
+sub typical_collect
+{
+  my ($self, $ipaddr, $port)= @_;
+  my $instance= $self->instance;
+  $instance->exec_sql("USE admintool");
+
+  my $collect= $self->_make_collector($ipaddr, $port);
+ 
+
+
+}
+
+sub _make_collector
+{
+  my ($self, $ipaddr, $port)= @_;
+  return Ytkit::Collect->new("--host", $ipaddr,
+                             "--port", $port,
+                             "--user", $self->{monitor_user} // "''",
+                             "--password", $self->{monitor_password} // "''",
+                             "--output=sql",
+                             "--sql-update",
+                             "--interval=0",
+                             "--count=1");
 }
 
 sub purge_old_records
@@ -226,7 +260,12 @@ sub purge_old_records
                                   "WHERE last_update < CURDATE() - INTERVAL 1 YEAR", $table);
     $self->instance->exec_sql($purge_by_yearly);
 
-
+    ### Hold recods on Monday before 2 weeks ago
+    my $purge_by_weekly= _sprintf("DELETE FROM admintool.%s USE INDEX(idx_lastupdate) " .
+                                  "WHERE last_update < CURDATE() - INTERVAL 2 WEEK AND " .
+                                        "WEEKDAY(last_update) <> 1");
+    $self->instance->exec_sql($purge_by_weekly);
+  }
 
 }
 

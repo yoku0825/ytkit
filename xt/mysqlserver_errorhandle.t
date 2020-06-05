@@ -36,86 +36,89 @@ use constant
   QUERY_ERROR   => "SELECT Syntax-error",
 };
 
-
-my $mysqld= Test::mysqld->new;
-
-my $server= Ytkit::MySQLServer->new({ host   => "localhost",
-                                      socket => $mysqld->base_dir . "/tmp/mysql.sock",
-                                      user   => "root" });
-$server->conn;
-ok(!($server->error), "Connect to mysqld");
-
-subtest "Query without error" => sub
+SKIP:
 {
-  my $warn_count= 0;
-  local $SIG{__WARN__}= sub
+  skip "_carpf does not work on ENV{HARNESS_ACTIVE}" if $ENV{HARNESS_ACTIVE};
+  my $mysqld= Test::mysqld->new;
+  
+  my $server= Ytkit::MySQLServer->new({ host   => "localhost",
+                                        socket => $mysqld->base_dir . "/tmp/mysql.sock",
+                                        user   => "root" });
+  $server->conn;
+  ok(!($server->error), "Connect to mysqld");
+  
+  subtest "Query without error" => sub
   {
-    $warn_count++;
+    my $warn_count= 0;
+    local $SIG{__WARN__}= sub
+    {
+      $warn_count++;
+    };
+  
+    eval
+    {
+      $server->exec_sql(QUERY_SUCCESS);
+      $server->exec_sql_with_croak(QUERY_SUCCESS);
+      $server->exec_sql_with_carp(QUERY_SUCCESS);
+    };
+  
+    ok(!($@), "Didn't croak");
+    is($warn_count, 0, "Carp should not be called");
+  
+    done_testing;
   };
-
-  eval
+  
+  subtest "Query with warnings" => sub
   {
-    $server->exec_sql(QUERY_SUCCESS);
-    $server->exec_sql_with_croak(QUERY_SUCCESS);
-    $server->exec_sql_with_carp(QUERY_SUCCESS);
+    my $warn_count= 0;
+    local $SIG{__WARN__}= sub
+    {
+      $warn_count++;
+    };
+  
+    eval
+    {
+      $server->exec_sql(QUERY_WARNING);
+      $server->exec_sql_with_croak(QUERY_WARNING);
+      $server->exec_sql_with_carp(QUERY_WARNING);
+    };
+  
+    ok(!($@), "Didn't croak");
+    is($warn_count, 2, "Carp was called from exec_sql_with_croak and exec_sql_with_carp");
+  
+    done_testing;
   };
-
-  ok(!($@), "Didn't croak");
-  is($warn_count, 0, "Carp should not be called");
-
-  done_testing;
-};
-
-subtest "Query with warnings" => sub
-{
-  my $warn_count= 0;
-  local $SIG{__WARN__}= sub
+  
+  subtest "Query with error" => sub
   {
-    $warn_count++;
+    my $warn_count= 0;
+    local $SIG{__WARN__}= sub
+    {
+      $warn_count++;
+    };
+  
+    eval
+    {
+      $server->exec_sql(QUERY_ERROR);
+    };
+    ok(!($@), "Didn't croak");
+  
+    eval
+    {
+      $server->exec_sql_with_croak(QUERY_ERROR);
+    };
+    ok($@, "Should be croak");
+  
+    eval
+    {
+      $server->exec_sql_with_carp(QUERY_ERROR);
+    };
+  
+    ok(!($@), "Didn't croak");
+    is($warn_count, 1, "Carp was called from exec_sql_with_carp");
+  
+    done_testing;
   };
-
-  eval
-  {
-    $server->exec_sql(QUERY_WARNING);
-    $server->exec_sql_with_croak(QUERY_WARNING);
-    $server->exec_sql_with_carp(QUERY_WARNING);
-  };
-
-  ok(!($@), "Didn't croak");
-  is($warn_count, 2, "Carp was called from exec_sql_with_croak and exec_sql_with_carp");
-
-  done_testing;
-};
-
-subtest "Query with error" => sub
-{
-  my $warn_count= 0;
-  local $SIG{__WARN__}= sub
-  {
-    $warn_count++;
-  };
-
-  eval
-  {
-    $server->exec_sql(QUERY_ERROR);
-  };
-  ok(!($@), "Didn't croak");
-
-  eval
-  {
-    $server->exec_sql_with_croak(QUERY_ERROR);
-  };
-  ok($@, "Should be croak");
-
-  eval
-  {
-    $server->exec_sql_with_carp(QUERY_ERROR);
-  };
-
-  ok(!($@), "Didn't croak");
-  is($warn_count, 1, "Carp was called from exec_sql_with_carp");
-
-  done_testing;
-};
+}
 
 done_testing;

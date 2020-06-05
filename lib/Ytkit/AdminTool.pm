@@ -91,14 +91,13 @@ sub run
         my $instance= $self->instance;
 
         ### INSERT INTO admintool.instance_info
-        $instance->exec_sql("INSERT INTO admintool.instance_info " .
-                            "(ipaddr, port, last_update, monitoring_enable, last_status) " .
-                            "VALUES (?, ?, NOW(), DEFAULT, DEFAULT)", undef,
-                            $ipaddr, $port);
-        $instance->raise_if_error;
+        $instance->exec_sql_with_croak("INSERT INTO admintool.instance_info " .
+                                      "(ipaddr, port, last_update, monitoring_enable, last_status) " .
+                                      "VALUES (?, ?, NOW(), DEFAULT, DEFAULT)", undef,
+                                      $ipaddr, $port);
 
         ### Initial information fetching
-        my $buff= $self->full_collect($ipaddr, $port);
+        $self->full_collect($ipaddr, $port);
       }
     }
     else
@@ -133,8 +132,7 @@ sub create_database_admintool
     $self->instance->exec_sql("USE admintool");
     foreach (@{Ytkit::AdminTool::DDL::admintool_schema()})
     {
-      $self->instance->exec_sql($_);
-      $self->instance->raise_if_error;
+      $self->instance->exec_sql_with_croak($_);
     }
     _infof("Finished CREATE TABLE in admintool");
 
@@ -184,8 +182,7 @@ sub create_database_adminview
   _infof("Starting CREATE VIEW in adminview");
   foreach (@{Ytkit::AdminTool::DDL::adminview_schema()})
   {
-    $self->instance->exec_sql($_);
-    $self->instance->raise_if_error;
+    $self->instance->exec_sql_with_croak($_);
   }
 
   ### Only 8.0 can use WITH RECURSIVE and WINDOW functions
@@ -193,8 +190,7 @@ sub create_database_adminview
   {
     foreach (@{Ytkit::AdminTool::DDL::adminview_schema_ex()})
     {
-      $self->instance->exec_sql($_);
-      $self->instance->raise_if_error;
+      $self->instance->exec_sql_with_croak($_);
     }
   }
   _infof("Finished CREATE VIEW in adminview");
@@ -208,42 +204,72 @@ sub full_collect
   my $instance= $self->instance;
   $instance->use("admintool");
 
+  my $buff; ### For empty resultset (SHOW SLAVE STATUS for master, SELECT p_s. for p_s=OFF)
   my $collect= $self->_make_collector($ipaddr, $port);
 
   ### admintool.variable_info
-  $instance->exec_sql_with_carp($collect->print_show_variables);
+  $buff= $collect->print_show_variables;
+  $instance->exec_sql_with_carp($buff) if $buff;
 
   ### admintool.slave_info
   ### - INSERTing slave_info should be after DELETE.
   ###   Because old info could be remained when slave has promoted to master.
   $instance->exec_sql_with_carp("DELETE FROM admintool.slave_info WHERE (ipaddr, port) = (?, ?)", undef, $ipaddr, $port);
-  $instance->exec_sql_with_carp($collect->print_show_slave);
+  $buff= $collect->print_show_slave;
+  $instance->exec_sql_with_carp($buff) if $buff;
 
+  ### admintool.grant_info
+  $buff= $collect->print_show_grants;
+  $instance->exec_sql_with_carp($buff) if $buff;
+
+  $self->typical_collect($ipaddr, $port);
 }
 
 sub typical_collect
 {
   my ($self, $ipaddr, $port)= @_;
   my $instance= $self->instance;
-  $instance->exec_sql("USE admintool");
+  $instance->use("admintool");
 
+  my $buff; ### For empty resultset (SHOW SLAVE STATUS for master, SELECT p_s. for p_s=OFF)
   my $collect= $self->_make_collector($ipaddr, $port);
  
+  ### admintool.table_status_info
+  $buff= $collect->print_table_size;
+  $instance->exec_sql_with_carp($buff) if $buff;
 
+  ### admintool.ps_table_info
+  $buff= $collect->print_table_latency;
+  $instance->exec_sql_with_carp($buff) if $buff;
 
+  ### admintool.is_innodb_metrics
+  $buff= $collect->print_innodb_metrics;
+  $instance->exec_sql_with_carp($buff) if $buff;
+
+  ### admintool.ps_digest_info
+  $buff= $collect->print_query_latency;
+  $instance->exec_sql_with_carp($buff) if $buff;
+
+  ### admintool.status_info
+  $buff= $collect->print_show_status;
+  $instance->exec_sql_with_carp($buff) if $buff;
+
+  ### Destroy for next collector
+  delete($self->{_collector});
 }
 
 sub _make_collector
 {
   my ($self, $ipaddr, $port)= @_;
-  return Ytkit::Collect->new("--host", $ipaddr,
-                             "--port", $port,
-                             "--user", $self->{monitor_user} // "''",
-                             "--password", $self->{monitor_password} // "''",
-                             "--output=sql",
-                             "--sql-update",
-                             "--interval=0",
-                             "--count=1");
+  $self->{_collector} //= Ytkit::Collect->new("--host", $ipaddr,
+                                              "--port", $port,
+                                              "--user", $self->{monitor_user} // "''",
+                                              "--password", $self->{monitor_password} // "''",
+                                              "--output=sql",
+                                              "--sql-update",
+                                              "--interval=0",
+                                              "--count=1");
+  return $self->{_collector};
 }
 
 sub purge_old_records

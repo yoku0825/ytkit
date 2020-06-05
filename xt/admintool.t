@@ -41,6 +41,7 @@ foreach (sort(keys(%$test)))
 {
   subtest "Testing via $_" => sub
   {
+    $ENV{MYSQL_PWD}= "";
     my $mysqld= Test::mysqld->new($test->{$_});
     my $initialize= Ytkit::AdminTool->new("--host=localhost",
                                           "--socket",  $mysqld->base_dir . "/tmp/mysql.sock",
@@ -59,10 +60,10 @@ foreach (sort(keys(%$test)))
     my $adminview_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'adminview'";
     is($instance->_real_query_arrayref($adminview_count)->[0]->{c},
        $_ eq "8.0" ? 18 : 12, "Create adminview tables");
-  
+ 
     ### Create monitor user
-    $instance->exec_sql(q{CREATE USER monitor@127.0.0.1 IDENTIFIED BY 'password'});
-    $instance->exec_sql(q{GRANT SELECT ON *.* TO monitor@127.0.0.1});
+    $instance->exec_sql_with_croak(q{CREATE USER monitor@127.0.0.1 IDENTIFIED WITH mysql_native_password BY 'password'});
+    $instance->exec_sql_with_croak(q{GRANT SELECT, REPLICATION CLIENT, PROCESS ON *.* TO monitor@127.0.0.1});
 
     my $port= $instance->_real_query_arrayref('SELECT @@port AS port')->[0]->{port};
   
@@ -75,7 +76,13 @@ foreach (sort(keys(%$test)))
     $register->run;
     is($instance->_real_query_arrayref("SELECT COUNT(*) AS c FROM admintool.instance_info")->[0]->{c},
        1, "Registered successfully");
-  
+    $instance->exec_sql("/*!80011 SET SESSION information_schema_stats_expiry = 0 */");
+    is($instance->_real_query_arrayref("SELECT GROUP_CONCAT(table_name ORDER BY table_name) AS t " .
+                                       "FROM information_schema.tables " .
+                                       "WHERE table_schema = 'admintool' AND table_rows > 0")->[0]->{t},
+       "grant_info,instance_info,is_innodb_metrics,ps_digest_info,ps_table_info,status_info,table_status_info,variable_info",
+       "Initial collection succeeded"); ### slave_status_info is empty(single master)
+
     done_testing;
   };
 }

@@ -30,7 +30,6 @@ require "$Bin/Test.pl";
 no warnings "once";
 
 use_ok("Ytkit::AdminTool");
-use Ytkit::IO;
 
 is(scalar(@{Ytkit::AdminTool::DDL::admintool_schema()}), 10, "10 tables in admintool");
 is(scalar(@{Ytkit::AdminTool::DDL::adminview_schema()}), 12, "12 views in adminview");

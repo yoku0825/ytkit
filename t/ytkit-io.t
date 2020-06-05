@@ -198,5 +198,23 @@ subtest "Issue #31" => sub
   done_testing;
 };
 
+subtest "split_host_port" => sub
+{
+  my ($host, $port);
+  ($host, $port)= split_host_port("127.0.0.1:3309");
+  is($host, "127.0.0.1", "host:port type host");
+  is($port, 3309, "host:port type port");
+
+  ($host, $port)= split_host_port("192.168.0.1");
+  is($host, "192.168.0.1", "host type host");
+  is($port, 3306, "host type port(default)");
+
+  ($host, $port)= split_host_port("fe80::42:bdff:fe9a:f71e:3306");
+  is($host, undef, "ipv6 should not parse");
+  is($port, undef, "ipv6 should not parse");
+
+  done_testing;
+};
+
 done_testing;
 

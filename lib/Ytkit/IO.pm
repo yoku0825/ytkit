@@ -25,7 +25,7 @@ use utf8;
 use Carp qw{ carp croak };
 use Term::ReadKey;
 use base "Exporter";
-our @EXPORT= qw{ _infof _notef _carpf _croakf _debugf _sprintf _printf };
+our @EXPORT= qw{ _infof _notef _carpf _croakf _debugf _sprintf _printf split_host_port };
 
 use constant
 {
@@ -36,6 +36,18 @@ use constant
 };
 $ENV{ytkit_verbose} //= NORMAL;
 $ENV{ytkit_force} //= 0;
+
+sub split_host_port
+{
+  ### aaa:bbb -> (aaa, bbb), ccc -> (ccc, 3306)
+  my ($str)= @_;
+
+  my ($ipaddr, $port)= $str =~ /^([^:]+)(?::)?(\d+)?$/;
+  $port //= 3306; ### default
+  return undef if !($ipaddr);
+
+  return ($ipaddr, $port);
+}
 
 sub _notef ### NORMAL, VERBOSE, DEBUG (Not --silent)
 {

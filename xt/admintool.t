@@ -59,7 +59,7 @@ foreach (sort(keys(%$test)))
     ### adminview counts are different between 8.0 and others.
     my $adminview_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'adminview'";
     is($instance->_real_query_arrayref($adminview_count)->[0]->{c},
-       $_ eq "8.0" ? 18 : 12, "Create adminview tables");
+       $_ eq "8.0" ? 20 : 13, "Create adminview tables");
  
     ### Create monitor user
     $instance->exec_sql_with_croak(q{CREATE USER monitor@127.0.0.1 IDENTIFIED WITH mysql_native_password BY 'password'});
@@ -67,6 +67,7 @@ foreach (sort(keys(%$test)))
 
     my $port= $instance->_real_query_arrayref('SELECT @@port AS port')->[0]->{port};
   
+    $ENV{MYSQL_PWD}= "";
     my $register= Ytkit::AdminTool->new("--host=localhost",
                                         "--socket",  $mysqld->base_dir . "/tmp/mysql.sock",
                                         "--user=root",
@@ -74,14 +75,30 @@ foreach (sort(keys(%$test)))
                                         "--monitor-password=password",
                                         "register", _sprintf("127.0.0.1:%d", $port));
     $register->run;
-    is($instance->_real_query_arrayref("SELECT COUNT(*) AS c FROM admintool.instance_info")->[0]->{c},
-       1, "Registered successfully");
-    $instance->exec_sql("/*!80011 SET SESSION information_schema_stats_expiry = 0 */");
+    is_deeply($register->_fetch_instance_info,
+              [{ ipaddr => "127.0.0.1", port => $port }],
+              "Registered successfully");
+    $instance->update_stats_expiry;
     is($instance->_real_query_arrayref("SELECT GROUP_CONCAT(table_name ORDER BY table_name) AS t " .
                                        "FROM information_schema.tables " .
                                        "WHERE table_schema = 'admintool' AND table_rows > 0")->[0]->{t},
        "grant_info,instance_info,is_innodb_metrics,ps_digest_info,ps_table_info,status_info,table_status_info,variable_info",
        "Initial collection succeeded"); ### slave_status_info is empty(single master)
+
+    ### For testing after "collect"
+    my $table_rows= $instance->_real_query_arrayref("SELECT COUNT(*) AS c FROM admintool.status_info")->[0]->{c};
+
+    $ENV{MYSQL_PWD}= "";
+    my $collect= Ytkit::AdminTool->new("--host=localhost",
+                                       "--socket",  $mysqld->base_dir . "/tmp/mysql.sock",
+                                       "--user=root",
+                                       "--monitor-user=monitor",
+                                       "--monitor-password=password",
+                                       "collect");
+    $collect->run;
+    is($instance->_real_query_arrayref("SELECT COUNT(*) AS c FROM admintool.status_info")->[0]->{c},
+       $table_rows * 2,
+       "status_info collected");
 
     done_testing;
   };

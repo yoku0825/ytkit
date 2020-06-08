@@ -37,7 +37,7 @@ EOS
 
 my $allow_extra_arvg= 1;
 my $config= _config();
-my $subcommand= [qw{ initialize upgrade register }];
+my $subcommand= [qw{ initialize upgrade register collect }];
 
 sub new
 {
@@ -84,9 +84,8 @@ sub run
       foreach (@argv)
       {
         _debugf($_);
-        my ($ipaddr, $port)= $_ =~ /^([^:]+)(?::)?(\d+)?$/;
+        my ($ipaddr, $port)= split_host_port($_);
         _croakf("Invalid host (%s)", $_) if !($ipaddr);
-        $port //= 3306;
         _infof("Registering Host: %s, Port: %d", $ipaddr, $port);
         my $instance= $self->instance;
 
@@ -98,6 +97,16 @@ sub run
 
         ### Initial information fetching
         $self->full_collect($ipaddr, $port);
+      }
+    }
+    elsif ($command eq "collect")
+    {
+      ### typical_collect for registed in instance_info
+      foreach my $row (@{$self->_fetch_instance_info})
+      {
+        _infof("Fetcing for %s:%d", $row->{ipaddr}, $row->{port});
+        $self->typical_collect($row->{ipaddr}, $row->{port});
+        _infof("Fetcing done %s:%d", $row->{ipaddr}, $row->{port});
       }
     }
     else
@@ -129,7 +138,7 @@ sub create_database_admintool
   else
   {
     _infof("Starting CREATE TABLE in admintool");
-    $self->instance->exec_sql("USE admintool");
+    $self->instance->use("admintool");
     foreach (@{Ytkit::AdminTool::DDL::admintool_schema()})
     {
       $self->instance->exec_sql_with_croak($_);
@@ -140,7 +149,7 @@ sub create_database_admintool
     $self->fill_initial_data;
     _infof("Finished to fill initial data");
 
-   _notef("Finished initializing");
+    _notef("Finished initializing");
   }
 }
 
@@ -272,6 +281,12 @@ sub _make_collector
   return $self->{_collector};
 }
 
+sub _fetch_instance_info
+{
+  my ($self)= @_;
+  return $self->instance->query_arrayref("SELECT ipaddr, port FROM admintool.instance_info");
+}
+
 sub purge_old_records
 {
   my ($self)= @_;
@@ -281,15 +296,14 @@ sub purge_old_records
     ### DELETE all records before 1 year ago
     my $purge_by_yearly= _sprintf("DELETE FROM admintool.%s USE INDEX(idx_lastupdate) " .
                                   "WHERE last_update < CURDATE() - INTERVAL 1 YEAR", $table);
-    $self->instance->exec_sql($purge_by_yearly);
+    $self->instance->exec_sql_with_carp($purge_by_yearly);
 
     ### Hold recods on Monday before 2 weeks ago
     my $purge_by_weekly= _sprintf("DELETE FROM admintool.%s USE INDEX(idx_lastupdate) " .
                                   "WHERE last_update < CURDATE() - INTERVAL 2 WEEK AND " .
                                         "WEEKDAY(last_update) <> 1");
-    $self->instance->exec_sql($purge_by_weekly);
+    $self->instance->exec_sql_with_carp($purge_by_weekly);
   }
-
 }
 
 sub _config

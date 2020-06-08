@@ -32,8 +32,8 @@ no warnings "once";
 use_ok("Ytkit::AdminTool");
 
 is(scalar(@{Ytkit::AdminTool::DDL::admintool_schema()}), 10, "10 tables in admintool");
-is(scalar(@{Ytkit::AdminTool::DDL::adminview_schema()}), 12, "12 views in adminview");
-is(scalar(@{Ytkit::AdminTool::DDL::adminview_schema_ex()}), 6, "6 views in adminview(8.0 only)");
+is(scalar(@{Ytkit::AdminTool::DDL::adminview_schema()}), 13, "13 views in adminview");
+is(scalar(@{Ytkit::AdminTool::DDL::adminview_schema_ex()}), 7, "7 views in adminview(8.0 only)");
 
 
 done_testing;

@@ -24,7 +24,6 @@ use utf8;
 
 use Ytkit::IO;
 use Ytkit::Config::Option;
-use Data::Dumper;
 
 my $_version= "0.2.1";
 
@@ -119,9 +118,9 @@ sub new
         ### Making dict should be in loop.
         foreach my $alias (@{$option->{alias}})
         {
-          if ($dict->{$alias} && Dumper($dict->{$alias}) ne Dumper($option))
+          if ($dict->{$alias} && _sprintf($dict->{$alias}) ne _sprintf($option))
           {
-            _croakf("Duplicated alias %s detected. (%s - %s)", $alias, Dumper($dict->{$alias}), Dumper($option));
+            _croakf("Duplicated alias %s detected. (%s - %s)", $alias, _sprintf($dict->{$alias}), _sprintf($option));
           }
           $dict->{$alias}= $option;
         }
@@ -136,9 +135,9 @@ sub new
 
     foreach my $alias (@{$option->{alias}})
     {
-      if ($dict->{$alias} && Dumper($dict->{$alias}) ne Dumper($option))
+      if ($dict->{$alias} && _sprintf($dict->{$alias}) ne _sprintf($option))
       {
-        _croakf("Duplicated alias %s detected. (%s - %s)", $alias, Dumper($dict->{$alias}), Dumper($option));
+        _croakf("Duplicated alias %s detected. (%s - %s)", $alias, _sprintf($dict->{$alias}), _sprintf($option));
       }
  
       $dict->{$alias}= $option;

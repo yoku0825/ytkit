@@ -142,7 +142,7 @@ sub _sprintf
 sub __extract_ref
 {
   my ($element)= @_;
-  return $element if !$element;
+  return "" if !(defined($element));
   my @ret;
 
   if (ref($element) eq "HASH" || 

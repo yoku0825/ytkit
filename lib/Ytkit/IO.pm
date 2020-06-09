@@ -145,7 +145,8 @@ sub __extract_ref
   return $element if !$element;
   my @ret;
 
-  if (ref($element) eq "HASH")
+  if (ref($element) eq "HASH" || 
+      ref($element) =~ /^Ytkit::/) ### Treat blessed reference as same as HASH
   {
     foreach (sort(keys(%$element)))
     {

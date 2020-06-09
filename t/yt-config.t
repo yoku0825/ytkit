@@ -327,7 +327,6 @@ subtest "Mandatory option" => sub
   done_testing;
 };
  
-
 subtest "Built-in option handling" => sub
 {
   $ENV{MYSQL_PWD}= "abc";
@@ -337,6 +336,24 @@ subtest "Built-in option handling" => sub
   is($config->{result}->{password}, "ghi", "--password overrides MYSQL_PWD");
   is($ENV{MYSQL_PWD}, "ghi", "--password overrides MYSQL_PWD");
 
+  done_testing;
+};
+
+subtest "Duplicated aliases" => sub
+{
+  my $option_struct=
+  {
+    sort => { alias => ["sort", "s"] },
+    silent => { alias => ["silent", "s"] },
+  };
+
+  my $config;
+  eval
+  {
+    $config= Ytkit::Config->new($option_struct);
+  };
+
+  ok($@, "Failed because there are duplicated aliases.");
   done_testing;
 };
 

@@ -366,6 +366,23 @@ CREATE SQL SECURITY INVOKER VIEW `daily_table_latency_list` AS
 EOS
 ;
 
+my $daily_digest_latency_list= << 'EOS'
+CREATE SQL SECURITY INVOKER VIEW `daily_digest_latency_list` AS
+  SELECT CAST(`ps_digest_list`.`last_update` AS DATE) AS `_date`,
+         `ps_digest_list`.`hostname` AS `hostname`,
+         `ps_digest_list`.`ipaddr` AS `ipaddr`,
+         `ps_digest_list`.`port` AS `port`,
+         `ps_digest_list`.`datadir` AS `datadir`,
+         `ps_digest_list`.`digest_text` AS `digest_text`,
+         AVG(`ps_digest_list`.`count_star`) AS `count_star`,
+         AVG(`ps_digest_list`.`sum_timer_wait`) AS `sum_timer_wait`,
+         AVG(`ps_digest_list`.`sum_rows_examined`) AS `sum_rows_examined`,
+         AVG(`ps_digest_list`.`sum_rows_sent`) AS `sum_rows_sent`
+  FROM `ps_digest_list`
+  GROUP BY `_date`, `hostname`, `ipaddr`, `port`, `datadir`, `digest`
+EOS
+;
+
 ### adminview_schema (for 8.0.11 and later)
 my $recent_status_list= << 'EOS'
 CREATE SQL SECURITY INVOKER VIEW `recent_status_list` AS
@@ -558,26 +575,48 @@ CREATE SQL SECURITY INVOKER VIEW `table_read_list_analyze_90` AS
 EOS
 ;
 
-
+my $digest_list_analyze_90= << 'EOS'
+CREATE SQL SECURITY INVOKER VIEW `digest_list_analyze_90` AS
+  SELECT `last_90_days_calendar`.`_date` AS `_date`,
+         `daily_digest_latency_list`.`hostname` AS `hostname`,
+         `daily_digest_latency_list`.`ipaddr` AS `ipaddr`,
+         `daily_digest_latency_list`.`port` AS `port`,
+         `daily_digest_latency_list`.`datadir` AS `datadir`,
+         `daily_digest_latency_list`.`digest_text` AS `digest_text`,
+         `daily_digest_latency_list`.`count_star` AS `count_star`,
+         `daily_digest_latency_list`.`sum_rows_examined` AS `sum_rows_examined`,
+         `daily_digest_latency_list`.`sum_rows_sent` AS `sum_rows_sent`,
+         `sum_rows_examined` / `count_star` AS `avg_rows_examined`,
+         `sum_rows_sent` / `count_star` AS `avg_rows_sent`,
+         `sum_rows_examined` / `sum_rows_sent` AS `index_ratio`
+  FROM `last_90_days_calendar` LEFT JOIN `daily_digest_latency_list` USING(_date)
+EOS
+;
 
 sub admintool_schema
 {
-  return [$instance_info, $variable_info, $table_status_info, $grant_info, $is_innodb_metrics,
-          $ps_digest_info, $ps_table_info, $slave_info, $status_info, $ytkit_option];
+  return [$instance_info, $variable_info, $table_status_info,
+          $grant_info, $is_innodb_metrics, $ps_digest_info,
+          $ps_table_info, $slave_info, $status_info, ### 12
+          $ytkit_option];
 }
 
 sub adminview_schema
 {
-  return [$datadir_list, $hostname_list, $version_list, $instance_list, $grant_list,
-          $is_metrics_list, $ps_digest_list, $ps_table_list, $status_list, $table_status_list,
-          $variable_list, $daily_table_row_list, $daily_table_latency_list];
+  return [$datadir_list, $hostname_list, $version_list,
+          $instance_list, $grant_list, $is_metrics_list,
+          $ps_digest_list, $ps_table_list, $status_list,
+          $table_status_list, $variable_list, $daily_table_row_list, ### 12
+          $daily_table_latency_list, $daily_digest_latency_list];
 }
 
 sub adminview_schema_ex
 {
   ### For 8.0.11 and later.
-  return [$recent_status_list, $recent_table_status_list, $last_33_days_calendar, $last_90_days_calendar, $table_status_list_last_month,
-          $table_status_list_analyze_33, $table_status_list_analyze_90, $table_read_list_analyze_last_month, $table_read_list_analyze_90];
+  return [$recent_status_list, $recent_table_status_list, $last_33_days_calendar,
+          $last_90_days_calendar, $table_status_list_last_month, $table_status_list_analyze_33,
+          $table_status_list_analyze_90, $table_read_list_analyze_last_month, $table_read_list_analyze_90, ### 9
+          $digest_list_analyze_90];
 }
 
 

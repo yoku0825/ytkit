@@ -59,7 +59,7 @@ foreach (sort(keys(%$test)))
     ### adminview counts are different between 8.0 and others.
     my $adminview_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'adminview'";
     is($instance->_real_query_arrayref($adminview_count)->[0]->{c},
-       $_ eq "8.0" ? 20 : 13, "Create adminview tables");
+       $_ eq "8.0" ? 21 : 13, "Create adminview tables");
  
     ### Create monitor user
     $instance->exec_sql_with_croak(q{CREATE USER monitor@127.0.0.1 IDENTIFIED WITH mysql_native_password BY 'password'});

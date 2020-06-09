@@ -217,18 +217,30 @@ sub full_collect
   my $collect= $self->_make_collector($ipaddr, $port);
 
   ### admintool.variable_info
-  $buff= $collect->print_show_variables;
+  eval
+  {
+    $buff= $collect->print_show_variables;
+  };
+  _carpf($@) if $@;
   $instance->exec_sql_with_carp($buff) if $buff;
 
   ### admintool.slave_info
   ### - INSERTing slave_info should be after DELETE.
   ###   Because old info could be remained when slave has promoted to master.
   $instance->exec_sql_with_carp("DELETE FROM admintool.slave_info WHERE (ipaddr, port) = (?, ?)", undef, $ipaddr, $port);
-  $buff= $collect->print_show_slave;
+  eval
+  {
+    $buff= $collect->print_show_slave;
+  };
+  _carpf($@) if $@;
   $instance->exec_sql_with_carp($buff) if $buff;
 
   ### admintool.grant_info
-  $buff= $collect->print_show_grants;
+  eval
+  {
+    $buff= $collect->print_show_grants;
+  };
+  _carpf($@) if $@;
   $instance->exec_sql_with_carp($buff) if $buff;
 
   $self->typical_collect($ipaddr, $port);
@@ -244,23 +256,43 @@ sub typical_collect
   my $collect= $self->_make_collector($ipaddr, $port);
  
   ### admintool.table_status_info
-  $buff= $collect->print_table_size;
+  eval
+  {
+    $buff= $collect->print_table_size;
+  };
+  _carpf($@) if $@;
   $instance->exec_sql_with_carp($buff) if $buff;
 
   ### admintool.ps_table_info
-  $buff= $collect->print_table_latency;
+  eval
+  {
+    $buff= $collect->print_table_latency;
+  };
+  _carpf($@) if $@;
   $instance->exec_sql_with_carp($buff) if $buff;
 
   ### admintool.is_innodb_metrics
-  $buff= $collect->print_innodb_metrics;
+  eval
+  {
+    $buff= $collect->print_innodb_metrics;
+  };
+  _carpf($@) if $@;
   $instance->exec_sql_with_carp($buff) if $buff;
 
   ### admintool.ps_digest_info
-  $buff= $collect->print_query_latency;
+  eval
+  {
+    $buff= $collect->print_query_latency;
+  };
+  _carpf($@) if $@;
   $instance->exec_sql_with_carp($buff) if $buff;
 
   ### admintool.status_info
-  $buff= $collect->print_show_status;
+  eval
+  {
+    $buff= $collect->print_show_status;
+  };
+  _carpf($@) if $@;
   $instance->exec_sql_with_carp($buff) if $buff;
 
   ### Destroy for next collector

@@ -451,6 +451,28 @@ CREATE SQL SECURITY INVOKER VIEW `last_90_days_calendar` AS
 EOS
 ;
 
+my $table_status_list_last_month= << 'EOS'
+CREATE SQL SECURITY INVOKER VIEW `table_status_list_last_month` AS
+  SELECT `last_90_days_calendar`.`_date` AS `_date`,
+         `daily_table_row_list`.`hostname` AS `hostname`,
+         `daily_table_row_list`.`ipaddr` AS `ipaddr`,
+         `daily_table_row_list`.`port` AS `port`,
+         `daily_table_row_list`.`datadir` AS `datadir`,
+         `daily_table_row_list`.`table_schema` AS `table_schema`,
+         `daily_table_row_list`.`table_name` AS `table_name`,
+         `daily_table_row_list`.`table_rows` AS `table_rows`,
+         AVG(`daily_table_row_list`.`table_rows`) OVER `w7` AS `moving_avg_7`,
+         FIRST_VALUE(`daily_table_row_list`.`table_rows`) OVER `w_all` AS `_first`,
+         LAST_VALUE(`daily_table_row_list`.`table_rows`) OVER `w_all` AS `_last`,
+         (`daily_table_row_list`.`table_rows` - LAG(`daily_table_row_list`.`table_rows`) OVER `w`) AS `_diff`
+  FROM `last_90_days_calendar` LEFT JOIN `daily_table_row_list` USING(_date)
+  WHERE MONTH(_date) = MONTH(CURDATE() - INTERVAL 1 MONTH)
+  WINDOW `w` AS (PARTITION BY hostname, datadir, table_schema, table_name ORDER BY _date),
+         `w7` AS (`w` ROWS BETWEEN 7 PRECEDING AND CURRENT ROW),
+         `w_all` AS (`w` RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+EOS
+;
+
 my $table_status_list_analyze_33= << 'EOS'
 CREATE SQL SECURITY INVOKER VIEW `table_status_list_analyze_33` AS
   SELECT `last_33_days_calendar`.`_date` AS `_date`,
@@ -493,21 +515,22 @@ CREATE SQL SECURITY INVOKER VIEW `table_status_list_analyze_90` AS
 EOS
 ;
 
-my $table_read_list_alanlyze_33= << 'EOS'
+my $table_read_list_alanlyze_last_month= << 'EOS'
 CREATE SQL SECURITY INVOKER VIEW `table_read_list_analyze_33` AS
-  SELECT `last_33_days_calendar`.`_date` AS `_date`,
+  SELECT `last_90_days_calendar`.`_date` AS `_date`,
          `daily_table_latency_list`.`hostname` AS `hostname`,
          `daily_table_latency_list`.`ipaddr` AS `ipaddr`,
          `daily_table_latency_list`.`port` AS `port`,
          `daily_table_latency_list`.`datadir` AS `datadir`,
          `daily_table_latency_list`.`table_schema` AS `table_schema`,
          `daily_table_latency_list`.`table_name` AS `table_name`,
-         `daily_table_latency_list`.`count_read` AS `table_rows`,
+         `daily_table_latency_list`.`count_read` AS `count_read`,
          AVG(`daily_table_latency_list`.`count_read`) OVER `w7` AS `moving_avg_7`,
          FIRST_VALUE(`daily_table_latency_list`.`count_read`) OVER `w_all` AS `_first`,
          LAST_VALUE(`daily_table_latency_list`.`count_read`) OVER `w_all` AS `_last`,
          (`daily_table_latency_list`.`count_read` - LAG(`daily_table_latency_list`.`count_read`) OVER `w`) AS `_diff`
-  FROM `last_33_days_calendar` LEFT JOIN `daily_table_latency_list` USING(_date)
+  FROM `last_90_days_calendar` LEFT JOIN `daily_table_latency_list` USING(_date)
+  WHERE MONTH(_date) = MONTH(CURDATE() - INTERVAL 1 MONTH)
   WINDOW `w` AS (PARTITION BY hostname, datadir, table_schema, table_name ORDER BY _date),
          `w7` AS (`w` ROWS BETWEEN 7 PRECEDING AND CURRENT ROW) ,
          `w_all` AS (`w` RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
@@ -530,8 +553,8 @@ sub adminview_schema
 sub adminview_schema_ex
 {
   ### For 8.0.11 and later.
-  return [$recent_status_list, $recent_table_status_list, $last_33_days_calendar, $last_90_days_calendar, $table_status_list_analyze_33,
-          $table_status_list_analyze_90, $table_read_list_alanlyze_33];
+  return [$recent_status_list, $recent_table_status_list, $last_33_days_calendar, $last_90_days_calendar, $table_status_list_last_month,
+          $table_status_list_analyze_33, $table_status_list_analyze_90, $table_read_list_alanlyze_last_month];
 }
 
 

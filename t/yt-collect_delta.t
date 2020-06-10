@@ -57,10 +57,10 @@ subtest "events_statements_summary_by_digest" => sub
     delete($prog->{_previous});
     $prog->{delta_per_second}= 0;
  
-    $prog->instance->{_select_ps_digest}= $Ytkit::Test::SELECT_FROM_ps_digest::VAR1;
+    $prog->instance->{_select_ps_digest}= $Ytkit::Test::SELECT_FROM_ps_digest::BEFORE;
     is($prog->print_query_latency, undef, "First read returns nothing");
 
-    $prog->instance->{_select_ps_digest}= $Ytkit::Test::SELECT_FROM_ps_digest::VAR2;
+    $prog->instance->{_select_ps_digest}= $Ytkit::Test::SELECT_FROM_ps_digest::AFTER;
     is_deeply(text2array($prog->print_query_latency),
               text2array(read_file("$Bin/data/r/delta_select_from_ps_digest_into_short_2s.r")),
               "Print Short style");
@@ -71,10 +71,10 @@ subtest "events_statements_summary_by_digest" => sub
     delete($prog->{_previous});
     $prog->{delta_per_second}= 1;
  
-    $prog->instance->{_select_ps_digest}= $Ytkit::Test::SELECT_FROM_ps_digest::VAR1;
+    $prog->instance->{_select_ps_digest}= $Ytkit::Test::SELECT_FROM_ps_digest::BEFORE;
     is($prog->print_query_latency, undef, "First read returns nothing");
 
-    $prog->instance->{_select_ps_digest}= $Ytkit::Test::SELECT_FROM_ps_digest::VAR2;
+    $prog->instance->{_select_ps_digest}= $Ytkit::Test::SELECT_FROM_ps_digest::AFTER;
     is_deeply(text2array($prog->print_query_latency),
               text2array(read_file("$Bin/data/r/delta_select_from_ps_digest_into_short_1s.r")),
               "Print Short style");

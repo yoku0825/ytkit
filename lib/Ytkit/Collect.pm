@@ -668,6 +668,11 @@ sub _config
                     default => 1,
                     isa     => [0, 1],
                     text    => "Print even diff-ed value is zero." },
+    old_compat => { alias   => ["old_compat", "old"],
+                    noarg   => 1,
+                    isa     => sub { $ENV{ytkit_collect_compat}= 1; },
+                    text    => "Not fetch sum_rows_sorted and sum_created_tmp_tables for old compatibility.",
+                    deprecated => 1 },
   };
   my $config= Ytkit::Config->new({ %$yt_collect_option, 
                                    %$Ytkit::Config::CONNECT_OPTION,

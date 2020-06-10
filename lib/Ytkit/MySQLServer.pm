@@ -316,6 +316,47 @@ sub describe_table
 sub select_ps_digest
 {
   my ($self, $limit)= @_;
+
+  ### Compatibility between 0.2.1-7 and 0.2.1-8
+  if ($ENV{ytkit_collect_compat})
+  {
+    ### Old behavior
+    return $self->_select_ps_digest_old_compat($limit);
+  }
+  else
+  {
+    ### New (2 columns added) behavior
+    my $sql= << "EOS";
+SELECT
+  schema_name,
+  digest,
+  digest_text,
+  count_star,
+  sum_timer_wait,
+  sum_rows_examined,
+  sum_rows_sent,
+  sum_sort_rows,
+  sum_created_tmp_tables,
+  NOW() AS last_update
+FROM
+  performance_schema.events_statements_summary_by_digest
+WHERE
+  digest_text NOT LIKE 'SET %' AND
+  digest_text NOT LIKE 'DESC %' AND
+  digest_text NOT LIKE 'SHOW %'
+ORDER BY
+  count_star DESC
+EOS
+    $sql .= sprintf(" LIMIT %d", $limit) if $limit;
+ 
+    return $self->query_arrayref($sql);
+  }
+}
+
+sub _select_ps_digest_old_compat
+{
+  my ($self, $limit)= @_;
+
   my $sql= << "EOS";
 SELECT
   schema_name,
@@ -335,6 +376,7 @@ WHERE
 ORDER BY
   count_star DESC
 EOS
+
   $sql .= sprintf(" LIMIT %d", $limit) if $limit;
  
   return $self->query_arrayref($sql);

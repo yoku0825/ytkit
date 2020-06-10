@@ -328,6 +328,10 @@ SELECT
   NOW() AS last_update
 FROM
   performance_schema.events_statements_summary_by_digest
+WHERE
+  digest_text NOT LIKE 'SET %' AND
+  digest_text NOT LIKE 'DESC %' AND
+  digest_text NOT LIKE 'SHOW %'
 ORDER BY
   count_star DESC
 EOS

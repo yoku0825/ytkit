@@ -111,6 +111,8 @@ CREATE TABLE `ps_digest_info` (
   `sum_rows_sent` bigint unsigned NOT NULL,
   `last_update` datetime NOT NULL,
   `sum_timer_wait` bigint unsigned NOT NULL,
+  `sum_sort_rows` bigint unsigned NOT NULL,
+  `sum_created_tmp_tables` bigint unsigned NOT NULL,
   PRIMARY KEY (`seq`),
   KEY `idx_lastupdate` (`last_update`),
   CONSTRAINT `ps_digest_info_ibfk_1` FOREIGN KEY (`ipaddr`, `port`) REFERENCES `instance_info` (`ipaddr`, `port`) ON DELETE CASCADE ON UPDATE CASCADE

@@ -325,6 +325,8 @@ SELECT
   sum_timer_wait,
   sum_rows_examined,
   sum_rows_sent,
+  sum_sort_rows,
+  sum_created_tmp_tables,
   NOW() AS last_update
 FROM
   performance_schema.events_statements_summary_by_digest

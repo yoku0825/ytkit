@@ -122,7 +122,7 @@ subtest "Handling --sql-update, --sql-ignore and --sql-replace by fix_sql_option
 subtest "events_statements_summary_by_digest" => sub
 {
   $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
-  $prog->instance->{_select_ps_digest}= $Ytkit::Test::SELECT_FROM_ps_digest::VAR1;
+  $prog->instance->{_select_ps_digest}= $Ytkit::Test::SELECT_FROM_ps_digest::BEFORE;
 
   $prog->{output}= "tsv";
   is($prog->print_query_latency, read_file("$Bin/data/r/select_from_ps_digest_into_tsv.r"), "Print TSV style");

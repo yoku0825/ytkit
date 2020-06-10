@@ -65,6 +65,27 @@ foreach (sort(keys(%$test)))
     my $adminview_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'adminview'";
     is($instance->_real_query_arrayref($adminview_count)->[0]->{c},
        $_ eq "8.0" ? 24 : 14, "Create adminview tables");
+
+    subtest "Checking view definition is correct" => sub
+    {
+      my $adminview_name= "SELECT table_name AS table_name FROM information_schema.views WHERE table_schema = 'adminview'";
+
+      local $SIG{__WARN__}= sub
+      {
+        ok(0, "Querying adminview failed.");
+      };
+
+      foreach my $row (@{$instance->_real_query_arrayref($adminview_name)})
+      {
+        eval
+        {
+          $instance->_real_query_arrayref(_sprintf("SELECT * FROM adminview.%s", $row->{table_name}));
+        };
+        ok(!($@), _sprintf("SELECT FROM adminview.%s succeeded", $row->{table_name})) or diag($@);
+      }
+      ok(1, "All adminview SELECTed");
+      done_testing;
+    };
  
     ### Create monitor user
     $instance->exec_sql_with_croak(q{CREATE USER monitor@127.0.0.1 IDENTIFIED WITH mysql_native_password BY 'password'});

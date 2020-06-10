@@ -379,7 +379,7 @@ CREATE SQL SECURITY INVOKER VIEW `daily_digest_latency_list` AS
          AVG(`ps_digest_list`.`sum_rows_examined`) AS `sum_rows_examined`,
          AVG(`ps_digest_list`.`sum_rows_sent`) AS `sum_rows_sent`
   FROM `ps_digest_list`
-  GROUP BY `_date`, `hostname`, `ipaddr`, `port`, `datadir`, `digest`
+  GROUP BY `_date`, `hostname`, `ipaddr`, `port`, `datadir`, `digest_text`
 EOS
 ;
 

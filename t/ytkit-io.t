@@ -183,6 +183,13 @@ subtest "Extract ARRAYref and HASHref" => sub
 
   is(_notef("bbb%sqqq", $mixed), qq|bbb{a => b, c => [d, e, f], g => h}qqq\n|, "Print via _notef");
 
+  subtest "Issue #45" => sub
+  {
+    bless $mixed => "Ytkit::IO";
+    is(Ytkit::IO::__extract_ref($mixed), q|{a => b, c => [d, e, f], g => h}|, "Blessed reference");
+    done_testing;
+  };
+
   done_testing;
 };
 

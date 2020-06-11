@@ -37,7 +37,7 @@ EOS
 
 my $allow_extra_arvg= 1;
 my $config= _config();
-my $subcommand= [qw{ initialize upgrade register collect }];
+my $subcommand= [qw{ initialize upgrade register collect list }];
 
 sub new
 {
@@ -107,6 +107,19 @@ sub run
         _infof("Fetcing for %s:%d", $row->{ipaddr}, $row->{port});
         $self->typical_collect($row->{ipaddr}, $row->{port});
         _infof("Fetcing done %s:%d", $row->{ipaddr}, $row->{port});
+      }
+    }
+    elsif ($command eq "list")
+    {
+      foreach my $row (@{$self->list_instance_info})
+      {
+        _printf("%s\t%s\t%d\t%s\t%s\t%s\n",
+                $row->{hostname},
+                $row->{ipaddr},
+                $row->{port},
+                $row->{datadir},
+                $row->{version},
+                $row->{master});
       }
     }
     else
@@ -319,6 +332,13 @@ sub _fetch_instance_info
   return $self->instance->query_arrayref("SELECT ipaddr, port FROM admintool.instance_info");
 }
 
+sub list_instance_info
+{
+  my ($self)= @_;
+  return $self->instance->query_arrayref("SELECT hostname, ipaddr, port, datadir, version, master, monitor " .
+                                         "FROM adminview.instance_list");
+}
+
 sub purge_old_records
 {
   my ($self)= @_;
@@ -330,9 +350,9 @@ sub purge_old_records
                                   "WHERE last_update < CURDATE() - INTERVAL 1 YEAR", $table);
     $self->instance->exec_sql_with_carp($purge_by_yearly);
 
-    ### Hold recods on Monday before 2 weeks ago
+    ### Hold recods on Monday before 1 month ago
     my $purge_by_weekly= _sprintf("DELETE FROM admintool.%s USE INDEX(idx_lastupdate) " .
-                                  "WHERE last_update < CURDATE() - INTERVAL 2 WEEK AND " .
+                                  "WHERE last_update < CURDATE() - INTERVAL 1 MONTH AND " .
                                         "WEEKDAY(last_update) <> 1");
     $self->instance->exec_sql_with_carp($purge_by_weekly);
   }

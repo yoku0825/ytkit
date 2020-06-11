@@ -268,6 +268,8 @@ CREATE SQL SECURITY INVOKER VIEW `ps_digest_list` AS
          `admintool`.`ps_digest_info`.`sum_timer_wait` AS `sum_timer_wait`,
          `admintool`.`ps_digest_info`.`sum_rows_examined` AS `sum_rows_examined`,
          `admintool`.`ps_digest_info`.`sum_rows_sent` AS `sum_rows_sent`,
+         `admintool`.`ps_digest_info`.`sum_sort_rows` AS `sum_sort_rows`,
+         `admintool`.`ps_digest_info`.`sum_created_tmp_tables` AS `sum_created_tmp_tables`,
          `admintool`.`ps_digest_info`.`last_update` AS `last_update`
   FROM `admintool`.`ps_digest_info` JOIN `instance_list` USING(ipaddr, port)
 EOS

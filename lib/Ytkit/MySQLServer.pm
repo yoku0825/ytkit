@@ -630,13 +630,15 @@ sub check_warnings
 {
   my ($self)= @_;
 
-  my $warn;
+  my @warn;
   eval
   {
-    $warn= $self->conn->selectall_arrayref("SHOW WARNINGS");
-    _debugf($warn) if @$warn;
+    @warn= @{$self->conn->selectall_arrayref("SHOW WARNINGS")};
+    _debugf(\@warn) if @warn;
   };
-  $self->warning($warn) if @$warn;
+
+  ### Filtering by ytkit_ignore_warning
+  $self->warning(\@warn) if @warn;
 } 
 
 sub clear_cache

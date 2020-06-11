@@ -50,12 +50,6 @@ sub new
   bless $self => $class;
   $self->handle_help;
 
-  ### Check --sql-update, --sql-ignore and --sql-replace at once.
-  $self->fix_sql_options;
-
-  ### die if can't connect to MySQL.
-  $self->test_connect;
-
   my @enable= grep { ref($self->{$_}) eq "HASH" && 
                      exists($self->{$_}->{enable}) && 
                      $self->{$_}->{enable} == 1 } keys(%$self);
@@ -63,6 +57,17 @@ sub new
   $self->make_handle;
 
   return $self;
+}
+
+sub prepare
+{
+  my ($self)= @_;
+
+  ### Check --sql-update, --sql-ignore and --sql-replace at once.
+  $self->fix_sql_options;
+
+  ### die if can't connect to MySQL.
+  $self->test_connect;
 }
 
 sub make_handle
@@ -539,7 +544,7 @@ sub fix_sql_options
   {
     _carpf("--sql-update(or its synonym), --sql-ignore(or its synonym) and --sql-replace(or its synonym) " .
                  "are NOT able to turn-on at same time.\n" .
-                 "Falling back to turn-off all of them(using simple INSERT INTO statement)") if !($ENV{HARNESS_ACTIVE});
+                 "Falling back to turn-off all of them(using simple INSERT INTO statement)");
     delete($self->{sql_update}) if $self->{sql_update};
     delete($self->{sql_replace}) if $self->{sql_replace};
     delete($self->{sql_ignore}) if $self->{sql_ignore};

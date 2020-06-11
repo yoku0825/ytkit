@@ -29,6 +29,7 @@ use Ytkit::Collect;
 
 if (my $prog= Ytkit::Collect->new(@ARGV))
 {
+  $prog->prepare;
   $prog->collect;
 }
 else

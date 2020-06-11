@@ -27,7 +27,6 @@ use JSON qw{ from_json };
 use Test::MockTime;
 Test::MockTime::set_fixed_time("2018-06-06 12:27:34 +0900", "%Y-%m-%d %H:%M:%S %z");
 $ENV{TZ}= "Asia/Tokyo";
-$ENV{HARNESS_ACTIVE}= 1;
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
@@ -319,7 +318,6 @@ subtest "SHOW SLAVE STATUS" => sub
 
 subtest "config description" => sub
 {
-  $ENV{HARNESS_ACTIVE}= 1;
   my $prog2= Ytkit::Collect->new;
   unlike($prog2->help, qr/FIXME/, "config description shouldn't have FIXME");
   done_testing;

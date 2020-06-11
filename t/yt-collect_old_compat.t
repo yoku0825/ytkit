@@ -38,7 +38,7 @@ no warnings "once";
 use_ok("Ytkit::Collect");
 
 ### Dummy connection
-ok(my $prog= Ytkit::Collect->new("--host=localhost"), "Create new");
+ok(my $prog= Ytkit::Collect->new("--host=localhost", "--old-compat"), "Create new");
 $prog->{print_header}= 0;
 
 ### Fix output-tablename
@@ -125,21 +125,21 @@ subtest "events_statements_summary_by_digest" => sub
   $prog->instance->{__select_ps_digest_old_compat}= $Ytkit::Test::SELECT_FROM_ps_digest::BEFORE_COMPAT;
 
   $prog->{output}= "tsv";
-  is($prog->print_query_latency, read_file("$Bin/data/r/select_from_ps_digest_into_tsv.r"), "Print TSV style");
+  is($prog->print_query_latency, read_file("$Bin/data/r/select_from_ps_digest_into_tsv_old_compat.r"), "Print TSV style");
 
   $prog->{output}= "csv";
-  is($prog->print_query_latency, read_file("$Bin/data/r/select_from_ps_digest_into_csv.r"), "Print CSV style");
+  is($prog->print_query_latency, read_file("$Bin/data/r/select_from_ps_digest_into_csv_old_compat.r"), "Print CSV style");
 
   $prog->{output}= "json";
   is_deeply(from_json($prog->print_query_latency),
-            from_json(read_file("$Bin/data/r/select_from_ps_digest_into_json.r")),
+            from_json(read_file("$Bin/data/r/select_from_ps_digest_into_json_old_compat.r")),
             "Print JSON style");
 
   $prog->{output}= "sql";
-  is($prog->print_query_latency, read_file("$Bin/data/r/select_from_ps_digest_into_sql.r"), "Print SQL style");
+  is($prog->print_query_latency, read_file("$Bin/data/r/select_from_ps_digest_into_sql_old_compat.r"), "Print SQL style");
 
   $prog->{output}= "short";
-  is($prog->print_query_latency, read_file("$Bin/data/r/select_from_ps_digest_into_short.r"), "Print Short style");
+  is($prog->print_query_latency, read_file("$Bin/data/r/select_from_ps_digest_into_short_old_compat.r"), "Print Short style");
 
   ### Turn off performance_schema.
   $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql57_ps_off;

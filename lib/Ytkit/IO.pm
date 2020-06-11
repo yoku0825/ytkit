@@ -82,7 +82,7 @@ sub _croakf
   if ($ENV{ytkit_force})
   {
     ### with --force, falling back carp.
-    carp($msg) if !($ENV{HARNESS_ACTIVE});
+    carp($msg);
   }
   else
   {
@@ -97,7 +97,7 @@ sub _carpf ### NORMAL, VERBOSE, DEBUG (Not --silent)
 
   return undef if $ENV{ytkit_verbose} < NORMAL;
   my $msg= _sprintf($format, @argv);
-  carp($msg) if !($ENV{HARNESS_ACTIVE});
+  carp($msg);
   return $msg;
 }
 
@@ -107,7 +107,7 @@ sub __out_stdout
 
   my $msg= _sprintf($format, @argv);
   $msg .= "\n" if (substr($msg, -1, 1) ne "\n");
-  print(STDOUT $msg) if !($ENV{HARNESS_ACTIVE});
+  print(STDOUT $msg);
   return $msg;
 }
 
@@ -117,7 +117,7 @@ sub __out_stderr
 
   my $msg= _sprintf($format, @argv);
   $msg .= "\n" if (substr($msg, -1, 1) ne "\n");
-  print(STDERR $msg) if !($ENV{HARNESS_ACTIVE});
+  print(STDERR $msg);
   return $msg;
 }
 

@@ -25,6 +25,7 @@ use Test::More;
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
+require "$Bin/Test.pl";
 no warnings "once";
 
 use_ok("Ytkit::Config");
@@ -291,6 +292,7 @@ subtest "Mandatory option" => sub
   my @test_argv= ();
   eval
   {
+    Ytkit::Test::_turn_off_stdouts() if $ENV{HARNESS_ACTIVE};
     my $config= Ytkit::Config->new($option_struct);
     $config->parse_argv(@test_argv); ### Empty array
   };
@@ -299,6 +301,7 @@ subtest "Mandatory option" => sub
   push(@test_argv, "--mandatory_option=test");
   eval
   {
+    Ytkit::Test::_turn_off_stdouts() if $ENV{HARNESS_ACTIVE};
     my $config= Ytkit::Config->new($option_struct);
     $config->parse_argv(@test_argv);
   };
@@ -307,24 +310,45 @@ subtest "Mandatory option" => sub
   push(@test_argv, "--mandatory_array=test");
   eval
   {
+    Ytkit::Test::_turn_off_stdouts() if $ENV{HARNESS_ACTIVE};
     my $config= Ytkit::Config->new($option_struct);
     $config->parse_argv(@test_argv);
   };
   ### mandatory but have default is through check_mandatory_option()
-  ok(!($@), "Success");
+  ok(!($@), "Success") or diag($@);
 
   ### Bug: --help doesn't handle correctly when script has "mandatory" option.
   ### https://github.com/yoku0825/ytkit/issues/42
   @test_argv= ("--help");
   eval
   {
+    Ytkit::Test::_turn_off_stdouts() if $ENV{HARNESS_ACTIVE};
     my $config= Ytkit::Config->new($option_struct);
     $config->parse_argv(@test_argv);
   };
-  ok(!($@), "--help without mandatory option is not croaked");
+  ok(!($@), "--help without mandatory option is not croaked") or diag($@);
 
 
   done_testing;
+};
+
+subtest "deprecated option" => sub
+{
+  my $option_struct=
+  {
+    deprecated => { alias => ["deprecated"], deprecated => 1 },
+  };
+
+  my $config= Ytkit::Config->new($option_struct);
+  my $warn_count= 0;
+
+  local $SIG{__WARN__}= sub
+  {
+    $warn_count++;
+  };
+  $config->parse_argv(("--deprecated"));
+  is($warn_count, 1, "deprecated option is passed");
+  done_testing; 
 };
  
 subtest "Built-in option handling" => sub
@@ -350,6 +374,7 @@ subtest "Duplicated aliases" => sub
   my $config;
   eval
   {
+    Ytkit::Test::_turn_off_stdouts() if $ENV{HARNESS_ACTIVE};
     $config= Ytkit::Config->new($option_struct);
   };
 

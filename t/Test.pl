@@ -32,6 +32,9 @@ foreach (glob("$Bin/data/*.pl"))
   require $_;
 }
 
+### STDOUT, STDERR changing for test
+_turn_off_stdouts() if ($ENV{HARNESS_ACTIVE});
+
 sub read_file
 {
   my ($filename)= @_;
@@ -39,6 +42,14 @@ sub read_file
   my @buff= <$fh>;
   close($fh);
   return join("", @buff);
+}
+
+sub _turn_off_stdouts
+{
+  close(STDOUT);
+  open(STDOUT, ">", "/dev/null");
+  close(STDERR);
+  open(STDERR, ">", "/dev/null");
 }
 
 return 1;

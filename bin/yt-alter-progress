@@ -29,6 +29,7 @@ use Ytkit::AlterProgress;
 
 if (my $prog= Ytkit::AlterProgress->new(@ARGV))
 {
+  $prog->prepare;
   printf("Press Ctrl + C for quit from %s\n", $0);
   map { $SIG{$_}= sub { $prog->restore_setting; exit 0 } } qw{INT HUP QUIT USR1 TERM};
   while ()

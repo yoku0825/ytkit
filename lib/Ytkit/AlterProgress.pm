@@ -63,6 +63,13 @@ sub new
   bless $self => $class;
   $self->handle_help;
 
+  return $self;
+}
+
+sub prepare
+{
+  my ($self)= @_;
+
   ### croak if can't connect to MySQL.
   $self->test_connect;
 
@@ -72,8 +79,6 @@ sub new
   ### Check instruments.
   $self->setup_instruments;
   $self->setup_consumers;
-
-  return $self;
 }
 
 sub checking_requirement
@@ -84,15 +89,14 @@ sub checking_requirement
   if ($self->instance->mysqld_version < 50706)
   {
     _croakf("yt-alter-progress needs MySQL Version >= 5.7.6 but Server version is %d",
-            $self->instance->mysqld_version) if !($ENV{HARNESS_ACTIVE});
+            $self->instance->mysqld_version);
     return 0;
   }
 
   ### and performance_schema = ON
   if (!($self->instance->p_s_on))
   {
-    _croakf("yt-alter-progress needs performance_schema = ON but actually off")
-      if !($ENV{HARNESS_ACTIVE});
+    _croakf("yt-alter-progress needs performance_schema = ON but actually off");
     return 0;
   }
   return 1;

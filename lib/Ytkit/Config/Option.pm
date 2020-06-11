@@ -122,7 +122,7 @@ sub set_value
                          "[" . join(", ", @{$self->{isa}}) . "]" :
                          $self->{isa});
 
-      _carpf($msg) if !($ENV{HARNESS_ACTIVE});
+      _carpf($msg);
     }
   }
   return 1;

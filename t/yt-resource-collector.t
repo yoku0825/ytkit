@@ -23,8 +23,6 @@ use warnings;
 use utf8;
 use Test::More;
 
-$ENV{HARNESS_ACTIVE}= 1;
-
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
 require "$Bin/Test.pl";

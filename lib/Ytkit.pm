@@ -112,7 +112,7 @@ sub test_connect
   {
     ### die if can't connect to MySQL.
     my $msg= sprintf("MySQL Connection failed. %s", $self->instance->error);
-    _croakf($msg) if !($ENV{HARNESS_ACTIVE});
+    _croakf($msg);
 
     ### For test.
     return $self;

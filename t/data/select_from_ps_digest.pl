@@ -1,7 +1,5 @@
 package Ytkit::Test::SELECT_FROM_ps_digest;
 
-use Clone qw{ clone };
-
 $BEFORE = [
           {
             'sum_timer_wait' => '1134794420000',

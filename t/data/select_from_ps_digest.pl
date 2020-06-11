@@ -9,7 +9,7 @@ $BEFORE = [
             'digest_text' => 'INSERT INTO `city` VALUES (...)',
             'sum_rows_examined' => 0,
             'sum_rows_sent' => 0,
-            'sum_rows_sorted' => 0,
+            'sum_sort_rows' => 0,
             'sum_created_tmp_tables' => 0,
             'count_star' => 4079
           },
@@ -21,7 +21,7 @@ $BEFORE = [
             'digest_text' => 'INSERT INTO `countrylanguage` VALUES (...)',
             'sum_rows_examined' => 0,
             'sum_rows_sent' => 0,
-            'sum_rows_sorted' => 0,
+            'sum_sort_rows' => 0,
             'sum_created_tmp_tables' => 0,
             'count_star' => 984
           },
@@ -33,7 +33,7 @@ $BEFORE = [
             'digest_text' => 'INSERT INTO `t1` VALUES (...)',
             'sum_rows_examined' => 0,
             'sum_rows_sent' => 0,
-            'sum_rows_sorted' => 0,
+            'sum_sort_rows' => 0,
             'sum_created_tmp_tables' => 0,
             'count_star' => 630
           },
@@ -45,7 +45,7 @@ $BEFORE = [
             'digest_text' => 'INSERT INTO `country` VALUES (...)',
             'sum_rows_examined' => 0,
             'sum_rows_sent' => 0,
-            'sum_rows_sorted' => 0,
+            'sum_sort_rows' => 0,
             'sum_created_tmp_tables' => 0,
             'count_star' => 239
           },
@@ -57,7 +57,7 @@ $BEFORE = [
             'digest_text' => 'SHOW GLOBAL VARIABLES',
             'sum_rows_examined' => 0,
             'sum_rows_sent' => 0,
-            'sum_rows_sorted' => 0,
+            'sum_sort_rows' => 0,
             'sum_created_tmp_tables' => 167,
             'count_star' => 167
           }
@@ -72,7 +72,7 @@ $AFTER = [
             'digest_text' => 'INSERT INTO `city` VALUES (...)',
             'sum_rows_examined' => 0,
             'sum_rows_sent' => 0,
-            'sum_rows_sorted' => 0,
+            'sum_sort_rows' => 0,
             'sum_created_tmp_tables' => 0,
             'count_star' => 4079
           },
@@ -84,7 +84,7 @@ $AFTER = [
             'digest_text' => 'INSERT INTO `countrylanguage` VALUES (...)',
             'sum_rows_examined' => 0,
             'sum_rows_sent' => 0,
-            'sum_rows_sorted' => 0,
+            'sum_sort_rows' => 0,
             'sum_created_tmp_tables' => 0,
             'count_star' => 984
           },
@@ -96,7 +96,7 @@ $AFTER = [
             'digest_text' => 'INSERT INTO `t1` VALUES (...)',
             'sum_rows_examined' => 0,
             'sum_rows_sent' => 0,
-            'sum_rows_sorted' => 0,
+            'sum_sort_rows' => 0,
             'sum_created_tmp_tables' => 0,
             'count_star' => 640
           },
@@ -108,7 +108,7 @@ $AFTER = [
             'digest_text' => 'INSERT INTO `country` VALUES (...)',
             'sum_rows_examined' => 0,
             'sum_rows_sent' => 0,
-            'sum_rows_sorted' => 0,
+            'sum_sort_rows' => 0,
             'sum_created_tmp_tables' => 0,
             'count_star' => 239
           },
@@ -120,7 +120,7 @@ $AFTER = [
             'digest_text' => 'SHOW GLOBAL VARIABLES',
             'sum_rows_examined' => 0,
             'sum_rows_sent' => 0,
-            'sum_rows_sorted' => 0,
+            'sum_sort_rows' => 0,
             'sum_created_tmp_tables' => 367,
             'count_star' => 367
           }

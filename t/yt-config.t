@@ -331,6 +331,25 @@ subtest "Mandatory option" => sub
 
   done_testing;
 };
+
+subtest "deprecated option" => sub
+{
+  my $option_struct=
+  {
+    deprecated => { alias => ["deprecated"], deprecated => 1 },
+  };
+
+  my $config= Ytkit::Config->new($option_struct);
+  my $warn_count= 0;
+
+  local $SIG{__WARN__}= sub
+  {
+    $warn_count++;
+  };
+  $config->parse_argv(("--deprecated"));
+  is($warn_count, 1, "deprecated option is passed");
+  done_testing; 
+};
  
 subtest "Built-in option handling" => sub
 {

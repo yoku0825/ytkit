@@ -47,6 +47,7 @@ sub new
       default => $opt->{default} // undef,
       text    => $opt->{text} // "FIXME: This option doesn't have description",
       mandatory => $opt->{mandatory} // undef,
+      deprecated => $opt->{deprecated} // undef,
     }
   }
 
@@ -111,6 +112,7 @@ sub set_value
   }
   else
   {
+    _carpf("Option %s is now deprecated.", $self->{alias}) if $self->{deprecated};
     if (_check_isa($value, $self->{isa}))
     {
       $self->{value}= $value;

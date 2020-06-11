@@ -33,16 +33,22 @@ use_ok("Ytkit::AlterProgress");
 
 ok(my $prog= Ytkit::AlterProgress->new("--host=localhost"), "Create new");
 
-$ENV{HARNESS_ACTIVE}= 1;
-
 subtest "Checking requirements" => sub
 {
   $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
-  ok($prog->checking_requirement, "Checking Requirement(OK on ps=ON 5.7)");
+  eval
+  {
+    $prog->checking_requirement;
+  };
+  ok(!($@), "Checking Requirement(OK on ps=ON 5.7)");
   $prog->clear_cache;
 
   $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql55_os_on;
-  ok(!($prog->checking_requirement), "Checking Requirement(NG on ps=ON 5.5)");
+  eval
+  {
+    $prog->checking_requirement;
+  };
+  ok($@, "Checking Requirement(NG on ps=ON 5.5)");
   $prog->clear_cache;
 
   done_testing;

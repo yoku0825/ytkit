@@ -631,15 +631,29 @@ sub check_warnings
   my ($self)= @_;
 
   my @warn;
-  eval
+  if ($self->{__test_show_warnings})
   {
-    @warn= @{$self->conn->selectall_arrayref("SHOW WARNINGS")};
-    _debugf(\@warn) if @warn;
-  };
+    ### For test purpose
+    @warn= @{$self->{__test_show_warnings}};
+  }
+  else
+  {
+    eval
+    {
+      @warn= @{$self->conn->selectall_arrayref("SHOW WARNINGS")};
+      _debugf(\@warn) if @warn;
+    };
+  }
 
   ### Filtering by ytkit_ignore_warning
-  $self->warning(\@warn) if @warn;
-} 
+  my @filtered= ();
+  foreach my $row (@warn)
+  {
+    push(@filtered, $row) if !(grep { $row->[1] eq $_ } @{$ENV{ytkit_ignore_warning}});
+  }
+  
+  $self->warning(\@filtered);
+}
 
 sub clear_cache
 {

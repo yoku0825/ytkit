@@ -258,8 +258,18 @@ subtest "Resultset format functions" => sub
   done_testing;
 };
 
+subtest "SHOW WARNINGS" => sub
+{
+  $server->{__test_show_warnings}= $Ytkit::Test::SHOW_WARNINGS::WARNING;
+  is(scalar(@{$server->check_warnings}), 7, "SHOW WARNINGS without filtering");
 
+  $ENV{ytkit_ignore_warning}= ["1287"];
+  is(scalar(@{$server->check_warnings}), 5, "Warning filtering");
 
+  $ENV{ytkit_ignore_warning}= ["1287", "1292"];
+  is(scalar(@{$server->check_warnings}), 0, "Multiple warning filtering");
+  done_testing;
+};
 
 
 done_testing;

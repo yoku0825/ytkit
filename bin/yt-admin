@@ -27,6 +27,9 @@ use FindBin qw/$Bin/;
 use lib "$Bin/../lib";
 use Ytkit::AdminTool;
 
+### Ignore "Warning, 1287, 'VALUES function' is deprecated and.. "
+$ENV{ytkit_ignore_warning}= ["1287"];
+
 if (my $prog= Ytkit::AdminTool->new(@ARGV))
 {
   $prog->run;

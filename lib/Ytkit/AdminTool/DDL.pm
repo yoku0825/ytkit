@@ -381,7 +381,9 @@ CREATE SQL SECURITY INVOKER VIEW `daily_digest_latency_list` AS
          AVG(`ps_digest_list`.`count_star`) AS `count_star`,
          AVG(`ps_digest_list`.`sum_timer_wait`) AS `sum_timer_wait`,
          AVG(`ps_digest_list`.`sum_rows_examined`) AS `sum_rows_examined`,
-         AVG(`ps_digest_list`.`sum_rows_sent`) AS `sum_rows_sent`
+         AVG(`ps_digest_list`.`sum_rows_sent`) AS `sum_rows_sent`,
+         AVG(`ps_digest_list`.`sum_sort_rows`) AS `sum_sort_rows`,
+         AVG(`ps_digest_list`.`sum_created_tmp_tables`) AS `sum_created_tmp_tables`
   FROM `ps_digest_list`
   GROUP BY `_date`, `hostname`, `ipaddr`, `port`, `datadir`, `digest_text`
 EOS
@@ -590,6 +592,8 @@ CREATE SQL SECURITY INVOKER VIEW `digest_list_analyze_90` AS
          `daily_digest_latency_list`.`count_star` AS `count_star`,
          `daily_digest_latency_list`.`sum_rows_examined` AS `sum_rows_examined`,
          `daily_digest_latency_list`.`sum_rows_sent` AS `sum_rows_sent`,
+         `daily_digest_latency_list`.`sum_sort_rows` AS `sum_sort_rows`,
+         `daily_digest_latency_list`.`sum_created_tmp_tables` AS `sum_created_tmp_tables`,
          `sum_rows_examined` / `count_star` AS `avg_rows_examined`,
          `sum_rows_sent` / `count_star` AS `avg_rows_sent`,
          `sum_rows_examined` / `sum_rows_sent` AS `index_ratio`

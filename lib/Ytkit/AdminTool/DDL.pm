@@ -570,10 +570,10 @@ CREATE SQL SECURITY INVOKER VIEW `table_read_list_analyze_90` AS
          `daily_table_latency_list`.`table_schema` AS `table_schema`,
          `daily_table_latency_list`.`table_name` AS `table_name`,
          `daily_table_latency_list`.`count_read` AS `count_read`,
-         AVG(`daily_table_latency_list`.`count_read`) OVER `w7` AS `moving_avg_7`,
          FIRST_VALUE(`daily_table_latency_list`.`count_read`) OVER `w_all` AS `_first`,
          LAST_VALUE(`daily_table_latency_list`.`count_read`) OVER `w_all` AS `_last`,
-         (`daily_table_latency_list`.`count_read` - LAG(`daily_table_latency_list`.`count_read`) OVER `w`) AS `_diff`
+         (`daily_table_latency_list`.`count_read` - LAG(`daily_table_latency_list`.`count_read`) OVER `w`) AS `_diff`,
+         (`_date` - LAG(`_date`) OVER `w`) AS `_diff_date`
   FROM `last_90_days_calendar` LEFT JOIN `daily_table_latency_list` USING(_date)
   WINDOW `w` AS (PARTITION BY hostname, datadir, table_schema, table_name ORDER BY _date),
          `w7` AS (`w` ROWS BETWEEN 7 PRECEDING AND CURRENT ROW) ,

@@ -34,6 +34,9 @@ use constant ABORT_I_S      => "Querying information_schema is too dangerous for
 use constant ERRNO_INTERNAL => 9999;
 use constant ER_NO_SUCH_TABLE => 1146;
 
+### Implicit default
+$ENV{ytkit_ignore_warning} //= "";
+
 sub new
 {
   my ($class, $opt)= @_;
@@ -649,7 +652,7 @@ sub check_warnings
   my @filtered= ();
   foreach my $row (@warn)
   {
-    push(@filtered, $row) if !(grep { $row->[1] eq $_ } @{$ENV{ytkit_ignore_warning}});
+    push(@filtered, $row) if !(grep { $row->[1] eq $_ } split(",", $ENV{ytkit_ignore_warning}));
   }
   
   $self->warning(\@filtered);

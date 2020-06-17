@@ -377,6 +377,7 @@ CREATE SQL SECURITY INVOKER VIEW `daily_digest_latency_list` AS
          `ps_digest_list`.`ipaddr` AS `ipaddr`,
          `ps_digest_list`.`port` AS `port`,
          `ps_digest_list`.`datadir` AS `datadir`,
+         `ps_digest_list`.`digest` AS `digest`,
          `ps_digest_list`.`digest_text` AS `digest_text`,
          AVG(`ps_digest_list`.`count_star`) AS `count_star`,
          AVG(`ps_digest_list`.`sum_timer_wait`) AS `sum_timer_wait`,
@@ -385,7 +386,7 @@ CREATE SQL SECURITY INVOKER VIEW `daily_digest_latency_list` AS
          AVG(`ps_digest_list`.`sum_sort_rows`) AS `sum_sort_rows`,
          AVG(`ps_digest_list`.`sum_created_tmp_tables`) AS `sum_created_tmp_tables`
   FROM `ps_digest_list`
-  GROUP BY `_date`, `hostname`, `ipaddr`, `port`, `datadir`, `digest_text`
+  GROUP BY `_date`, `hostname`, `ipaddr`, `port`, `datadir`, `digest`, `digest_text`
 EOS
 ;
 
@@ -588,6 +589,7 @@ CREATE SQL SECURITY INVOKER VIEW `digest_list_analyze_90` AS
          `daily_digest_latency_list`.`ipaddr` AS `ipaddr`,
          `daily_digest_latency_list`.`port` AS `port`,
          `daily_digest_latency_list`.`datadir` AS `datadir`,
+         `daily_digest_latency_list`.`digest` AS `digest`,
          `daily_digest_latency_list`.`digest_text` AS `digest_text`,
          `daily_digest_latency_list`.`count_star` AS `count_star`,
          `daily_digest_latency_list`.`sum_rows_examined` AS `sum_rows_examined`,

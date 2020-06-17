@@ -24,7 +24,7 @@ use utf8;
 
 
 ### admintool_schema
-my $instance_info= << 'EOS'
+my $instance_info= << 'EOS';
 CREATE TABLE `instance_info` (
   `ipaddr` varchar(15) NOT NULL,
   `port` smallint unsigned NOT NULL,
@@ -34,9 +34,8 @@ CREATE TABLE `instance_info` (
   PRIMARY KEY (`ipaddr`,`port`)
 ) ENGINE=InnoDB
 EOS
-;
 
-my $variable_info= << 'EOS'
+my $variable_info= << 'EOS';
 CREATE TABLE `variable_info` (
   `ipaddr` varchar(15) NOT NULL,
   `port` smallint unsigned NOT NULL,
@@ -47,9 +46,8 @@ CREATE TABLE `variable_info` (
   CONSTRAINT `variable_info_ibfk_1` FOREIGN KEY (`ipaddr`, `port`) REFERENCES `instance_info` (`ipaddr`, `port`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB 
 EOS
-;
 
-my $table_status_info= << 'EOS'
+my $table_status_info= << 'EOS';
 CREATE TABLE `table_status_info` (
   `seq` bigint unsigned NOT NULL AUTO_INCREMENT,
   `ipaddr` varchar(15) NOT NULL,
@@ -67,9 +65,8 @@ CREATE TABLE `table_status_info` (
   CONSTRAINT `table_status_info_ibfk_1` FOREIGN KEY (`ipaddr`, `port`) REFERENCES `instance_info` (`ipaddr`, `port`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB
 EOS
-;
 
-my $grant_info= << 'EOS'
+my $grant_info= << 'EOS';
 CREATE TABLE `grant_info` (
   `ipaddr` varchar(15) NOT NULL,
   `port` smallint unsigned NOT NULL,
@@ -81,9 +78,8 @@ CREATE TABLE `grant_info` (
   CONSTRAINT `grant_info_ibfk_1` FOREIGN KEY (`ipaddr`, `port`) REFERENCES `instance_info` (`ipaddr`, `port`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB
 EOS
-;
 
-my $is_innodb_metrics= << 'EOS'
+my $is_innodb_metrics= << 'EOS';
 CREATE TABLE `is_innodb_metrics` (
   `seq` bigint unsigned NOT NULL AUTO_INCREMENT,
   `ipaddr` varchar(15) NOT NULL,
@@ -96,9 +92,8 @@ CREATE TABLE `is_innodb_metrics` (
   CONSTRAINT `is_innodb_metrics_ibfk_1` FOREIGN KEY (`ipaddr`, `port`) REFERENCES `instance_info` (`ipaddr`, `port`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB
 EOS
-;
 
-my $ps_digest_info= << 'EOS'
+my $ps_digest_info= << 'EOS';
 CREATE TABLE `ps_digest_info` (
   `seq` bigint unsigned NOT NULL AUTO_INCREMENT,
   `ipaddr` varchar(15) NOT NULL,
@@ -118,9 +113,8 @@ CREATE TABLE `ps_digest_info` (
   CONSTRAINT `ps_digest_info_ibfk_1` FOREIGN KEY (`ipaddr`, `port`) REFERENCES `instance_info` (`ipaddr`, `port`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB
 EOS
-;
 
-my $ps_table_info= << 'EOS'
+my $ps_table_info= << 'EOS';
 CREATE TABLE `ps_table_info` (
   `seq` bigint unsigned NOT NULL AUTO_INCREMENT,
   `ipaddr` varchar(15) NOT NULL,
@@ -137,9 +131,8 @@ CREATE TABLE `ps_table_info` (
   CONSTRAINT `ps_table_info_ibfk_1` FOREIGN KEY (`ipaddr`, `port`) REFERENCES `instance_info` (`ipaddr`, `port`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB
 EOS
-;
 
-my $slave_info= << 'EOS'
+my $slave_info= << 'EOS';
 CREATE TABLE `slave_info` (
   `ipaddr` varchar(15) NOT NULL DEFAULT '',
   `port` smallint unsigned NOT NULL DEFAULT '0',
@@ -150,9 +143,8 @@ CREATE TABLE `slave_info` (
   CONSTRAINT `slave_info_ibfk_2` FOREIGN KEY (`ipaddr`, `port`) REFERENCES `instance_info` (`ipaddr`, `port`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB
 EOS
-;
 
-my $status_info= << 'EOS'
+my $status_info= << 'EOS';
 CREATE TABLE `status_info` (
   `seq` bigint unsigned NOT NULL AUTO_INCREMENT,
   `ipaddr` varchar(15) NOT NULL,
@@ -165,9 +157,8 @@ CREATE TABLE `status_info` (
   CONSTRAINT `status_info_ibfk_1` FOREIGN KEY (`ipaddr`, `port`) REFERENCES `instance_info` (`ipaddr`, `port`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB
 EOS
-;
 
-my $ytkit_option= << 'EOS'
+my $ytkit_option= << 'EOS';
 CREATE TABLE `ytkit_option` (
   `program_name` varchar(32) NOT NULL,
   `option_name` varchar(64) NOT NULL,
@@ -175,10 +166,9 @@ CREATE TABLE `ytkit_option` (
   PRIMARY KEY (`program_name`,`option_name`)
 ) ENGINE=InnoDB
 EOS
-;
 
 ### adminview_schema(common)
-my $datadir_list= << 'EOS'
+my $datadir_list= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `datadir_list` AS
   SELECT `admintool`.`variable_info`.`ipaddr` AS `ipaddr`,
          `admintool`.`variable_info`.`port` AS `port`,
@@ -186,9 +176,8 @@ CREATE SQL SECURITY INVOKER VIEW `datadir_list` AS
   FROM `admintool`.`variable_info`
   WHERE `admintool`.`variable_info`.`variable_name` = 'datadir'
 EOS
-;
 
-my $hostname_list= << 'EOS'
+my $hostname_list= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `hostname_list` AS
   SELECT DISTINCT
          SUBSTRING_INDEX(`admintool`.`variable_info`.`value`,'.',1) AS `hostname`, /* Trim 1st dot */
@@ -196,9 +185,8 @@ CREATE SQL SECURITY INVOKER VIEW `hostname_list` AS
   FROM `admintool`.`variable_info`
   WHERE `admintool`.`variable_info`.`variable_name` = 'hostname'
 EOS
-;
 
-my $version_list= << 'EOS'
+my $version_list= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `version_list` AS
   SELECT `admintool`.`variable_info`.`ipaddr` AS `ipaddr`,
          `admintool`.`variable_info`.`port` AS `port`,
@@ -206,9 +194,8 @@ CREATE SQL SECURITY INVOKER VIEW `version_list` AS
   FROM `admintool`.`variable_info`
   WHERE `admintool`.`variable_info`.`variable_name` = 'version'
 EOS
-;
 
-my $instance_list= << 'EOS'
+my $instance_list= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `instance_list` AS
   SELECT `hostname_list`.`hostname` AS `hostname`,
          `admintool`.`instance_info`.`ipaddr` AS `ipaddr`,
@@ -226,9 +213,8 @@ CREATE SQL SECURITY INVOKER VIEW `instance_list` AS
     JOIN `version_list` USING(ipaddr, port)
     LEFT JOIN `admintool`.`slave_info` USING(ipaddr, port)
 EOS
-;
 
-my $grant_list= << 'EOS'
+my $grant_list= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `grant_list` AS
   SELECT `instance_list`.`hostname` AS `hostname`,
          `instance_list`.`ipaddr` AS `ipaddr`,
@@ -240,9 +226,8 @@ CREATE SQL SECURITY INVOKER VIEW `grant_list` AS
          `admintool`.`grant_info`.`last_update` AS `last_update`
   FROM `instance_list` JOIN `admintool`.`grant_info` USING(ipaddr, port)
 EOS
-;
 
-my $is_metrics_list= << 'EOS'
+my $is_metrics_list= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `is_metrics_list` AS
   SELECT `instance_list`.`hostname` AS `hostname`,
          `instance_list`.`ipaddr` AS `ipaddr`,
@@ -253,9 +238,8 @@ CREATE SQL SECURITY INVOKER VIEW `is_metrics_list` AS
          `admintool`.`is_innodb_metrics`.`last_update` AS `last_update`
   FROM `admintool`.`is_innodb_metrics` JOIN `instance_list` USING(ipaddr, port)
 EOS
-;
 
-my $ps_digest_list= << 'EOS'
+my $ps_digest_list= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `ps_digest_list` AS
   SELECT `instance_list`.`hostname` AS `hostname`,
          `instance_list`.`ipaddr` AS `ipaddr`,
@@ -273,9 +257,8 @@ CREATE SQL SECURITY INVOKER VIEW `ps_digest_list` AS
          `admintool`.`ps_digest_info`.`last_update` AS `last_update`
   FROM `admintool`.`ps_digest_info` JOIN `instance_list` USING(ipaddr, port)
 EOS
-;
 
-my $ps_table_list= << 'EOS'
+my $ps_table_list= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `ps_table_list` AS
   SELECT `instance_list`.`hostname` AS `hostname`,
          `instance_list`.`ipaddr` AS `ipaddr`,
@@ -290,9 +273,8 @@ CREATE SQL SECURITY INVOKER VIEW `ps_table_list` AS
          `admintool`.`ps_table_info`.`sum_timer_write` AS `sum_timer_write`
   FROM `instance_list` JOIN `admintool`.`ps_table_info` USING(ipaddr, port)
 EOS
-;
 
-my $status_list= << 'EOS'
+my $status_list= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `status_list` AS
   SELECT `instance_list`.`hostname` AS `hostname`,
          `instance_list`.`ipaddr` AS `ipaddr`,
@@ -303,9 +285,8 @@ CREATE SQL SECURITY INVOKER VIEW `status_list` AS
          `admintool`.`status_info`.`last_update` AS `last_update`
   FROM `instance_list` JOIN `admintool`.`status_info` USING(ipaddr, port)
 EOS
-;
 
-my $table_status_list= << 'EOS'
+my $table_status_list= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `table_status_list` AS
   SELECT `instance_list`.`hostname` AS `hostname`,
          `instance_list`.`ipaddr` AS `ipaddr`,
@@ -320,9 +301,8 @@ CREATE SQL SECURITY INVOKER VIEW `table_status_list` AS
          `admintool`.`table_status_info`.`last_update` AS `last_update`
   FROM `instance_list` JOIN `admintool`.`table_status_info` USING(ipaddr, port)
 EOS
-;
 
-my $variable_list= << 'EOS'
+my $variable_list= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `variable_list` AS
   SELECT `instance_list`.`hostname` AS `hostname`,
          `instance_list`.`ipaddr` AS `ipaddr`,
@@ -332,9 +312,8 @@ CREATE SQL SECURITY INVOKER VIEW `variable_list` AS
          `admintool`.`variable_info`.`value` AS `value`
   FROM `instance_list` JOIN `admintool`.`variable_info` USING(ipaddr, port)
 EOS
-;
 
-my $daily_table_row_list= << 'EOS'
+my $daily_table_row_list= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `daily_table_row_list` AS
   SELECT CAST(`table_status_list`.`last_update` AS DATE) AS `_date`,
          `table_status_list`.`hostname` AS `hostname`,
@@ -350,9 +329,8 @@ CREATE SQL SECURITY INVOKER VIEW `daily_table_row_list` AS
   FROM `table_status_list`
   GROUP BY `_date`, `hostname`, `ipaddr`, `port`, `datadir`, `table_schema`, `table_name`
 EOS
-;
 
-my $daily_table_latency_list= << 'EOS'
+my $daily_table_latency_list= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `daily_table_latency_list` AS
   SELECT CAST(`ps_table_list`.`last_update` AS DATE) AS `_date`,
          `ps_table_list`.`hostname` AS `hostname`,
@@ -368,9 +346,8 @@ CREATE SQL SECURITY INVOKER VIEW `daily_table_latency_list` AS
   FROM `ps_table_list`
   GROUP BY `_date`, `hostname`, `ipaddr`, `port`, `datadir`, `table_schema`, `table_name`
 EOS
-;
 
-my $daily_digest_latency_list= << 'EOS'
+my $daily_digest_latency_list= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `daily_digest_latency_list` AS
   SELECT CAST(`ps_digest_list`.`last_update` AS DATE) AS `_date`,
          `ps_digest_list`.`hostname` AS `hostname`,
@@ -388,9 +365,8 @@ CREATE SQL SECURITY INVOKER VIEW `daily_digest_latency_list` AS
   FROM `ps_digest_list`
   GROUP BY `_date`, `hostname`, `ipaddr`, `port`, `datadir`, `digest`, `digest_text`
 EOS
-;
 
-my $daily_is_metric_list= << 'EOS'
+my $daily_is_metric_list= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `daily_is_metric_list` AS
   SELECT CAST(`is_metrics_list`.`last_update` AS DATE) AS `_date`,
          `is_metrics_list`.`hostname` AS `hostname`,
@@ -402,10 +378,9 @@ CREATE SQL SECURITY INVOKER VIEW `daily_is_metric_list` AS
   FROM `is_metrics_list`
   GROUP BY `_date`, `hostname`, `ipaddr`, `port`, `datadir`, `name`
 EOS
-;
 
 ### adminview_schema (for 8.0.11 and later)
-my $recent_status_list= << 'EOS'
+my $recent_status_list= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `recent_status_list` AS
   WITH ranked_status_list AS (
     SELECT `status_list`.`hostname` AS `hostname`,
@@ -428,9 +403,8 @@ CREATE SQL SECURITY INVOKER VIEW `recent_status_list` AS
   FROM ranked_status_list
   WHERE `ranked_status_list`.`_rank` = 1
 EOS
-;
 
-my $recent_table_status_list= << 'EOS'
+my $recent_table_status_list= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `recent_table_status_list` AS
   WITH ranked_table_status_list AS (
     SELECT `table_status_list`.`hostname` AS `hostname`,
@@ -461,9 +435,8 @@ CREATE SQL SECURITY INVOKER VIEW `recent_table_status_list` AS
   FROM ranked_table_status_list
   WHERE `ranked_table_status_list`.`_rank` = 1
 EOS
-;
 
-my $last_33_days_calendar= << 'EOS'
+my $last_33_days_calendar= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `last_33_days_calendar` AS
   WITH RECURSIVE `last_33_days_calendar` AS (
     SELECT CURDATE() AS `_date`
@@ -474,9 +447,8 @@ CREATE SQL SECURITY INVOKER VIEW `last_33_days_calendar` AS
   SELECT `last_33_days_calendar`.`_date` AS `_date`
   FROM `last_33_days_calendar`
 EOS
-;
 
-my $last_90_days_calendar= << 'EOS'
+my $last_90_days_calendar= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `last_90_days_calendar` AS
   WITH RECURSIVE `last_90_days_calendar` AS (
     SELECT CURDATE() AS `_date`
@@ -487,9 +459,8 @@ CREATE SQL SECURITY INVOKER VIEW `last_90_days_calendar` AS
   SELECT `last_90_days_calendar`.`_date` AS `_date`
   FROM `last_90_days_calendar`
 EOS
-;
 
-my $table_status_list_last_month= << 'EOS'
+my $table_status_list_last_month= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `table_status_list_last_month` AS
   SELECT `last_90_days_calendar`.`_date` AS `_date`,
          `daily_table_row_list`.`hostname` AS `hostname`,
@@ -509,9 +480,8 @@ CREATE SQL SECURITY INVOKER VIEW `table_status_list_last_month` AS
          `w7` AS (`w` ROWS BETWEEN 7 PRECEDING AND CURRENT ROW),
          `w_all` AS (`w` RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
 EOS
-;
 
-my $table_status_list_analyze_33= << 'EOS'
+my $table_status_list_analyze_33= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `table_status_list_analyze_33` AS
   SELECT `last_33_days_calendar`.`_date` AS `_date`,
          `daily_table_row_list`.`hostname` AS `hostname`,
@@ -530,9 +500,8 @@ CREATE SQL SECURITY INVOKER VIEW `table_status_list_analyze_33` AS
          `w7` AS (`w` ROWS BETWEEN 7 PRECEDING AND CURRENT ROW) ,
          `w_all` AS (`w` RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
 EOS
-;
 
-my $table_status_list_analyze_90= << 'EOS'
+my $table_status_list_analyze_90= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `table_status_list_analyze_90` AS
   SELECT `last_90_days_calendar`.`_date` AS `_date`,
          `daily_table_row_list`.`hostname` AS `hostname`,
@@ -551,9 +520,8 @@ CREATE SQL SECURITY INVOKER VIEW `table_status_list_analyze_90` AS
          `w7` AS (`w` ROWS BETWEEN 7 PRECEDING AND CURRENT ROW) ,
          `w_all` AS (`w` RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
 EOS
-;
 
-my $table_read_list_analyze_last_month= << 'EOS'
+my $table_read_list_analyze_last_month= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `table_read_list_analyze_last_month` AS
   SELECT `last_90_days_calendar`.`_date` AS `_date`,
          `daily_table_latency_list`.`hostname` AS `hostname`,
@@ -573,9 +541,8 @@ CREATE SQL SECURITY INVOKER VIEW `table_read_list_analyze_last_month` AS
          `w7` AS (`w` ROWS BETWEEN 7 PRECEDING AND CURRENT ROW) ,
          `w_all` AS (`w` RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
 EOS
-;
 
-my $table_read_list_analyze_90= << 'EOS'
+my $table_read_list_analyze_90= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `table_read_list_analyze_90` AS
   SELECT `last_90_days_calendar`.`_date` AS `_date`,
          `daily_table_latency_list`.`hostname` AS `hostname`,
@@ -594,9 +561,8 @@ CREATE SQL SECURITY INVOKER VIEW `table_read_list_analyze_90` AS
          `w7` AS (`w` ROWS BETWEEN 7 PRECEDING AND CURRENT ROW) ,
          `w_all` AS (`w` RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
 EOS
-;
 
-my $digest_list_analyze_90= << 'EOS'
+my $digest_list_analyze_90= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `digest_list_analyze_90` AS
   SELECT `last_90_days_calendar`.`_date` AS `_date`,
          `daily_digest_latency_list`.`hostname` AS `hostname`,
@@ -615,7 +581,6 @@ CREATE SQL SECURITY INVOKER VIEW `digest_list_analyze_90` AS
          `sum_rows_examined` / `sum_rows_sent` AS `index_ratio`
   FROM `last_90_days_calendar` LEFT JOIN `daily_digest_latency_list` USING(_date)
 EOS
-;
 
 sub admintool_schema
 {

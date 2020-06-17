@@ -590,8 +590,12 @@ CREATE SQL SECURITY INVOKER VIEW `is_metrics_list_analyze_90` AS
          `daily_is_metrics_list`.`port` AS `port`,
          `daily_is_metrics_list`.`datadir` AS `datadir`,
          `daily_is_metrics_list`.`name` AS `name`,
-         `daily_is_metrics_list`.`avg_count` AS `avg_count`
+         `daily_is_metrics_list`.`avg_count` AS `avg_count`,
+         FIRST_VALUE(`daily_is_metrics_list`.`avg_count`) OVER `w_all` AS `_first`,
+         LAST_VALUE(`daily_is_metrics_list`.`avg_count`) OVER `w_all` AS `_last`
   FROM `last_90_days_calendar` LEFT JOIN `daily_is_metrics_list` USING(_date)
+  WINDOW `w` AS (PARTITION BY hostname, datadir, name ORDER BY _date),
+         `w_all` AS (`w` RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
 EOS
 
 sub admintool_schema

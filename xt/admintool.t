@@ -64,7 +64,7 @@ foreach (sort(keys(%$test)))
     ### adminview counts are different between 8.0 and others.
     my $adminview_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'adminview'";
     is($instance->_real_query_arrayref($adminview_count)->[0]->{c},
-       $_ eq "8.0" ? 25 : 15, "Create adminview tables");
+       $_ eq "8.0" ? 26 : 15, "Create adminview tables");
 
     subtest "Checking view definition is correct" => sub
     {

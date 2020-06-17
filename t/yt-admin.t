@@ -33,7 +33,7 @@ use_ok("Ytkit::AdminTool");
 
 is(scalar(@{Ytkit::AdminTool::DDL::admintool_schema()}), 10, "10 tables in admintool");
 is(scalar(@{Ytkit::AdminTool::DDL::adminview_schema()}), 15, "15 views in adminview");
-is(scalar(@{Ytkit::AdminTool::DDL::adminview_schema_ex()}), 10, "10 views in adminview(8.0 only)");
+is(scalar(@{Ytkit::AdminTool::DDL::adminview_schema_ex()}), 11, "11 views in adminview(8.0 only)");
 
 
 done_testing;

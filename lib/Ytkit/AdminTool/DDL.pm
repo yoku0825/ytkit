@@ -366,8 +366,8 @@ CREATE SQL SECURITY INVOKER VIEW `daily_digest_latency_list` AS
   GROUP BY `_date`, `hostname`, `ipaddr`, `port`, `datadir`, `digest`, `digest_text`
 EOS
 
-my $daily_is_metric_list= << 'EOS';
-CREATE SQL SECURITY INVOKER VIEW `daily_is_metric_list` AS
+my $daily_is_metrics_list= << 'EOS';
+CREATE SQL SECURITY INVOKER VIEW `daily_is_metrics_list` AS
   SELECT CAST(`is_metrics_list`.`last_update` AS DATE) AS `_date`,
          `is_metrics_list`.`hostname` AS `hostname`,
          `is_metrics_list`.`ipaddr` AS `ipaddr`,
@@ -582,6 +582,18 @@ CREATE SQL SECURITY INVOKER VIEW `digest_list_analyze_90` AS
   FROM `last_90_days_calendar` LEFT JOIN `daily_digest_latency_list` USING(_date)
 EOS
 
+my $is_metrics_list_analyze_90= << 'EOS';
+CREATE SQL SECURITY INVOKER VIEW `is_metrics_list_analyze_90` AS
+  SELECT `last_90_days_calendar`.`_date` AS `_date`,
+         `daily_is_metrics_list`.`hostname` AS `hostname`,
+         `daily_is_metrics_list`.`ipaddr` AS `ipaddr`,
+         `daily_is_metrics_list`.`port` AS `port`,
+         `daily_is_metrics_list`.`datadir` AS `datadir`,
+         `daily_is_metrics_list`.`name` AS `name`,
+         `daily_is_metrics_list`.`avg_count` AS `avg_count`
+  FROM `last_90_days_calendar` LEFT JOIN `daily_is_metrics_list` USING(_date)
+EOS
+
 sub admintool_schema
 {
   return [$instance_info, $variable_info, $table_status_info,
@@ -595,8 +607,8 @@ sub adminview_schema
   return [$datadir_list, $hostname_list, $version_list,
           $instance_list, $grant_list, $is_metrics_list,
           $ps_digest_list, $ps_table_list, $status_list,
-          $table_status_list, $variable_list, $daily_table_row_list, ### 12
-          $daily_table_latency_list, $daily_digest_latency_list, $daily_is_metric_list]; 
+          $table_status_list, $variable_list, $daily_table_row_list,
+          $daily_table_latency_list, $daily_digest_latency_list, $daily_is_metrics_list]; ### 15
 }
 
 sub adminview_schema_ex
@@ -605,7 +617,7 @@ sub adminview_schema_ex
   return [$recent_status_list, $recent_table_status_list, $last_33_days_calendar,
           $last_90_days_calendar, $table_status_list_last_month, $table_status_list_analyze_33,
           $table_status_list_analyze_90, $table_read_list_analyze_last_month, $table_read_list_analyze_90, ### 9
-          $digest_list_analyze_90];
+          $digest_list_analyze_90, $is_metrics_list_analyze_90];
 }
 
 

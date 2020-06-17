@@ -390,6 +390,20 @@ CREATE SQL SECURITY INVOKER VIEW `daily_digest_latency_list` AS
 EOS
 ;
 
+my $daily_is_metric_list= << 'EOS'
+CREATE SQL SECURITY INVOKER VIEW `daily_is_metric_list` AS
+  SELECT CAST(`is_metrics_list`.`last_update` AS DATE) AS `_date`,
+         `is_metrics_list`.`hostname` AS `hostname`,
+         `is_metrics_list`.`ipaddr` AS `ipaddr`,
+         `is_metrics_list`.`port` AS `port`,
+         `is_metrics_list`.`datadir` AS `datadir`,
+         `is_metrics_list`.`name` AS `name`,
+         AVG(`is_metrics_list`.`count`) AS `avg_count`
+  FROM `is_metrics_list`
+  GROUP BY `_date`, `hostname`, `ipaddr`, `port`, `datadir`, `name`
+EOS
+;
+
 ### adminview_schema (for 8.0.11 and later)
 my $recent_status_list= << 'EOS'
 CREATE SQL SECURITY INVOKER VIEW `recent_status_list` AS
@@ -617,7 +631,7 @@ sub adminview_schema
           $instance_list, $grant_list, $is_metrics_list,
           $ps_digest_list, $ps_table_list, $status_list,
           $table_status_list, $variable_list, $daily_table_row_list, ### 12
-          $daily_table_latency_list, $daily_digest_latency_list];
+          $daily_table_latency_list, $daily_digest_latency_list, $daily_is_metric_list]; 
 }
 
 sub adminview_schema_ex

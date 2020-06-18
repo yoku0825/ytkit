@@ -179,7 +179,7 @@ subtest "Extract ARRAYref and HASHref" => sub
   my $mixed= { a => "b", c => ["d", "e", "f"], g => "h" };
   is(Ytkit::IO::__extract_ref($mixed), q|{a => b, c => [d, e, f], g => h}|, "Mixed reference");
 
-  is(_notef("bbb%sqqq", $mixed), qq|bbb{a => b, c => [d, e, f], g => h}qqq\n|, "Print via _notef");
+  is(_printf("bbb%sqqq", $mixed), qq|bbb{a => b, c => [d, e, f], g => h}qqq\n|, "Print via _printf");
 
   subtest "Issue #45" => sub
   {
@@ -226,6 +226,32 @@ subtest "Output format" => sub
   is(_printf("test"), "test\n", "Without trailing-LF, add LF");
   is(_printf("test\n"), "test\n", "With trailing-LF, leave it");
   is(_printf("test\n\n"), "test\n", "With duplicated trailing-LF, remove duplicated LF(s)");
+
+  $ENV{ytkit_force}= 0;
+  $ENV{ytkit_verbose}= Ytkit::IO::DEBUG;
+
+  is(_infof("test"), "INFO: test\n", "_infof adds INFO:");
+  is(_infof("test\ntest2"), "INFO: test\nINFO: test2\n", "_infof adds INFO: each line");
+  is(_notef("test"), "NOTE: test\n", "_notef adds NOTE:");
+  is(_notef("test\ntest2"), "NOTE: test\nNOTE: test2\n", "_notef adds NOTE: each line");
+  is(_carpf("test"), "WARNING: test\n", "_carpf adds WARNING:");
+  is(_carpf("test\ntest2"), "WARNING: test\nWARNING: test2\n", "_carpf adds WARNING: each line");
+  is(_debugf("test"), "DEBUG: test\n", "_debugf adds DEBUG:");
+  is(_debugf("test\ntest2"), "DEBUG: test\nDEBUG: test2\n", "_debugf adds DEBUG: each line");
+
+  eval
+  {
+    _croakf("test");
+  };
+  like($@, qr{ERROR: test\n}, "_croakf adds ERROR:");
+
+  eval
+  {
+    _croakf("test\ntest2");
+  };
+  like($@, qr{ERROR: test\nERROR: test2\n}, "_croakf adds ERROR: each line");
+
+
   done_testing;
 };
 

@@ -54,7 +54,11 @@ sub _notef ### NORMAL, VERBOSE, DEBUG (Not --silent)
   my ($format, @argv)= @_;
 
   return undef if $ENV{ytkit_verbose} < NORMAL;
-  return __out_stdout($format, @argv);
+
+  my $msg= _sprintf($format, @argv);
+  $msg= join("\n", map { sprintf("NOTE: %s", $_) } split(/\n/, $msg));
+  $msg= __adjust_trailing_linefeed($msg);
+  return __out_stdout($msg);
 }
 
 sub _infof ### VERBOSE, DEBUG (Only --verbose)
@@ -62,7 +66,11 @@ sub _infof ### VERBOSE, DEBUG (Only --verbose)
   my ($format, @argv)= @_;
 
   return undef if $ENV{ytkit_verbose} < VERBOSE;
-  return __out_stdout($format, @argv);
+
+  my $msg= _sprintf($format, @argv);
+  $msg= join("\n", map { sprintf("INFO: %s", $_) } split(/\n/, $msg));
+  $msg= __adjust_trailing_linefeed($msg);
+  return __out_stdout($msg);
 }
 
 sub _debugf ### DEBUG (Only --verbose --verbose (twice))
@@ -70,7 +78,12 @@ sub _debugf ### DEBUG (Only --verbose --verbose (twice))
   my ($format, @argv)= @_;
 
   return undef if $ENV{ytkit_verbose} < DEBUG;
-  return __out_stderr("DEBUG: %s", _sprintf($format, @argv));
+
+  my $msg= _sprintf($format, @argv);
+  $msg= join("\n", map { sprintf("DEBUG: %s", $_) } split(/\n/, $msg));
+  $msg= __adjust_trailing_linefeed($msg);
+
+  return __out_stderr($msg);
 }
 
 sub _croakf
@@ -78,6 +91,8 @@ sub _croakf
   my ($format, @argv)= @_;
 
   my $msg= _sprintf($format, @argv);
+  $msg= join("\n", map { sprintf("ERROR: %s", $_) } split(/\n/, $msg));
+  $msg= __adjust_trailing_linefeed($msg);
 
   if ($ENV{ytkit_force})
   {
@@ -96,25 +111,25 @@ sub _carpf ### NORMAL, VERBOSE, DEBUG (Not --silent)
   my ($format, @argv)= @_;
 
   return undef if $ENV{ytkit_verbose} < NORMAL;
+
   my $msg= _sprintf($format, @argv);
+  $msg= join("\n", map { sprintf("WARNING: %s", $_) } split(/\n/, $msg));
+  $msg= __adjust_trailing_linefeed($msg);
+
   carp($msg);
   return $msg;
 }
 
 sub __out_stdout
 {
-  my ($format, @argv)= @_;
-
-  my $msg= __adjust_trailing_linefeed(_sprintf($format, @argv));
+  my ($msg)= @_;
   print(STDOUT $msg);
   return $msg;
 }
 
 sub __out_stderr
 {
-  my ($format, @argv)= @_;
-
-  my $msg= __adjust_trailing_linefeed(_sprintf($format, @argv));
+  my ($msg)= @_;
   print(STDERR $msg);
   return $msg;
 }
@@ -132,7 +147,8 @@ sub __adjust_trailing_linefeed
 sub _printf
 {
   my ($format, @argv)= @_;
-  return __out_stdout($format, @argv);
+  my $msg= __adjust_trailing_linefeed(_sprintf($format, @argv));
+  return __out_stdout($msg);
 }
 
 sub _sprintf
@@ -183,7 +199,5 @@ sub _ask_password
   chomp($password);
   return $password;
 }
-
-
 
 return 1;

@@ -105,8 +105,7 @@ sub __out_stdout
 {
   my ($format, @argv)= @_;
 
-  my $msg= _sprintf($format, @argv);
-  $msg .= "\n" if (substr($msg, -1, 1) ne "\n");
+  my $msg= __adjust_trailing_linefeed(_sprintf($format, @argv));
   print(STDOUT $msg);
   return $msg;
 }
@@ -115,10 +114,19 @@ sub __out_stderr
 {
   my ($format, @argv)= @_;
 
-  my $msg= _sprintf($format, @argv);
-  $msg .= "\n" if (substr($msg, -1, 1) ne "\n");
+  my $msg= __adjust_trailing_linefeed(_sprintf($format, @argv));
   print(STDERR $msg);
   return $msg;
+}
+
+sub __adjust_trailing_linefeed
+{
+  my ($str)= @_;
+
+  ### Always add LF and remove by REGEXP
+  $str .= "\n"; 
+  $str =~ s/\n+\Z/\n/;
+  return $str;
 }
 
 sub _printf

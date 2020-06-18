@@ -222,5 +222,13 @@ subtest "split_host_port" => sub
   done_testing;
 };
 
+subtest "Output format" => sub
+{
+  is(_printf("test"), "test\n", "Without trailing-LF, add LF");
+  is(_printf("test\n"), "test\n", "With trailing-LF, leave it");
+  is(_printf("test\n\n"), "test\n", "With duplicated trailing-LF, remove duplicated LF(s)");
+  done_testing;
+};
+
 done_testing;
 

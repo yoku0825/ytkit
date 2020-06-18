@@ -124,7 +124,7 @@ sub __out_stderr
 sub _printf
 {
   my ($format, @argv)= @_;
-  return __out_stderr($format, @argv);
+  return __out_stdout($format, @argv);
 }
 
 sub _sprintf

@@ -555,7 +555,8 @@ CREATE SQL SECURITY INVOKER VIEW `table_read_list_analyze_90` AS
          FIRST_VALUE(`daily_table_latency_list`.`count_read`) OVER `w_all` AS `_first`,
          LAST_VALUE(`daily_table_latency_list`.`count_read`) OVER `w_all` AS `_last`,
          (`daily_table_latency_list`.`count_read` - LAG(`daily_table_latency_list`.`count_read`) OVER `w`) AS `_diff`,
-         (`_date` - LAG(`_date`) OVER `w`) AS `_diff_date`
+         (`_date` - LAG(`_date`) OVER `w`) AS `_diff_date`,
+         AVG(`daily_table_latency_list`.`count_read`) OVER `w7` AS `moving_avg_7`
   FROM `last_90_days_calendar` LEFT JOIN `daily_table_latency_list` USING(_date)
   WINDOW `w` AS (PARTITION BY hostname, datadir, table_schema, table_name ORDER BY _date),
          `w7` AS (`w` ROWS BETWEEN 7 PRECEDING AND CURRENT ROW) ,

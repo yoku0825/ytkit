@@ -37,10 +37,10 @@ sub instance
 sub help
 {
   my ($self)= @_;
-  return sprintf("%s\n%s\n\n%s",
-                 $self->{_config}->help,
-                 $self->version,
-                 $self->usage);
+  return _sprintf("%s\n%s\n\n%s",
+                  $self->{_config}->help,
+                  $self->version,
+                  $self->usage);
 }
 
 sub usage
@@ -111,8 +111,7 @@ sub test_connect
   if ($self->instance->error)
   {
     ### die if can't connect to MySQL.
-    my $msg= sprintf("MySQL Connection failed. %s", $self->instance->error);
-    _croakf($msg);
+    _croakf("MySQL Connection failed. %s", $self->instance->error);
 
     ### For test.
     return $self;

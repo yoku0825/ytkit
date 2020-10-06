@@ -41,7 +41,7 @@ my @argv= qw{ --role=auto --host=127.0.0.1 };
 ### Connection failed.
 my $prog= Ytkit::HealthCheck->new(@argv);
 is($prog->{status}->{str}, "CRITICAL", "Connection Failed");
-is($prog->hostname, "127.0.0.1", "Default hostname when connection has failed.");
+is($prog->instance->hostname, "127.0.0.1", "Default hostname when connection has failed.");
 
 &reset_param;
 

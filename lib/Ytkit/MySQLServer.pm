@@ -449,6 +449,13 @@ EOS
 sub select_is_metrics
 {
   my ($self)= @_;
+  if ($self->mysqld_version < 50602)
+  {
+    ### information_schema.innodb_metrics has been implemented 5.6.2
+    _carpf("%s is not implemented information_schema.innodb_metrics (5.6.2 and later)", $self->valueof("version"));
+    return [];
+  }
+
   my $sql= "SELECT name AS name, " .
                   "count AS count, " .
                   "NOW() AS last_update " .
@@ -877,6 +884,21 @@ sub fetch_innodb_lock_waits
     }
   }
   return $ret;
+}
+
+sub history_list_length
+{
+  my ($self)= @_;
+  my $ret;
+
+  eval
+  {
+    $ret= $self->select_is_metrics;
+  };
+  return 0 if $@;
+
+  my @row= grep { $_->{name} eq "trx_rseg_history_len" } @$ret;
+  return $row[0]->{count} // 0;
 }
 
 sub _fetch_innodb_lock_waits_rawsql

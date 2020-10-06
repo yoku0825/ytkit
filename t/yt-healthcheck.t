@@ -599,6 +599,43 @@ subtest "check uptime" => sub
   done_testing;
 };
 
+subtest "check history_list_length" => sub
+{
+  ### history_list_length = 21
+  $prog->instance->{_select_is_metrics}= $Ytkit::Test::SELECT_FROM_is_metrics::VAR1;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1; ### For version number
+
+  $prog->{history_list}->{warning}= 10000000;
+  $prog->{history_list}->{critical}= 1000000;
+  $prog->{history_list}->{enable}= 1;
+  $prog->check_history_list_length;
+  is($prog->{status}->{str}, "OK", "history_list_length < warning");
+  &reset_param;
+
+  $prog->{history_list}->{warning}= 10;
+  $prog->{history_list}->{critical}= 1000000;
+  $prog->{history_list}->{enable}= 1;
+  $prog->check_history_list_length;
+  is($prog->{status}->{str}, "WARNING", "history_list_length > warning");
+  &reset_param;
+
+  $prog->{history_list}->{warning}= 10;
+  $prog->{history_list}->{critical}= 20;
+  $prog->{history_list}->{enable}= 1;
+  $prog->check_history_list_length;
+  is($prog->{status}->{str}, "CRITICAL", "history_list_length > critical");
+  &reset_param;
+
+  $prog->{history_list}->{warning}= 10;
+  $prog->{history_list}->{critical}= 20;
+  $prog->{history_list}->{enable}= 0;
+  $prog->check_history_list_length;
+  is($prog->{status}->{str}, "OK", "Disabled");
+  &reset_param;
+
+  done_testing;
+};
+
 subtest "Issue 40" => sub
 {
   $prog->{autoinc_usage}->{warning}= 50;
@@ -636,7 +673,7 @@ sub reset_param
   $prog->{status}= Ytkit::HealthCheck::NAGIOS_OK;
   $prog->{output}= "";
 
-  foreach (qw{long_query connection_count autoinc_usage read_only slave_status gtid_hole})
+  foreach (qw{long_query connection_count autoinc_usage read_only slave_status gtid_hole history_list})
   {
     delete($prog->{$_});
   }

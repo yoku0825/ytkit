@@ -1,7 +1,7 @@
 package Ytkit::HealthCheck;
 
 ########################################################################
-# Copyright (C) 2017, 2019  yoku0825
+# Copyright (C) 2017, 2020  yoku0825
 # Copyright (C) 2018        hacchuu0119
 #
 # This program is free software; you can redistribute it and/or
@@ -116,6 +116,7 @@ sub new
     $self->check_gtid_hole;
     $self->check_latest_deadlock;
     $self->check_uptime;
+    $self->check_history_list_length;
   }
   elsif ($role eq "slave")
   {
@@ -127,6 +128,7 @@ sub new
     $self->check_read_only;
     $self->check_gtid_hole;
     $self->check_uptime;
+    $self->check_history_list_length;
   }
   elsif ($role eq "intermidiate")
   {
@@ -140,6 +142,7 @@ sub new
     $self->check_gtid_hole;
     $self->check_latest_deadlock;
     $self->check_uptime;
+    $self->check_history_list_length;
   }
   elsif ($role eq "backup")
   {
@@ -727,6 +730,18 @@ sub check_uptime
   return 0;
 }
 
+sub check_history_list_length
+{
+  my ($self)= @_;
+  return 0 unless $self->{history_list}->{enable};
+
+  my $length= $self->instance->history_list_length;
+  my $status= compare_threshold($length, $self->{history_list});
+
+  $self->update_status($status, sprintf("trx_rseg_history_len is %d", $length)) if $status;
+  return 0;
+}
+
 sub dump_detail
 {
   my ($self)= @_;
@@ -892,6 +907,15 @@ EOS
                    text => "Warning threshold for Uptime(seconds)", },
       critical => { default => 300,
                     text => "Critical threshold for Uptime(seconds)", },
+    },
+    history_list =>
+    {
+      enable => { default => 1,
+                  text => "When set to 1, check trx_rseg_history_len from information_schema.innodb_metrics.", },
+      warning => { default => 100000,
+                   text => "Warning threshold for trx_rseg_history_len", },
+      critical => { default => 500000,
+                    text => "Critical threshold for trx_rseg_history_len", },
     },
     dump_detail      => { alias   => ["dump-detail"],
                           text    => qq{When result is NOT NAGIOS_OK,\n} .

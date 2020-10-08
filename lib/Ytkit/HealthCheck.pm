@@ -874,7 +874,7 @@ EOS
     },
     history_list =>
     {
-      enable => { default => 1,
+      enable => { default => 0,
                   text => "When set to 1, check trx_rseg_history_len from information_schema.innodb_metrics.", },
       warning => { default => 100000,
                    text => "Warning threshold for trx_rseg_history_len", },

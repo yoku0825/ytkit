@@ -1035,16 +1035,55 @@ sub print_information
   my $line= "=" x 10;
   my $ret;
 
-  $ret .= sprintf("\n%sSHOW PROCESSLIST%s\n\n", $line, $line);
-  $ret .= _print_table($self->show_processlist);
-  $ret .= sprintf("\n%sSHOW SLAVE STATUS%s\n\n", $line, $line);
-  $ret .= _print_vtable($self->show_slave_status);
-  $ret .= sprintf("\n%sSHOW ENGINE INNODB STATUS%s\n\n", $line, $line);
-  $ret .= $self->show_engine_innodb_status->[0]->{Status};
-  $ret .= sprintf("\n%sSHOW INNODB LOCKS%s\n\n", $line, $line);
-  $ret .= _print_vtable($self->fetch_innodb_lock_waits);
-  $ret .= sprintf("\n%sperformance_schema.threads%s\n\n", $line, $line);
-  $ret .= _print_table($self->select_ps_threads);
+  eval
+  {
+    $self->show_processlist;
+  };
+  if (!($@))
+  {
+    $ret .= sprintf("\n%sSHOW PROCESSLIST%s\n\n", $line, $line);
+    $ret .= _print_table($self->show_processlist);
+  }
+
+  eval
+  {
+    $self->show_slave_status;
+  };
+  if (!($@))
+  {
+    $ret .= sprintf("\n%sSHOW SLAVE STATUS%s\n\n", $line, $line);
+    $ret .= _print_vtable($self->show_slave_status);
+  }
+
+  eval
+  {
+    $self->show_engine_innodb_status;
+  };
+  if (!($@))
+  {
+    $ret .= sprintf("\n%sSHOW ENGINE INNODB STATUS%s\n\n", $line, $line);
+    $ret .= $self->show_engine_innodb_status->[0]->{Status};
+  }
+
+  eval
+  {
+    $self->fetch_innodb_lock_waits;
+  };
+  if (!($@))
+  {
+    $ret .= sprintf("\n%sSHOW INNODB LOCKS%s\n\n", $line, $line);
+    $ret .= _print_vtable($self->fetch_innodb_lock_waits);
+  }
+
+  eval
+  {
+    $self->select_ps_threads;
+  };
+  if (!($@))
+  {
+    $ret .= sprintf("\n%sperformance_schema.threads%s\n\n", $line, $line);
+    $ret .= _print_table($self->select_ps_threads);
+  }
 
   return $ret;
 }

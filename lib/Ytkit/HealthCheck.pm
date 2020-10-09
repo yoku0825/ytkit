@@ -221,7 +221,7 @@ sub print_status
 {
   my ($self)= @_;
   _printf("%s on %s: %s (%s)\n%s",
-          $self->{status}->{str}, $self->instanse->hostname,
+          $self->{status}->{str}, $self->instance->hostname,
           $self->{output}, $self->{role},
           $self->{dump_detail} && $self->{status}->{exit_code} ne NAGIOS_OK->{exit_code} ? 
             "-  Details in " . $self->{dump_detail} : 

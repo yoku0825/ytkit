@@ -1,7 +1,7 @@
 package Ytkit::HealthCheck;
 
 ########################################################################
-# Copyright (C) 2017, 2019  yoku0825
+# Copyright (C) 2017, 2020  yoku0825
 # Copyright (C) 2018        hacchuu0119
 #
 # This program is free software; you can redistribute it and/or
@@ -116,6 +116,7 @@ sub new
     $self->check_gtid_hole;
     $self->check_latest_deadlock;
     $self->check_uptime;
+    $self->check_history_list_length;
   }
   elsif ($role eq "slave")
   {
@@ -127,6 +128,7 @@ sub new
     $self->check_read_only;
     $self->check_gtid_hole;
     $self->check_uptime;
+    $self->check_history_list_length;
   }
   elsif ($role eq "intermidiate")
   {
@@ -140,6 +142,7 @@ sub new
     $self->check_gtid_hole;
     $self->check_latest_deadlock;
     $self->check_uptime;
+    $self->check_history_list_length;
   }
   elsif ($role eq "backup")
   {
@@ -184,7 +187,7 @@ sub decide_role
   my $master= my $slave= 0;
 
   $master= 1 if $self->show_slaves_via_processlist;
-  $slave = 1 if ($self->show_slave_status && $self->show_slave_status->[0]);
+  $slave = 1 if ($self->instance->show_slave_status && $self->instance->show_slave_status->[0]);
 
   if ($master && $slave)
   {
@@ -214,21 +217,15 @@ sub result
   exit $self->{status}->{exit_code};
 }
 
-sub hostname
-{
-  my ($self)= @_;
-  return $self->instance->hostname;
-}
-
 sub print_status
 {
   my ($self)= @_;
-  _notef("%s on %s: %s (%s)\n%s",
-         $self->{status}->{str}, $self->hostname,
-         $self->{output}, $self->{role},
-         $self->{dump_detail} && $self->{status}->{exit_code} ne NAGIOS_OK->{exit_code} ? 
-           "-  Details in " . $self->{dump_detail} : 
-           "");
+  _printf("%s on %s: %s (%s)\n%s",
+          $self->{status}->{str}, $self->instance->hostname,
+          $self->{output}, $self->{role},
+          $self->{dump_detail} && $self->{status}->{exit_code} ne NAGIOS_OK->{exit_code} ? 
+            "-  Details in " . $self->{dump_detail} : 
+            "");
 }
 
 sub check_long_query
@@ -239,7 +236,7 @@ sub check_long_query
   ### Evaluate each thread.
   my @warning_thread;
   my @critical_thread;
-  foreach my $row (@{$self->show_processlist})
+  foreach my $row (@{$self->instance->show_processlist})
   {
     my $user= $row->{User};
 
@@ -320,8 +317,8 @@ sub check_connection_count
   my ($self)= @_;
   return 0 unless $self->{connection_count}->{enable};
 
-  my $current= $self->show_status->{Threads_connected}->{Value};
-  my $setting= $self->show_variables->{max_connections}->{Value};
+  my $current= $self->instance->show_status->{Threads_connected}->{Value};
+  my $setting= $self->instance->show_variables->{max_connections}->{Value};
   my $ratio  = ($current / $setting) * 100;
   my $status = compare_threshold($ratio, $self->{connection_count});
   $self->update_status($status, sprintf(qq{Caution for too many connections: "%5.2f(%d/%d)"\t},
@@ -346,7 +343,7 @@ sub check_autoinc_usage
   ### select_autoinc_usage can raise an error when server has many tables
   eval
   {
-    $self->select_autoinc_usage;
+    $self->instance->select_autoinc_usage;
   };
 
   if ($@)
@@ -359,7 +356,7 @@ sub check_autoinc_usage
   }
   else
   {
-    foreach my $row (@{$self->select_autoinc_usage})
+    foreach my $row (@{$self->instance->select_autoinc_usage})
     {
       ### Calculate max value of autoinc from datatype.
       my ($type, $unsigned)= $row->{column_type} =~ /^([a-z]+)(?:\(.+\))?(\s+(unsigned))?/;
@@ -381,7 +378,7 @@ sub check_read_only
   my ($self)= @_;
 
   my $status   = NAGIOS_OK;
-  my $read_only= $self->show_variables->{read_only}->{Value};
+  my $read_only= $self->instance->show_variables->{read_only}->{Value};
 
   if ($read_only eq "ON")
   {
@@ -396,7 +393,7 @@ sub check_read_only
 
   $self->update_status($status, sprintf(qq{read_only should be %s but current setting is %s}, 
                                         $self->{read_only}->{should_be} == 1 ? "ON" : "OFF",
-                                        $self->show_variables->{read_only}->{Value})) if $status;
+                                        $self->instance->show_variables->{read_only}->{Value})) if $status;
 }
 
 sub check_slave_status
@@ -404,7 +401,7 @@ sub check_slave_status
   my ($self)= @_;
   return 0 unless $self->{slave_status}->{enable};
 
-  foreach my $row (@{$self->show_slave_status})
+  foreach my $row (@{$self->instance->show_slave_status})
   {
     my $status;
     my $output= "";
@@ -584,42 +581,12 @@ sub compare_threshold_reverse
   return NAGIOS_OK;
 }
 
-sub show_slave_status
-{
-  my ($self)= @_;
-  return $self->instance->show_slave_status;
-}
-
-sub show_processlist
-{
-  my ($self)= @_;
-  return $self->instance->show_processlist;
-}
-
-sub show_status
-{
-  my ($self)= @_;
-  return $self->instance->show_status;
-}
-
-sub show_variables
-{
-  my ($self)= @_;
-  return $self->instance->show_variables;
-}
-
-sub select_autoinc_usage
-{
-  my ($self)= @_;
-  return $self->instance->select_autoinc_usage;
-}
-
 sub show_slaves_via_processlist
 {
   my ($self)= @_;
-  return 0 unless $self->show_processlist;
+  return 0 unless $self->instance->show_processlist;
 
-  foreach my $row (@{$self->show_processlist})
+  foreach my $row (@{$self->instance->show_processlist})
   {
     ### "Binlog Dump (GTID)" is in processlist, the server maybe master.
     return 1 if $row->{Command} =~ /^Binlog\sDump/;
@@ -720,10 +687,22 @@ sub check_uptime
   my ($self)= @_;
   return 0 unless $self->{uptime}->{enable};
 
-  my $uptime= $self->show_status->{Uptime}->{Value};
+  my $uptime= $self->instance->show_status->{Uptime}->{Value};
   my $status= compare_threshold_reverse($uptime, $self->{uptime});
 
   $self->update_status($status, sprintf("Uptime is too small %d", $uptime)) if $status;
+  return 0;
+}
+
+sub check_history_list_length
+{
+  my ($self)= @_;
+  return 0 unless $self->{history_list}->{enable};
+
+  my $length= $self->instance->history_list_length;
+  my $status= compare_threshold($length, $self->{history_list});
+
+  $self->update_status($status, sprintf("trx_rseg_history_len is %d", $length)) if $status;
   return 0;
 }
 
@@ -747,14 +726,14 @@ sub dump_detail
   if ($@ || !($fh))
   {
     ### Falling down to STDERR
-    _notef("Couldn't open %s, falling back to STDERR\n", $self->{dump_detail});
+    _carpf("Couldn't open %s, falling back to STDERR\n", $self->{dump_detail});
     $fh= IO::Handle->new_from_fd(2, "w");
   }
   binmode $fh, ":utf8";
 
   printf($fh "# %s\n", localtime->strftime("%Y/%m/%d %H:%M:%S"));
   printf($fh "# %s on %s: %s (%s)\n",
-         $self->{status}->{str}, $self->hostname,
+         $self->{status}->{str}, $self->instance->hostname,
          $self->{output}, $self->{role},
          localtime->cdate);
   printf($fh "%s\n", $self->instance->print_information);
@@ -892,6 +871,15 @@ EOS
                    text => "Warning threshold for Uptime(seconds)", },
       critical => { default => 300,
                     text => "Critical threshold for Uptime(seconds)", },
+    },
+    history_list =>
+    {
+      enable => { default => 0,
+                  text => "When set to 1, check trx_rseg_history_len from information_schema.innodb_metrics.", },
+      warning => { default => 100000,
+                   text => "Warning threshold for trx_rseg_history_len", },
+      critical => { default => 500000,
+                    text => "Critical threshold for trx_rseg_history_len", },
     },
     dump_detail      => { alias   => ["dump-detail"],
                           text    => qq{When result is NOT NAGIOS_OK,\n} .

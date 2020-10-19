@@ -451,6 +451,13 @@ EOS
 sub select_is_metrics
 {
   my ($self)= @_;
+  if ($self->mysqld_version < 50602)
+  {
+    ### information_schema.innodb_metrics has been implemented 5.6.2
+    _carpf("%s is not implemented information_schema.innodb_metrics (5.6.2 and later)", $self->valueof("version"));
+    return [];
+  }
+
   my $sql= "SELECT name AS name, " .
                   "count AS count, " .
                   "NOW() AS last_update " .
@@ -881,6 +888,21 @@ sub fetch_innodb_lock_waits
   return $ret;
 }
 
+sub history_list_length
+{
+  my ($self)= @_;
+  my $ret;
+
+  eval
+  {
+    $ret= $self->select_is_metrics;
+  };
+  return 0 if $@;
+
+  my @row= grep { $_->{name} eq "trx_rseg_history_len" } @$ret;
+  return $row[0]->{count} // 0;
+}
+
 sub _fetch_innodb_lock_waits_rawsql
 {
   my ($self)= @_;
@@ -1015,16 +1037,55 @@ sub print_information
   my $line= "=" x 10;
   my $ret;
 
-  $ret .= sprintf("\n%sSHOW PROCESSLIST%s\n\n", $line, $line);
-  $ret .= _print_table($self->show_processlist);
-  $ret .= sprintf("\n%sSHOW SLAVE STATUS%s\n\n", $line, $line);
-  $ret .= _print_vtable($self->show_slave_status);
-  $ret .= sprintf("\n%sSHOW ENGINE INNODB STATUS%s\n\n", $line, $line);
-  $ret .= $self->show_engine_innodb_status->[0]->{Status};
-  $ret .= sprintf("\n%sSHOW INNODB LOCKS%s\n\n", $line, $line);
-  $ret .= _print_vtable($self->fetch_innodb_lock_waits);
-  $ret .= sprintf("\n%sperformance_schema.threads%s\n\n", $line, $line);
-  $ret .= _print_table($self->select_ps_threads);
+  eval
+  {
+    $self->show_processlist;
+  };
+  if (!($@))
+  {
+    $ret .= sprintf("\n%sSHOW PROCESSLIST%s\n\n", $line, $line);
+    $ret .= _print_table($self->show_processlist);
+  }
+
+  eval
+  {
+    $self->show_slave_status;
+  };
+  if (!($@))
+  {
+    $ret .= sprintf("\n%sSHOW SLAVE STATUS%s\n\n", $line, $line);
+    $ret .= _print_vtable($self->show_slave_status);
+  }
+
+  eval
+  {
+    $self->show_engine_innodb_status;
+  };
+  if (!($@))
+  {
+    $ret .= sprintf("\n%sSHOW ENGINE INNODB STATUS%s\n\n", $line, $line);
+    $ret .= $self->show_engine_innodb_status->[0]->{Status};
+  }
+
+  eval
+  {
+    $self->fetch_innodb_lock_waits;
+  };
+  if (!($@))
+  {
+    $ret .= sprintf("\n%sSHOW INNODB LOCKS%s\n\n", $line, $line);
+    $ret .= _print_vtable($self->fetch_innodb_lock_waits);
+  }
+
+  eval
+  {
+    $self->select_ps_threads;
+  };
+  if (!($@))
+  {
+    $ret .= sprintf("\n%sperformance_schema.threads%s\n\n", $line, $line);
+    $ret .= _print_table($self->select_ps_threads);
+  }
 
   return $ret;
 }

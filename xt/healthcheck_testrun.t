@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2019, 2020  yoku0825
+# Copyright (C) 2020  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -27,7 +27,7 @@ use FindBin qw{$Bin};
 use lib "$Bin/../lib";
 use Test::mysqld;
 
-use Ytkit::MySQLServer;
+use Ytkit::HealthCheck;
 
 my $test=
 {
@@ -51,33 +51,13 @@ foreach my $version (sort(keys(%$test)))
     };
     my $mysqld= Test::mysqld->new($test->{$version});
 
-    my $server= Ytkit::MySQLServer->new({ host   => "localhost",
-                                          socket => $mysqld->base_dir . "/tmp/mysql.sock",
-                                          user   => "root", });
-    $server->conn;
-    ok(!($server->error), "Connect to mysqld");
-
-    my $file_path= "$Bin/../lib/Ytkit/MySQLServer.pm";
-    my @method   = `grep "^sub" $file_path | awk '{print \$2}'`;
-    my @ignore   = qw{ conn new DESTROY query_arrayref query_hashref 
-                       warning error show_grants exec_sql valueof 
-                       errno clear_cache describe_table raise_if_error warn_if_error
-                       exec_sql_with_croak exec_sql_with_carp use }; ### Almost cases are 'need argument(s)'
-    
-    foreach my $func (@method)
-    {
-      chomp($func);
-      next if !($func);
-      next if grep { $func eq $_ } @ignore;
-      next if substr($func, 0, 1) eq "_"; ### private methods
-    
-      eval
-      {
-        $server->$func;
-      };
-    
-      ok(!($@) && !($server->error), "$func has executed without error.") or diag($server->error);
-    }
+    my $prog= Ytkit::HealthCheck->new("--host=localhost",
+                                      "--socket", $mysqld->base_dir . "/tmp/mysql.sock",
+                                      "--user=root",
+                                      "--uptime-critical=0",
+                                      "--uptime-warning=0");
+    $prog->print_status;
+    is($prog->{status}->{exit_code}, 0);
     done_testing;
   };
 }

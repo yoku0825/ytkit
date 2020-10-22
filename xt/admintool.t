@@ -37,8 +37,8 @@ $ENV{ytkit_verbose}= $ENV{ytkit_verbose} == Ytkit::IO::NORMAL ?
 
 my $test=
 {
-  "5.7" => { mysqld => "/usr/mysql/5.7.30/bin/mysqld" },
-  "8.0" => { mysqld => "/usr/mysql/8.0.20/bin/mysqld" },
+  "5.7" => { mysqld => "/usr/mysql/5.7.32/bin/mysqld" },
+  "8.0" => { mysqld => "/usr/mysql/8.0.22/bin/mysqld" },
 };
 
 

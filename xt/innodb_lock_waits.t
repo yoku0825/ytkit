@@ -34,9 +34,9 @@ my $test=
   "5.0" => { mysqld => "/usr/mysql/5.0.96/libexec/mysqld", mysql_install_db => "/usr/mysql/5.0.96/bin/mysql_install_db" },
   "5.1" => { mysqld => "/usr/mysql/5.1.73/libexec/mysqld", mysql_install_db => "/usr/mysql/5.1.73/bin/mysql_install_db" },
   "5.5" => { mysqld => "/usr/mysql/5.5.62/bin/mysqld", mysql_install_db => "/usr/mysql/5.5.62/scripts/mysql_install_db" },
-  "5.6" => { mysqld => "/usr/mysql/5.6.48/bin/mysqld", mysql_install_db => "/usr/mysql/5.6.48/scripts/mysql_install_db" },
-  "5.7" => { mysqld => "/usr/mysql/5.7.30/bin/mysqld" },
-  "8.0" => { mysqld => "/usr/mysql/8.0.20/bin/mysqld" },
+  "5.6" => { mysqld => "/usr/mysql/5.6.50/bin/mysqld", mysql_install_db => "/usr/mysql/5.6.50/scripts/mysql_install_db" },
+  "5.7" => { mysqld => "/usr/mysql/5.7.32/bin/mysqld" },
+  "8.0" => { mysqld => "/usr/mysql/8.0.22/bin/mysqld" },
 };
 
 subtest "Testing via 5.0" => sub

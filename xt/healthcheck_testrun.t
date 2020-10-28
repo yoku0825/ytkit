@@ -27,6 +27,7 @@ use FindBin qw{$Bin};
 use lib "$Bin/../lib";
 use Test::mysqld;
 
+use DBI;
 use Ytkit::HealthCheck;
 
 my $test=
@@ -39,6 +40,15 @@ my $test=
   "8.0.22" => { mysqld => "/usr/mysql/8.0.22/bin/mysqld" },
 };
 
+my @enables_list= qw{ --autoinc-usage-enable=1 
+                      --connection-count-enable=1
+                      --deadlock-enable=1
+                      --gtid-hole-enable=1
+                      --history-list-enable=1
+                      --long-query-enable=1
+                      --slave-status-enable=1
+                      --uptime-enable=1 };
+
 ### Put test-binaries into /usr/mysql/X.X.XX 
 foreach my $version (sort(keys(%$test)))
 {
@@ -50,10 +60,13 @@ foreach my $version (sort(keys(%$test)))
       log_bin   => "mysql-bin",
     };
     my $mysqld= Test::mysqld->new($test->{$version});
+    my $server= DBI->connect($mysqld->dsn, "root", "") or die;
+    $server->do("SET GLOBAL innodb_stats_on_metadata = OFF");
 
     my $prog= Ytkit::HealthCheck->new("--host=localhost",
                                       "--socket", $mysqld->base_dir . "/tmp/mysql.sock",
                                       "--user=root",
+                                      @enables_list,
                                       "--uptime-critical=0",
                                       "--uptime-warning=0");
     $prog->print_status;

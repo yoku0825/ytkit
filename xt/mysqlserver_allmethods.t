@@ -62,7 +62,7 @@ foreach my $version (sort(keys(%$test)))
     my @ignore   = qw{ conn new DESTROY query_arrayref query_hashref 
                        warning error show_grants exec_sql valueof 
                        errno clear_cache describe_table raise_if_error warn_if_error
-                       exec_sql_with_croak exec_sql_with_carp use }; ### Almost cases are 'need argument(s)'
+                       exec_sql_with_croak exec_sql_with_carp use support_version }; ### Almost cases are 'need argument(s)'
     
     foreach my $func (@method)
     {

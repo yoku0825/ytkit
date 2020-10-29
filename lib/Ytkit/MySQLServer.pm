@@ -51,6 +51,7 @@ sub new
     _errno    => undef,
     _warning  => undef,
     _do_not_query_i_s => 0,
+    _ignore_unsupport_version => 0,
   };
   bless $self => $class;
 
@@ -1164,6 +1165,33 @@ sub _print_vtable
     }
   }
   return $ret;
+}
+
+sub support_version
+{
+  my ($self, $require_version)= @_;
+
+  if ($self->mysqld_version >= $require_version)
+  {
+    return 1;
+  }
+  else
+  {
+    if (!($self->{_ignore_unsupport_version}))
+    {
+      my $caller= (caller 1)[3] || "";
+      my ($caller_name)= $caller =~ /::([^:]+)$/;
+      $caller_name ||= "";
+      my $require_version_string= _sprintf("%d.%d.%d",
+                                           int($require_version / 10000),
+                                           int(($require_version % 10000) / 100),
+                                           $require_version % 100);
+
+      _carpf("Unsupported version %s for function %s (Need %s and later)",
+             $self->valueof("version"), $caller_name, $require_version_string);
+    }
+    return 0;
+  }
 }
 
 

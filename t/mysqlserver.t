@@ -32,7 +32,7 @@ no warnings "once";
 
 use_ok("Ytkit::MySQLServer");
 
-sub reset
+sub server_reset
 {
   my ($server)= @_;
   $server->clear_cache;
@@ -52,28 +52,28 @@ subtest "show_slave_status" => sub
 {
   $server->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::OK;
   is_deeply($server->show_slave_status, $Ytkit::Test::SHOW_SLAVE_STATUS::OK, "SHOW SLAVE STATUS");
-  $server->clear_cache;
+  server_reset($server);
 };
 
 subtest "show_slave_hosts" => sub
 {
   $server->{_show_slave_hosts}= $Ytkit::Test::SHOW_SLAVE_HOSTS::TWO_HOSTS;
   is_deeply($server->show_slave_hosts, $Ytkit::Test::SHOW_SLAVE_HOSTS::TWO_HOSTS, "SHOW SLAVE HOSTS");
-  $server->clear_cache;
+  server_reset($server);
 };
 
 subtest "show_processlist" => sub
 {
   $server->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::time_1_0_1000_6000;
   is_deeply($server->show_processlist, $Ytkit::Test::SHOW_PROCESSLIST::time_1_0_1000_6000, "SHOW PROCESSLIST");
-  $server->clear_cache;
+  server_reset($server);
 };
 
 subtest "show_status" => sub
 {
   $server->{_show_status}   = $Ytkit::Test::SHOW_STATUS::VAR1;
   is_deeply($server->show_status, $Ytkit::Test::SHOW_STATUS::VAR1, "SHOW STATUS");
-  $server->clear_cache;
+  server_reset($server);
 };
 
 subtest "show_variables" => sub
@@ -83,21 +83,21 @@ subtest "show_variables" => sub
   is($server->hostname, "163-44-175-117", "Fetch hostname");
   is($server->mysqld_version, 50719, "Fetch version-string");
   is($server->port, 64057, "Fetch port-number");
-  $server->clear_cache;
+  server_reset($server);
 };
 
 subtest "select_autoinc_usage" => sub
 {
   $server->{_select_autoinc_usage}= $Ytkit::Test::AUTOINC_USAGE::VAR1;
   is_deeply($server->select_autoinc_usage, $Ytkit::Test::AUTOINC_USAGE::VAR1, "SELECT FROM i_s.columns");
-  $server->clear_cache;
+  server_reset($server);
 };
 
 subtest "show_master_logs" => sub
 {
   $server->{_show_master_logs}= $Ytkit::Test::SHOW_MASTER_LOGS::VAR1;
   is_deeply($server->show_master_logs, $Ytkit::Test::SHOW_MASTER_LOGS::VAR1, "SHOW MASTER LOGS");
-  $server->clear_cache;
+  server_reset($server);
 };
 
 subtest "select_ps_digest" => sub
@@ -105,7 +105,7 @@ subtest "select_ps_digest" => sub
   $server->{_select_ps_digest}= $Ytkit::Test::SELECT_FROM_ps_digest::VAR1;
   is_deeply($server->select_ps_digest, $Ytkit::Test::SELECT_FROM_ps_digest::VAR1,
             "SELECT FROM p_s.events_statements_summary_by_digest");
-  $server->clear_cache;
+  server_reset($server);
 };
 
 subtest "select_ps_table" => sub
@@ -113,7 +113,7 @@ subtest "select_ps_table" => sub
   $server->{_select_ps_table}= $Ytkit::Test::SELECT_FROM_ps_table::VAR1;
   is_deeply($server->select_ps_table, $Ytkit::Test::SELECT_FROM_ps_table::VAR1,
             "SELECT FROM p_s.table_io_waits_summary_by_table");
-  $server->clear_cache;
+  server_reset($server);
 };
 
 subtest "select_is_table_by_size" => sub
@@ -121,7 +121,7 @@ subtest "select_is_table_by_size" => sub
   $server->{_select_is_table_by_size}= $Ytkit::Test::SELECT_FROM_is_table::VAR1;
   is_deeply($server->select_is_table_by_size, $Ytkit::Test::SELECT_FROM_is_table::VAR1,
             "SELECT FROM i_s.tables");
-  $server->clear_cache;
+  server_reset($server);
 };
 
 subtest "select_user_list" => sub
@@ -129,7 +129,7 @@ subtest "select_user_list" => sub
   $server->{_select_user_list}= $Ytkit::Test::SELECT_user_list::one_user;
   is_deeply($server->select_user_list, $Ytkit::Test::SELECT_user_list::one_user,
             "SELECT FROM mysql.user");
-  $server->clear_cache;
+  server_reset($server);
 };
 
 subtest "show_grants" => sub
@@ -140,7 +140,7 @@ subtest "show_grants" => sub
               { grants => q{GRANT TRIGGER ON `sys`.* TO 'mysql.sys'@'localhost'} },
               { grants => q{GRANT SELECT ON `sys`.`sys_config` TO 'mysql.sys'@'localhost'} }, ],
             "SHOW GRANTS");
-  $server->clear_cache;
+  server_reset($server);
 };
 
 subtest "show_master_status" => sub
@@ -148,18 +148,18 @@ subtest "show_master_status" => sub
   $server->{_show_master_status}= $Ytkit::Test::SHOW_MASTER_STATUS::VAR1;
   is_deeply($server->show_master_status, $Ytkit::Test::SHOW_MASTER_STATUS::VAR1, "SHOW MASTER STATUS");
   is($server->gtid, "0604c90e-4b59-11e7-b7fb-525400101084:1-9473,0ce790cd-4d07-11e8-9c10-06621cb53d46:1-1293146,19b26900-fcef-11e7-82fa-063fb69985da:1-37128417,1a34192d-fcef-11e7-8595-062147627228:1-164886,2dbe69ea-fcf1-11e7-9d9d-06e9e866376c:1-9520469,2dc9ee8e-fcf1-11e7-a0b5-063446ecbea8:1-627502,39e654ff-fcd4-11e7-8c43-06c109ddbd54:1-1933987,39e66f01-fcd4-11e7-8b39-06bafc31ddaa:1-18474,4873fe37-553b-11e6-a000-00163e101065:1-3253609,4bc34a43-553b-11e6-a3e1-00163e101068:1-115562065,530afaf4-0235-11e7-8d29-525400101060:1-29153937,532bb6e3-631b-11e8-9a49-06ffbe912614:1-74871,5cf27cc1-ecf5-11e6-b34d-525400101053:1-23916786,67db7046-ecf5-11e6-af24-525400101051:1-2,78d2f4ce-70e4-11e7-883c-525400357c3c:1-31320573,7a3770b6-70e4-11e7-a5c0-525400cef58d:1-461,7c42f667-fcd8-11e7-8a07-061709b49a88:1-4744216,84ae5745-022d-11e7-a586-525400101059:1-1489972,a47d2ef7-54a2-11e6-8665-00163e101064:1-3334686,acb97e92-57bf-11e6-8db0-e83935b85c80:1,b5989019-548e-11e6-b767-00163e101065:1-2,b5b1251b-548e-11e6-8c48-00163e101068:1-10,bd7d8b42-fcf2-11e7-afd2-066adb890798:1-130727030,bd8a1e0e-fcf2-11e7-9abd-063d77248c82:1-3482158,c26a9bf2-fcec-11e7-95a2-06e48450d818:1-5922,c28a6437-fcec-11e7-930b-06413a0e1bb0:1,cff18bdf-54a2-11e6-92c6-00163e101063:1-6407745", "Get GTID");
-  $server->clear_cache;
+  server_reset($server);
 };
 
 subtest "innodb_stats_on_metadata" => sub
 {
   $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::VAR1;
   ok(!($server->stats_on_metadata), "innodb_stats_on_metadata = OFF");
-  $server->clear_cache;
+  server_reset($server);
 
   $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::STATS_ON_METADATA_IS_ON;
   ok($server->stats_on_metadata, "innodb_stats_on_metadata = ON");
-  $server->clear_cache;
+  server_reset($server);
 
   done_testing;
 };
@@ -168,7 +168,7 @@ subtest "pseudo_thread_id" => sub
 {
   $server->{_thread_id}= $Ytkit::Test::SHOW_VARIABLES::show_session_variables_like_pseudo_thread_id;
   is($server->thread_id, 72, "pseudo_thread_id");
-  $server->clear_cache;
+  server_reset($server);
   done_testing;
 };
 
@@ -177,17 +177,17 @@ subtest "Set information_schema_stats_expiry" => sub
   $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql57_ps_on;
   $server->{_should_set_stats_expiry}= $Ytkit::Test::SHOW_VARIABLES::stats_expiry_empty;
   ok(!($server->should_set_stats_expiry), "5.7 doesn't have information_schema_stats_expiry.");
-  $server->clear_cache;
+  server_reset($server);
 
   $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80;
   $server->{_should_set_stats_expiry}= $Ytkit::Test::SHOW_VARIABLES::stats_expiry_nonzero;
   ok($server->should_set_stats_expiry, "8.0 and information_schema_stats_expiry <> 0.");
-  $server->clear_cache;
+  server_reset($server);
 
   $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80;
   $server->{_should_set_stats_expiry}= $Ytkit::Test::SHOW_VARIABLES::stats_expiry_zero;
   ok(!($server->should_set_stats_expiry), "8.0 and information_schema_stats_expiry = 0.");
-  $server->clear_cache;
+  server_reset($server);
  
   done_testing;
 };
@@ -198,7 +198,7 @@ subtest "Parse SHOW ENGINE INNODB STATUS" => sub
   {
     $server->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql50;
     is($server->latest_deadlock->epoch, 1562551919, "Parse LATEST DETECTED DEADLOCK");
-    $server->clear_cache;
+    server_reset($server);
     done_testing;
   };
 
@@ -206,7 +206,7 @@ subtest "Parse SHOW ENGINE INNODB STATUS" => sub
   {
     $server->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql51;
     is($server->latest_deadlock->epoch, 1562563203, "Parse LATEST DETECTED DEADLOCK");
-    $server->clear_cache;
+    server_reset($server);
     done_testing;
   };
 
@@ -214,7 +214,7 @@ subtest "Parse SHOW ENGINE INNODB STATUS" => sub
   {
     $server->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql55;
     is($server->latest_deadlock->epoch, 1562563601, "Parse LATEST DETECTED DEADLOCK");
-    $server->clear_cache;
+    server_reset($server);
     done_testing;
   };
  
@@ -222,7 +222,7 @@ subtest "Parse SHOW ENGINE INNODB STATUS" => sub
   {
     $server->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql56;
     is($server->latest_deadlock->epoch, 1562563782, "Parse LATEST DETECTED DEADLOCK");
-    $server->clear_cache;
+    server_reset($server);
     done_testing;
   };
  
@@ -230,11 +230,11 @@ subtest "Parse SHOW ENGINE INNODB STATUS" => sub
   {
     $server->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql57;
     is($server->latest_deadlock->epoch, 1562837618, "Parse LATEST DETECTED DEADLOCK");
-    $server->clear_cache;
+    server_reset($server);
 
     $server->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql57_no_deadlock;
     is($server->latest_deadlock->epoch, 0, "Parse LATEST DETECTED DEADLOCK but doesn't exist");
-    $server->clear_cache;
+    server_reset($server);
  
     done_testing;
   };
@@ -243,7 +243,7 @@ subtest "Parse SHOW ENGINE INNODB STATUS" => sub
   {
     $server->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql80;
     is($server->latest_deadlock->epoch, 1562838160, "Parse LATEST DETECTED DEADLOCK");
-    $server->clear_cache;
+    server_reset($server);
     done_testing;
   };
  

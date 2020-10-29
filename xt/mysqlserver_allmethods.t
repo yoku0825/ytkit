@@ -20,24 +20,18 @@
 
 use strict;
 use warnings;
+no warnings "once";
 use utf8;
 use Test::More;
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
+require "$Bin/xTest.pl";
 use Test::mysqld;
 
 use Ytkit::MySQLServer;
 
-my $test=
-{
-  #"5.0.96" => { mysqld => "/usr/mysql/5.0.96/libexec/mysqld", mysql_install_db => "/usr/mysql/5.0.96/bin/mysql_install_db" },
-  #"5.1.72" => { mysqld => "/usr/mysql/5.1.73/libexec/mysqld", mysql_install_db => "/usr/mysql/5.1.73/bin/mysql_install_db" },
-  "5.5.62" => { mysqld => "/usr/mysql/5.5.62/bin/mysqld", mysql_install_db => "/usr/mysql/5.5.62/scripts/mysql_install_db" },
-  "5.6.50" => { mysqld => "/usr/mysql/5.6.50/bin/mysqld", mysql_install_db => "/usr/mysql/5.6.50/scripts/mysql_install_db" },
-  "5.7.32" => { mysqld => "/usr/mysql/5.7.32/bin/mysqld" },
-  "8.0.22" => { mysqld => "/usr/mysql/8.0.22/bin/mysqld" },
-};
+my $test= $Ytkit::xTest::version;
 
 ### Put test-binaries into /usr/mysql/X.X.XX 
 foreach my $version (sort(keys(%$test)))
@@ -56,13 +50,14 @@ foreach my $version (sort(keys(%$test)))
                                           user   => "root", });
     $server->conn;
     ok(!($server->error), "Connect to mysqld");
+    $server->{_ignore_unsupport_version}= 1 if $ENV{HARNESS_ACTIVE};
 
     my $file_path= "$Bin/../lib/Ytkit/MySQLServer.pm";
     my @method   = `grep "^sub" $file_path | awk '{print \$2}'`;
     my @ignore   = qw{ conn new DESTROY query_arrayref query_hashref 
                        warning error show_grants exec_sql valueof 
                        errno clear_cache describe_table raise_if_error warn_if_error
-                       exec_sql_with_croak exec_sql_with_carp use }; ### Almost cases are 'need argument(s)'
+                       exec_sql_with_croak exec_sql_with_carp use support_version }; ### Almost cases are 'need argument(s)'
     
     foreach my $func (@method)
     {

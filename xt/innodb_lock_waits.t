@@ -20,56 +20,20 @@
 
 use strict;
 use warnings;
+no warnings "once";
 use utf8;
 use Test::More;
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
+require "$Bin/xTest.pl";
 use Test::mysqld;
 
 use Ytkit::MySQLServer;
 
-my $test=
-{
-  "5.0" => { mysqld => "/usr/mysql/5.0.96/libexec/mysqld", mysql_install_db => "/usr/mysql/5.0.96/bin/mysql_install_db" },
-  "5.1" => { mysqld => "/usr/mysql/5.1.73/libexec/mysqld", mysql_install_db => "/usr/mysql/5.1.73/bin/mysql_install_db" },
-  "5.5" => { mysqld => "/usr/mysql/5.5.62/bin/mysqld", mysql_install_db => "/usr/mysql/5.5.62/scripts/mysql_install_db" },
-  "5.6" => { mysqld => "/usr/mysql/5.6.50/bin/mysqld", mysql_install_db => "/usr/mysql/5.6.50/scripts/mysql_install_db" },
-  "5.7" => { mysqld => "/usr/mysql/5.7.32/bin/mysqld" },
-  "8.0" => { mysqld => "/usr/mysql/8.0.22/bin/mysqld" },
-};
+my $test= $Ytkit::xTest::version;
 
-subtest "Testing via 5.0" => sub
-{
-  plan skip_all => "libmysqlclient21 doesn't support MySQL 5.0 connection..";
-
-  my $mysqld= Test::mysqld->new($test->{"5.0"});
-  my $server= Ytkit::MySQLServer->new({ host   => "localhost",
-                                        socket => $mysqld->base_dir . "/tmp/mysql.sock",
-                                        user   => "root", });
-  $server->conn;
-  ok(!($server->error), "Connect to mysqld");
-  ok(!(defined($server->fetch_innodb_lock_waits)), "fetch_innodb_lock_waits returns undef");
-  is($server->error, "Unsupported version for fetch_innodb_lock_waits", "Unsupported Error message");
-  done_testing;
-};
-
-subtest "Testing via 5.1" => sub
-{
-  plan skip_all => "libmysqlclient21 doesn't support MySQL 5.1 connection..";
-
-  my $mysqld= Test::mysqld->new($test->{"5.1"});
-  my $server= Ytkit::MySQLServer->new({ host   => "localhost",
-                                        socket => $mysqld->base_dir . "/tmp/mysql.sock",
-                                        user   => "root", });
-  $server->conn;
-  ok(!($server->error), "Connect to mysqld");
-  ok(!(defined($server->fetch_innodb_lock_waits)), "fetch_innodb_lock_waits returns undef");
-  is($server->error, "Unsupported version for fetch_innodb_lock_waits", "Unsupported Error message");
-  done_testing;
-};
-
-foreach (qw{ 5.5 5.6 })
+foreach (sort(keys(%${Ytkit::xTest::version})))
 {
   subtest "Testing via $_" => sub
   {
@@ -82,40 +46,8 @@ foreach (qw{ 5.5 5.6 })
     is_deeply($server->fetch_innodb_lock_waits, [], "fetch_innodb_lock_waits returns empty arrayref");
     ok(!($server->error), "Query is succeeded");
   
-    ### sys.innodb_lock_waits does NOT exists.
-    eval
-    {
-      $server->_fetch_sys_innodb_lock_waits;
-    };
-    is($server->errno, Ytkit::MySQLServer::ER_NO_SUCH_TABLE, "_fetch_sys_innodb_lock_waits is failed.");
-  
     done_testing;
   };
 }
-
-foreach (qw{ 5.7 8.0 })
-{
-  subtest "Testing via $_" => sub
-  {
-    my $mysqld= Test::mysqld->new($test->{$_});
-    my $server= Ytkit::MySQLServer->new({ host   => "localhost",
-                                          socket => $mysqld->base_dir . "/tmp/mysql.sock",
-                                          user   => "root", });
-    $server->conn;
-    ok(!($server->error), "Connect to mysqld");
-    is_deeply($server->fetch_innodb_lock_waits, [], "fetch_innodb_lock_waits returns empty arrayref");
-    ok(!($server->error), "Query is succeeded");
-  
-    ### sys.innodb_lock_waits exists.
-    eval
-    {
-      $server->_fetch_sys_innodb_lock_waits;
-    };
-    ok(!($server->errno), "_fetch_sys_innodb_lock_waits is succeeded.");
-  
-    done_testing;
-  };
-}
-
 
 done_testing;

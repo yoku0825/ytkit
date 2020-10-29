@@ -20,16 +20,17 @@
 
 use strict;
 use warnings;
+no warnings "once";
 use utf8;
 use Test::More;
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
+require "$Bin/xTest.pl";
 use Test::mysqld;
 
 use Ytkit::MySQLServer;
-my $mysqld= Test::mysqld->new;
-
+my $mysqld= Test::mysqld->new(${Ytkit::xTest::version}->{$Ytkit::xTest::mysql80});
 my $server= Ytkit::MySQLServer->new({ host   => "localhost",
                                       socket => $mysqld->base_dir . "/tmp/mysql.sock",
                                       user   => "root" });

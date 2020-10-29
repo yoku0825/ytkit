@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 ########################################################################
-# Copyright (C) 2019  yoku0825
+# Copyright (C) 2019, 2020  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -32,14 +32,27 @@ use Ytkit::Config;
 my $config= Ytkit::Config->new({ %$Ytkit::Config::CONNECT_OPTION,
                                  %$Ytkit::Config::COMMON_OPTION,
                                  (query => { alias => ["e", "execute", "query"],
-                                             text => "Query for Data::Dumper::Dumper." }) });
+                                             text => "Query for Data::Dumper::Dumper." },
+                                  hashref_key => { alias => ["hashref-key", "key"],
+                                                     text  => "Key column name for duming via selectall_hashref " .
+                                                              "(if not specified, using selectall_arrayref)" } ) });
 $config->parse_argv(@ARGV);
 
 my $sql= $config->{result}->{query} // undef;
 if ($sql)
 {
   my $server= Ytkit::MySQLServer->new($config->{result});
-  print Dumper $server->query_arrayref($sql);
+  my $result_set;
+
+  if ($config->{result}->{hashref_key})
+  {
+    $result_set= $server->query_hashref($sql, $config->{result}->{hashref_key});
+  }
+  else
+  {
+    $result_set= $server->query_arrayref($sql);
+  }
+  print Dumper $result_set;
 }
 else
 {

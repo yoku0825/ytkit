@@ -20,25 +20,19 @@
 
 use strict;
 use warnings;
+no warnings "once";
 use utf8;
 use Test::More;
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
+require "$Bin/xTest.pl";
 use Test::mysqld;
 
 use DBI;
 use Ytkit::HealthCheck;
 
-my $test=
-{
-  #"5.0.96" => { mysqld => "/usr/mysql/5.0.96/libexec/mysqld", mysql_install_db => "/usr/mysql/5.0.96/bin/mysql_install_db" },
-  #"5.1.72" => { mysqld => "/usr/mysql/5.1.73/libexec/mysqld", mysql_install_db => "/usr/mysql/5.1.73/bin/mysql_install_db" },
-  "5.5.62" => { mysqld => "/usr/mysql/5.5.62/bin/mysqld", mysql_install_db => "/usr/mysql/5.5.62/scripts/mysql_install_db" },
-  "5.6.50" => { mysqld => "/usr/mysql/5.6.50/bin/mysqld", mysql_install_db => "/usr/mysql/5.6.50/scripts/mysql_install_db" },
-  "5.7.32" => { mysqld => "/usr/mysql/5.7.32/bin/mysqld" },
-  "8.0.22" => { mysqld => "/usr/mysql/8.0.22/bin/mysqld" },
-};
+my $test= $Ytkit::xTest::version;
 
 my @enables_list= qw{ --autoinc-usage-enable=1 
                       --connection-count-enable=1

@@ -382,6 +382,22 @@ subtest "Duplicated aliases" => sub
   done_testing;
 };
 
+subtest "Sample option printing" => sub
+{
+  my $option_struct=
+  {
+    simple_no_default => { alias => ["simple_no_default"] },
+    simple_has_default => { alias => ["simple_has_default"], default => "DEFAULT_VALUE" },
+    multi_alias_default => { alias => ["a", "multi_alias_default"], default => "MULTI" },
+  };
+  my $config= Ytkit::Config->new($option_struct);
+
+  is($config->{buffer}->{simple_no_default}->default_option_print, "", "No print non-default option");
+  is($config->{buffer}->{simple_has_default}->default_option_print, "--simple_has_default=DEFAULT_VALUE", "Print default option");
+  is($config->{buffer}->{multi_alias_default}->default_option_print, "--multi_alias_default=MULTI", "Choose longuest alias");
+  done_testing;
+};
+
 
 done_testing;
 

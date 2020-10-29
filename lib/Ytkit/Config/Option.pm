@@ -206,5 +206,35 @@ sub _alias_as_opt
   }
 }
 
+sub longest_alias
+{
+  my ($self)= @_;
+  my $longest= "";
+
+  foreach (@{$self->{alias}})
+  {
+    $longest= $_ if length($longest) < length($_);
+  }
+
+  return $longest;
+}
+
+sub default_option_print
+{
+  my ($self)= @_;
+  if (!($self->{default}))
+  {
+    return "";
+  }
+  elsif (ref($self->{default}) eq "ARRAY" && !(@{$self->{default}}))
+  {
+    return "";
+  }
+
+  my $left = _alias_as_opt($self->longest_alias);
+  my $right= $self->{noarg} ? "" : _sprintf("=%s", $self->{default});
+  return $left . $right;
+}
+
 
 return 1;

@@ -33,7 +33,7 @@ use Ytkit::MySQLServer;
 
 my $test= $Ytkit::xTest::version;
 
-foreach ($Ytkit::xTest::mysql55, $Ytkit::xTest::mysql56)
+foreach (sort(keys(%${Ytkit::xTest::version})))
 {
   subtest "Testing via $_" => sub
   {
@@ -46,40 +46,8 @@ foreach ($Ytkit::xTest::mysql55, $Ytkit::xTest::mysql56)
     is_deeply($server->fetch_innodb_lock_waits, [], "fetch_innodb_lock_waits returns empty arrayref");
     ok(!($server->error), "Query is succeeded");
   
-    ### sys.innodb_lock_waits does NOT exists.
-    eval
-    {
-      $server->_fetch_sys_innodb_lock_waits;
-    };
-    is($server->errno, Ytkit::MySQLServer::ER_NO_SUCH_TABLE, "_fetch_sys_innodb_lock_waits is failed.");
-  
     done_testing;
   };
 }
-
-foreach ($Ytkit::xTest::mysql57, $Ytkit::xTest::mysql80)
-{
-  subtest "Testing via $_" => sub
-  {
-    my $mysqld= Test::mysqld->new($test->{$_});
-    my $server= Ytkit::MySQLServer->new({ host   => "localhost",
-                                          socket => $mysqld->base_dir . "/tmp/mysql.sock",
-                                          user   => "root", });
-    $server->conn;
-    ok(!($server->error), "Connect to mysqld");
-    is_deeply($server->fetch_innodb_lock_waits, [], "fetch_innodb_lock_waits returns empty arrayref");
-    ok(!($server->error), "Query is succeeded");
-  
-    ### sys.innodb_lock_waits exists.
-    eval
-    {
-      $server->_fetch_sys_innodb_lock_waits;
-    };
-    ok(!($server->errno), "_fetch_sys_innodb_lock_waits is succeeded.");
-  
-    done_testing;
-  };
-}
-
 
 done_testing;

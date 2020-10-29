@@ -32,6 +32,13 @@ no warnings "once";
 
 use_ok("Ytkit::MySQLServer");
 
+sub reset
+{
+  my ($server)= @_;
+  $server->clear_cache;
+  $server->{_version}= 50719;
+}
+
 ### Connection failed.
 my $server= Ytkit::MySQLServer->new({ host => "localhost" });
 ok(!($server->conn), "Connection failed");

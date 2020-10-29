@@ -185,21 +185,26 @@ sub extract_for_usage
                  "";
 
   ### Expand each aliases
-  my @aliases;
-  foreach my $alias (@{$self->{alias}})
-  {
-    if (length($alias) == 1)
-    {
-      ### 1 character alias must specified with single-hyphen.
-      push(@aliases, _sprintf("-%s%s", $alias, $arg));
-    }
-    else
-    {
-      ### 2 or more characters must specified with double-hypen.
-      push(@aliases, _sprintf("--%s%s", $alias, $arg));
-    }
-  }
+  my @aliases= map { _sprintf("%s%s", _alias_as_opt($_), $arg) } @{$self->{alias}};
+
   return _sprintf("* %s%s%s\n  %s\n", join(", ", sort(@aliases)), $multi, $default, $self->{text});
 }
+
+sub _alias_as_opt
+{
+  my ($alias)= @_;
+  
+  if (length($alias) == 1)
+  {
+    ### 1 character alias must specified with single-hyphen.
+    return _sprintf("-%s", $alias);
+  }
+  else
+  {
+    ### 2 or more characters must specified with double-hypen.
+    return _sprintf("--%s", $alias);
+  }
+}
+
 
 return 1;

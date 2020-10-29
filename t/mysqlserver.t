@@ -278,5 +278,35 @@ subtest "SHOW WARNINGS" => sub
   done_testing;
 };
 
+subtest "Supported version handling" => sub
+{
+  server_reset($server);
+
+  my $warn_count= 0;
+  local $SIG{__WARN__}= sub
+  {
+    $warn_count++;
+  };
+ 
+  is($server->mysqld_version, 50719, "5.7.19 is set.");
+  is($warn_count, 0, "No warnings yet.");
+
+  ok($server->support_version(50632), "Compare vs. 5.6.32");
+  is($warn_count, 0, "No warnings");
+
+  ok($server->support_version(50719), "Compare vs. 5.7.19");
+  is($warn_count, 0, "No warnings");
+
+  ok(!($server->support_version(80022)), "Compare vs. 8.0.22");
+  is($warn_count, 1, "Raise warning");
+
+  $server->{_ignore_unsupport_version}= 1;
+  ok(!($server->support_version(80022)), "Compare vs. 8.0.22 again");
+  is($warn_count, 1, "No warning increment when _ignore_unsupport_version is set.");
+
+  server_reset($server);
+  done_testing;
+};
+
 
 done_testing;

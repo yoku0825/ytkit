@@ -50,6 +50,7 @@ foreach my $version (sort(keys(%$test)))
                                           user   => "root", });
     $server->conn;
     ok(!($server->error), "Connect to mysqld");
+    $server->{_ignore_unsupport_version}= 1 if $ENV{HARNESS_ACTIVE};
 
     my $file_path= "$Bin/../lib/Ytkit/MySQLServer.pm";
     my @method   = `grep "^sub" $file_path | awk '{print \$2}'`;

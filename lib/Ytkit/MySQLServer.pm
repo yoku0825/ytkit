@@ -282,6 +282,7 @@ sub show_variables
 sub select_autoinc_usage
 {
   my ($self)= @_;
+  return [] if !($self->support_version(50002));
 
   ### 8.0.13 and later uses cache for i_s.tables...
   $self->update_stats_expiry if $self->mysqld_version >= 80013 && $self->should_set_stats_expiry;
@@ -320,6 +321,7 @@ sub describe_table
 sub select_ps_digest
 {
   my ($self, $limit)= @_;
+  return [] if !($self->support_version(50605));
 
   ### Compatibility between 0.2.1-7 and 0.2.1-8
   if ($ENV{ytkit_collect_compat})
@@ -360,6 +362,7 @@ EOS
 sub _select_ps_digest_old_compat
 {
   my ($self, $limit)= @_;
+  return [] if !($self->support_version(50605));
 
   my $sql= << "EOS";
 SELECT
@@ -389,6 +392,8 @@ EOS
 sub select_ps_table
 {
   my ($self, $limit)= @_;
+  return [] if !($self->support_version(50602));
+
   my $sql= << "EOS";
 SELECT
   object_schema AS table_schema, 
@@ -413,6 +418,8 @@ EOS
 sub select_ps_threads
 {
   my ($self)= @_;
+  return [] if !($self->support_version(50602));
+
   my $sql= "SELECT * FROM performance_schema.threads"; ### Need lower column-names?
   return $self->query_arrayref($sql);
 }
@@ -420,6 +427,7 @@ sub select_ps_threads
 sub select_is_table_by_size
 {
   my ($self, $limit)= @_;
+  return [] if !($self->support_version(50002));
 
   ### 8.0.13 and later uses cache for i_s.tables...
   $self->update_stats_expiry if $self->mysqld_version >= 80013 && $self->should_set_stats_expiry;
@@ -450,12 +458,7 @@ EOS
 sub select_is_metrics
 {
   my ($self)= @_;
-  if ($self->mysqld_version < 50602)
-  {
-    ### information_schema.innodb_metrics has been implemented 5.6.2
-    _carpf("%s is not implemented information_schema.innodb_metrics (5.6.2 and later)", $self->valueof("version"));
-    return [];
-  }
+  return [] if !($self->support_version(50602));
 
   my $sql= "SELECT name AS name, " .
                   "count AS count, " .
@@ -761,6 +764,8 @@ sub valueof
 sub fetch_p_s_stage_innodb_alter_table
 {
   my ($self)= @_;
+  return [] if !($self->support_version(50706));
+
   my $sql= << "EOS";
 SELECT
   name AS name,
@@ -778,6 +783,7 @@ EOS
 sub fetch_p_s_events_stages
 {
   my ($self)= @_;
+  return [] if !($self->support_version(50601));
 
   my $sql= << "EOS";
 SELECT
@@ -795,6 +801,7 @@ EOS
 sub alter_table_progress
 {
   my ($self)= @_;
+  return [] if !($self->support_version(50706));
 
   my $sql= << 'EOS';
 SELECT
@@ -855,22 +862,27 @@ sub fetch_innodb_lock_waits
 {
   my ($self)= @_;
 
-  if ($self->mysqld_version < 50138)
+  ### Stop _carp within internal version handling
+  my $saved_ignore= $self->{_ignore_unsupport_version};
+  $self->{_ignore_unsupport_version}= 1;
+
+  ### i_s is implemented in 5.1.38, sys is implemented in 5.7.7
+  my $use_i_s= $self->support_version(50138);
+  my $use_sys= $self->support_version(50707);
+
+  ### Restore param
+  $self->{_ignore_unsupport_version}= $saved_ignore;
+ 
+  ### Can't use any information_schema.
+  return [] if !($use_i_s);
+
+  if ($use_sys)
   {
-    ### 5.0, 4.1, 4.0, .. are not supported.
-    $self->errno(ERRNO_INTERNAL);
-    $self->error(_sprintf("Unsupported version %s for fetch_innodb_lock_waits", $self->mysqld_version));
-    return undef;
+    return $self->_fetch_sys_innodb_lock_waits;
   }
-
-  my $ret;
-  eval
+  else
   {
-    $ret= $self->_fetch_sys_innodb_lock_waits;
-  };
-
-  if ($self->errno)
-  {
+    my $ret;
     eval
     {
       $ret= $self->_fetch_innodb_lock_waits_rawsql;
@@ -883,8 +895,8 @@ sub fetch_innodb_lock_waits
       $self->error("Unsupported version for fetch_innodb_lock_waits");
       return undef;
     }
+    return $ret;
   }
-  return $ret;
 }
 
 sub history_list_length

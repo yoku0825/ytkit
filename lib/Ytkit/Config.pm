@@ -336,7 +336,7 @@ sub _extract_for_usage
     ### Don't display functional isa 
     if ($opt->{isa} && ref($opt->{isa}) ne "CODE")
     {
-      $arg= sprintf("=%s", _sprintf("%s", $opt->{isa}));
+      $arg= _sprintf("=%s", $opt->{isa});
     }
     else
     {

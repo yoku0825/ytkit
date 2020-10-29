@@ -153,4 +153,53 @@ sub _check_isa
   }
 }
 
+sub extract_for_usage
+{
+  my ($self)= @_;
+
+  ### Decide to print "-s=value" or "-s"
+  my $arg;
+  if ($self->{noarg})
+  {
+    $arg= "";
+  }
+  else
+  {
+    ### Don't display functional isa 
+    if ($self->{isa} && ref($self->{isa}) ne "CODE")
+    {
+      $arg= _sprintf("=%s", $self->{isa});
+    }
+    else
+    {
+      $arg= "=value";
+    }
+  }
+
+  ### If multi => 1, add "(multiple)" after aliases.
+  my $multi= $self->{multi} ? " (multiple)" : "";
+
+  ### Add default information.
+  my $default= (exists($self->{default}) && length($self->{default} // "") > 0 && !($self->{noarg})) ? 
+                 _sprintf(" { Default: %s }", $self->{default}) : 
+                 "";
+
+  ### Expand each aliases
+  my @aliases;
+  foreach my $alias (@{$self->{alias}})
+  {
+    if (length($alias) == 1)
+    {
+      ### 1 character alias must specified with single-hyphen.
+      push(@aliases, _sprintf("-%s%s", $alias, $arg));
+    }
+    else
+    {
+      ### 2 or more characters must specified with double-hypen.
+      push(@aliases, _sprintf("--%s%s", $alias, $arg));
+    }
+  }
+  return _sprintf("* %s%s%s\n  %s\n", join(", ", sort(@aliases)), $multi, $default, $self->{text});
+}
+
 return 1;

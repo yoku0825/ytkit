@@ -306,70 +306,19 @@ sub show_option_text
   {
     if (ref($value) eq "Ytkit::Config::Option")
     {
-      push(@ret, _extract_for_usage($value));
+      push(@ret, $value->extract_for_usage);
     }
     else
     {
       ### Recursive
       while (my ($child_key, $child_value)= each(%$value))
       {
-        push(@ret, _extract_for_usage($child_value));
+        push(@ret, $child_value->extract_for_usage);
       }
     }
   }
   @ret= sort(@ret);
   return \@ret;
-}
-
-sub _extract_for_usage
-{
-  my ($opt)= @_;
-
-  ### Decide to print "-s=value" or "-s"
-  my $arg;
-  if ($opt->{noarg})
-  {
-    $arg= "";
-  }
-  else
-  {
-    ### Don't display functional isa 
-    if ($opt->{isa} && ref($opt->{isa}) ne "CODE")
-    {
-      $arg= _sprintf("=%s", $opt->{isa});
-    }
-    else
-    {
-      $arg= "=value";
-    }
-  }
-
-  ### If multi => 1, add "(multiple)" after aliases.
-  my $multi= $opt->{multi} ? " (multiple)" : "";
-
-  ### Add default information.
-  my $default= (exists($opt->{default}) && length($opt->{default} // "") > 0 && !($opt->{noarg})) ? 
-                 sprintf(" { Default: %s }", $opt->{default}) : 
-                 "";
-
-  ### Expand each aliases
-  my @aliases;
-  foreach my $alias (@{$opt->{alias}})
-  {
-    if (length($alias) == 1)
-    {
-      ### 1 character alias must specified with single-hyphen.
-      push(@aliases, sprintf("-%s%s", $alias, $arg));
-    }
-    else
-    {
-      ### 2 or more characters must specified with double-hypen.
-      ### Normalize to print "_" to "-".
-      $alias =~ s/_/-/g;
-      push(@aliases, sprintf("--%s%s", $alias, $arg));
-    }
-  }
-  return sprintf("* %s%s%s\n  %s\n", join(", ", sort(@aliases)), $multi, $default, $opt->{text});
 }
 
 sub _simple_parse

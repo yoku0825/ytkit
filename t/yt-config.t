@@ -226,14 +226,14 @@ subtest "new Ytkit::Config interface" => sub
 
     my @expected_usage=
     (
-      "* --simple-usage=value\n  simple_usage_text\n",
-      "* --noarg-usage\n  noarg_usage_text\n",
-      "* --multi-usage=value (multiple)\n  multi_usage_text\n",
-      "* --array-isa-usage=[a, b]\n  array_isa_usage_text\n",
-      "* --regexp-isa-usage=(?^:a|b)\n  regexp_isa_usage_text\n",
+      "* --simple_usage=value\n  simple_usage_text\n",
+      "* --noarg_usage\n  noarg_usage_text\n",
+      "* --multi_usage=value (multiple)\n  multi_usage_text\n",
+      "* --array_isa_usage=[a, b]\n  array_isa_usage_text\n",
+      "* --regexp_isa_usage=(?^:a|b)\n  regexp_isa_usage_text\n",
       "* -s=value\n  short_usage_text\n",
-      "* --another-alias=value, --multi-alias-usage=value, -a=value, -m=value\n  multi_alias_usage_text\n",
-      "* --default-usage=value { Default: default_value }\n  default_usage_text\n",
+      "* --another_alias=value, --multi_alias_usage=value, -a=value, -m=value\n  multi_alias_usage_text\n",
+      "* --default_usage=value { Default: default_value }\n  default_usage_text\n",
     );
     @expected_usage= sort(@expected_usage);
 
@@ -381,6 +381,7 @@ subtest "Duplicated aliases" => sub
   ok($@, "Failed because there are duplicated aliases.");
   done_testing;
 };
+
 
 done_testing;
 

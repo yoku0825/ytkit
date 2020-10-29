@@ -750,12 +750,14 @@ Switching check-item as below,
       - Connection count
       - AUTO_INCREMENT usage
       - read_only should be OFF
+      - Uptime
     - "slave"
       - Long query
       - Replication threads
       - Replication delay
       - Connection count
       - read_only should be ON
+      - Uptime
     - "intermidiate"
       - Long query
       - Connection count
@@ -763,6 +765,7 @@ Switching check-item as below,
       - Replication threads
       - Replication delay
       - read_only should be OFF
+      - Uptime
     - "backup"
       - Replication threads
       - read_only should be ON

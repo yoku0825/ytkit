@@ -318,6 +318,14 @@ sub describe_table
   return $self->query_arrayref("DESC " . $table);
 }
 
+sub select_innodb_trx
+{
+  my ($self)= @_;
+  return [] if !($self->support_version(50508));
+
+  return $self->query_arrayref("SELECT * FROM information_schema.innodb_trx ORDER BY trx_started DESC");
+}
+
 sub select_ps_digest
 {
   my ($self, $limit)= @_;
@@ -1087,6 +1095,16 @@ sub print_information
   {
     $ret .= sprintf("\n%sSHOW INNODB LOCKS%s\n\n", $line, $line);
     $ret .= _print_vtable($self->fetch_innodb_lock_waits);
+  }
+
+  eval
+  {
+    $self->select_innodb_trx;
+  };
+  if (!($@))
+  {
+    $ret .= sprintf("\n%sINNODB TRANSACTIONS%s\n\n", $line, $line);
+    $ret .= _print_vtable($self->select_innodb_trx);
   }
 
   eval

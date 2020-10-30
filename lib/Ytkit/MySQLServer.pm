@@ -917,6 +917,7 @@ sub history_list_length
 sub _fetch_innodb_lock_waits_rawsql
 {
   my ($self)= @_;
+  return [] if !($self->support_version(50508));
 
   ### information_schema.innodb_lock* is not on 8.0
   return undef if $self->mysqld_version >= 80011;

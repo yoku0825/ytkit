@@ -153,4 +153,88 @@ sub _check_isa
   }
 }
 
+sub extract_for_usage
+{
+  my ($self)= @_;
+
+  ### Decide to print "-s=value" or "-s"
+  my $arg;
+  if ($self->{noarg})
+  {
+    $arg= "";
+  }
+  else
+  {
+    ### Don't display functional isa 
+    if ($self->{isa} && ref($self->{isa}) ne "CODE")
+    {
+      $arg= _sprintf("=%s", $self->{isa});
+    }
+    else
+    {
+      $arg= "=value";
+    }
+  }
+
+  ### If multi => 1, add "(multiple)" after aliases.
+  my $multi= $self->{multi} ? " (multiple)" : "";
+
+  ### Add default information.
+  my $default= (exists($self->{default}) && length($self->{default} // "") > 0 && !($self->{noarg})) ? 
+                 _sprintf(" { Default: %s }", $self->{default}) : 
+                 "";
+
+  ### Expand each aliases
+  my @aliases= map { _sprintf("%s%s", _alias_as_opt($_), $arg) } @{$self->{alias}};
+
+  return _sprintf("* %s%s%s\n  %s\n", join(", ", sort(@aliases)), $multi, $default, $self->{text});
+}
+
+sub _alias_as_opt
+{
+  my ($alias)= @_;
+  
+  if (length($alias) == 1)
+  {
+    ### 1 character alias must specified with single-hyphen.
+    return _sprintf("-%s", $alias);
+  }
+  else
+  {
+    ### 2 or more characters must specified with double-hypen.
+    return _sprintf("--%s", $alias);
+  }
+}
+
+sub longest_alias
+{
+  my ($self)= @_;
+  my $longest= "";
+
+  foreach (@{$self->{alias}})
+  {
+    $longest= $_ if length($longest) < length($_);
+  }
+
+  return $longest;
+}
+
+sub default_option_print
+{
+  my ($self)= @_;
+  if (!($self->{default}))
+  {
+    return "";
+  }
+  elsif (ref($self->{default}) eq "ARRAY" && !(@{$self->{default}}))
+  {
+    return "";
+  }
+
+  my $left = _alias_as_opt($self->longest_alias);
+  my $right= $self->{noarg} ? "" : _sprintf("=%s", $self->{default});
+  return $left . $right;
+}
+
+
 return 1;

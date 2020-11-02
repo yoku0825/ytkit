@@ -1057,6 +1057,10 @@ sub print_information
   my $line= "=" x 10;
   my $ret;
 
+  ### Stop _carp within internal version handling
+  my $saved_ignore= $self->{_ignore_unsupport_version};
+  $self->{_ignore_unsupport_version}= 1;
+
   eval
   {
     $self->show_processlist;
@@ -1116,6 +1120,9 @@ sub print_information
     $ret .= sprintf("\n%sperformance_schema.threads%s\n\n", $line, $line);
     $ret .= _print_table($self->select_ps_threads);
   }
+
+  ### Restore param
+  $self->{_ignore_unsupport_version}= $saved_ignore;
 
   return $ret;
 }

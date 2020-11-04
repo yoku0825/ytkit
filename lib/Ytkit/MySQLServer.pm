@@ -318,6 +318,14 @@ sub describe_table
   return $self->query_arrayref("DESC " . $table);
 }
 
+sub select_innodb_trx
+{
+  my ($self)= @_;
+  return [] if !($self->support_version(50508));
+
+  return $self->query_arrayref("SELECT * FROM information_schema.innodb_trx ORDER BY trx_started DESC");
+}
+
 sub select_ps_digest
 {
   my ($self, $limit)= @_;
@@ -919,6 +927,7 @@ sub history_list_length
 sub _fetch_innodb_lock_waits_rawsql
 {
   my ($self)= @_;
+  return [] if !($self->support_version(50508));
 
   ### information_schema.innodb_lock* is not on 8.0
   return undef if $self->mysqld_version >= 80011;
@@ -1050,6 +1059,10 @@ sub print_information
   my $line= "=" x 10;
   my $ret;
 
+  ### Stop _carp within internal version handling
+  my $saved_ignore= $self->{_ignore_unsupport_version};
+  $self->{_ignore_unsupport_version}= 1;
+
   eval
   {
     $self->show_processlist;
@@ -1092,6 +1105,16 @@ sub print_information
 
   eval
   {
+    $self->select_innodb_trx;
+  };
+  if (!($@))
+  {
+    $ret .= sprintf("\n%sINNODB TRANSACTIONS%s\n\n", $line, $line);
+    $ret .= _print_vtable($self->select_innodb_trx);
+  }
+
+  eval
+  {
     $self->select_ps_threads;
   };
   if (!($@))
@@ -1099,6 +1122,9 @@ sub print_information
     $ret .= sprintf("\n%sperformance_schema.threads%s\n\n", $line, $line);
     $ret .= _print_table($self->select_ps_threads);
   }
+
+  ### Restore param
+  $self->{_ignore_unsupport_version}= $saved_ignore;
 
   return $ret;
 }

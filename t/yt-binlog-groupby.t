@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2017, 2019  yoku0825
+# Copyright (C) 2017, 2020  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -53,7 +53,7 @@ subtest "--sort (old-behavior compatibility)" => sub
 
 subtest "without --sort" => sub
 {
-  subtest "--group-by=all" => sub
+  subtest "--group-by=all --output=tsv" => sub
   {
     my @option= qw{ --group-by=all --cell=1m --output=tsv };
     run_test("01_parse_sbr_57.txt", "01_parse_sbr_57.r", @option);
@@ -64,15 +64,38 @@ subtest "without --sort" => sub
     done_testing;
   };
   
-  subtest "--group-by=all,exec" => sub
+  subtest "--group-by=all,exec --output=tsv" => sub
   {
     no warnings "qw";
-    my @option= qw{ --group-by=all,exec --cell=1m --output=tsv --sort };
+    my @option= qw{ --group-by=all,exec --cell=1m --output=tsv };
     run_test("01_parse_sbr_57.txt", "01_parse_sbr_57_all_exec.r", @option);
     run_test("mysqlbinlog_rbr_80.txt", "mysqlbinlog_rbr_80_allexec_1m_tsv.r", @option);
     run_test("mysqlbinlog_sbr_80.txt", "mysqlbinlog_sbr_80_allexec_1m_tsv.r", @option);
     done_testing;
   };
+
+  subtest "--group-by=all --output=csv" => sub
+  {
+    my @option= qw{ --group-by=all --cell=1m --output=csv };
+    run_test("01_parse_sbr_57.txt", "01_parse_sbr_57_csv.r", @option);
+    run_test("01_parse_rbr_57.txt", "01_parse_rbr_57_csv.r", @option);
+    run_test("mysqlbinlog_rbr_80.txt", "mysqlbinlog_rbr_80_all_1m_csv.r", @option);
+    run_test("mysqlbinlog_sbr_80.txt", "mysqlbinlog_sbr_80_all_1m_csv.r", @option);
+
+    done_testing;
+  };
+  
+  subtest "--group-by=all,exec --output=csv" => sub
+  {
+    no warnings "qw";
+    my @option= qw{ --group-by=all,exec --cell=1m --output=csv };
+    run_test("01_parse_sbr_57.txt", "01_parse_sbr_57_all_exec_csv.r", @option);
+    run_test("mysqlbinlog_rbr_80.txt", "mysqlbinlog_rbr_80_allexec_1m_csv.r", @option);
+    run_test("mysqlbinlog_sbr_80.txt", "mysqlbinlog_sbr_80_allexec_1m_csv.r", @option);
+    done_testing;
+  };
+
+  done_testing;
 };
 
 subtest "parse all group-by" => sub

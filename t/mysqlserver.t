@@ -291,7 +291,7 @@ subtest "Supported version handling" => sub
   {
     $warn_count++;
   };
- 
+
   is($server->mysqld_version, 50719, "5.7.19 is set.");
   is($warn_count, 0, "No warnings yet.");
 
@@ -309,6 +309,26 @@ subtest "Supported version handling" => sub
   is($warn_count, 1, "No warning increment when _ignore_unsupport_version is set.");
 
   server_reset($server);
+  done_testing;
+};
+
+subtest "i_am_group_replication_primary" => sub
+{
+  $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80;
+  $server->{_replication_group_members}= $Ytkit::Test::SELECT_FROM_ps_repl_group_members::online3;
+  is($server->i_am_group_replication_primary, 1, "Group Replication PRIMARY Server");
+  server_reset($server);
+
+  $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80_another_uuid;
+  $server->{_replication_group_members}= $Ytkit::Test::SELECT_FROM_ps_repl_group_members::online3;
+  is($server->i_am_group_replication_primary, 0, "Group Replication SECONDARY Server");
+  server_reset($server);
+
+  $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80_another_uuid;
+  $server->{_replication_group_members}= $Ytkit::Test::SELECT_FROM_ps_repl_group_members::offline1;
+  is($server->i_am_group_replication_primary, 0, "I'm not in Group Replication");
+  server_reset($server);
+
   done_testing;
 };
 

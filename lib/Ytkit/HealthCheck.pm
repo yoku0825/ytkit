@@ -1,7 +1,7 @@
 package Ytkit::HealthCheck;
 
 ########################################################################
-# Copyright (C) 2017, 2020  yoku0825
+# Copyright (C) 2017, 2021  yoku0825
 # Copyright (C) 2018        hacchuu0119
 #
 # This program is free software; you can redistribute it and/or
@@ -163,6 +163,24 @@ sub new
     $self->instance->{_hostname}= $self->{host};
     ### mikasafabric for MySQL specific checks.
     $self->check_fabric;
+  }
+  elsif ($role eq "innodb_cluster")
+  {
+    $self->check_innodb_cluster_node_count;
+    $self->check_innodb_cluster_replica_lag;
+
+    $self->check_long_query;
+    $self->check_connection_count;
+    $self->check_gtid_hole;
+    $self->check_uptime;
+    $self->check_history_list_length;
+ 
+    ### Like a master-replica toporogy.
+    if ($self->instance->i_am_group_replication_primary)
+    {
+      $self->check_autoinc_usage;
+      $self->check_latest_deadlock;
+    }
   }
   else
   {
@@ -706,6 +724,41 @@ sub check_history_list_length
   return 0;
 }
 
+sub check_innodb_cluster_node_count
+{
+  my ($self)= @_;
+  
+  my $count= grep { $_->{member_state} eq "ONLINE" } @{$self->instance->replication_group_members};
+  my $status= compare_threshold_reverse($count, { warning => 3, critical => 2 });
+
+  $self->update_status($status, sprintf("ONLINE Group Replication Member is %d", $count)) if $status;
+  return 0;
+}
+
+sub check_innodb_cluster_replica_lag
+{
+  my ($self)= @_;
+  return 0 unless $self->{group_replication_lag_enable};
+
+  ### How many commits not yet applied.
+  my $trx_lag= $self->instance->replication_group_member_stats->[0]->{count_transactions_remote_in_applier_queue};
+  my $trx_status= compare_threshold($trx_lag, $self->{group_replication_lag_transactions});
+  $self->update_status($trx_status, sprintf("%d transactions are queued in Group Replication", $trx_lag)) if $trx_status;
+
+  ### How many seconds between "STARTING APPLY" and "COMMITTED ORIGINAL"
+  my $applier_time_lag= $self->instance->replication_applier_status->{group_replication_applier}->{_diff} // 0;
+  my $applier_status= compare_threshold($applier_time_lag, $self->{group_replication_lag_seconds});
+  $self->update_status($applier_status,
+                       sprintf("Group Replication Applier Seconds_Behind_Master is %d. ", $applier_time_lag)) if $applier_status;
+
+  my $recovery_time_lag= $self->instance->replication_applier_status->{group_replication_recovery}->{_diff} // 0;
+  my $recovery_status= compare_threshold($recovery_time_lag, $self->{group_replication_lag_seconds});
+  $self->update_status($recovery_status,
+                       sprintf("Group Replication Applier Seconds_Behind_Master is %d. ", $recovery_time_lag)) if $recovery_status;
+
+  return 0;
+}
+
 sub dump_detail
 {
   my ($self)= @_;
@@ -776,12 +829,19 @@ Switching check-item as below,
       - Check only connectivity. For calling as library.
     - "fabric"
       - Checking for mikasafabric for MySQL.
+    - "innodb_cluster"
+      - Long query
+      - Connection count
+      - AUTO_INCREMENT usage (If member_state is PRIMARY)
+      - Group Replication status
+      - Group Replication delay
+      - Uptime
 EOS
 
   my $yt_healthcheck_option=
   {
     role => { alias => ["role"],
-              isa  => ["auto", "master", "slave", "backup", "fabric", "none", "intermidiate"],
+              isa  => ["auto", "master", "slave", "backup", "fabric", "none", "intermidiate", "innodb_cluster"],
               default => "auto",
               text => $role_text },
     long_query =>
@@ -883,6 +943,22 @@ EOS
                    text => "Warning threshold for trx_rseg_history_len", },
       critical => { default => 500000,
                     text => "Critical threshold for trx_rseg_history_len", },
+    },
+    group_replication_lag_enable => { default => 1,
+                                      text    => qq{When set to 0, turn off Group Replication Lag check.} },
+    group_replication_lag_transactions =>
+    {
+      warning  => { default => 100,
+                    text    => qq{Warning threshold for Group Replication Lag (queued transactions)} },
+      critical => { default => 10000,
+                    text    => qq{Critical threshold for Group Replication Lag (queued transactions)} },
+    },
+    group_replication_lag_seconds =>
+    {
+      warning  => { default => 5,
+                    text    => qq{Warning threshold for Group Replication Lag (seconds)} },
+      critical => { default => 30,
+                    text    => qq{Critical threshold for Group Replication Lag (seconds)} },
     },
     dump_detail      => { alias   => ["dump-detail"],
                           text    => qq{When result is NOT NAGIOS_OK,\n} .

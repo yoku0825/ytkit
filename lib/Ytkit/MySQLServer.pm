@@ -1,7 +1,7 @@
 package Ytkit::MySQLServer;
 
 ########################################################################
-# Copyright (C) 2018, 2020  yoku0825
+# Copyright (C) 2018, 2021  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -856,6 +856,65 @@ sub show_engine_innodb_status
 {
   my ($self)= @_;
   return $self->query_arrayref("SHOW ENGINE INNODB STATUS");
+}
+
+sub replication_group_members
+{
+  my ($self)= @_;
+  return [] if !($self->support_version(80013));
+
+  my $sql= << 'EOS';
+SELECT member_id, member_state, member_role
+FROM performance_schema.replication_group_members
+ORDER BY member_id
+EOS
+
+  return $self->query_arrayref($sql);
+}
+
+sub replication_group_member_stats
+{
+  my ($self)= @_;
+  return [] if !($self->support_version(80013));
+
+  my $sql= << 'EOS';
+SELECT count_transactions_remote_in_applier_queue, transactions_committed_all_members
+FROM performance_schema.replication_group_member_stats
+WHERE member_id = @@server_uuid
+EOS
+
+  return $self->query_arrayref($sql);
+}
+
+sub replication_applier_status
+{
+  my ($self)= @_;
+  return [] if !($self->support_version(80013));
+
+  my $sql= << 'EOS';
+SELECT
+  channel_name,
+  service_state,
+  applying_transaction,
+  applying_transaction_start_apply_timestamp,
+  applying_transaction_original_commit_timestamp,
+  TIMESTAMPDIFF(SECOND, applying_transaction_original_commit_timestamp, NOW(6)) AS _diff
+FROM performance_schema.replication_applier_status_by_worker 
+EOS
+
+  return $self->query_hashref($sql, "channel_name");
+}
+
+sub i_am_group_replication_primary
+{
+  my ($self)= @_;
+
+  my $server_uuid= $self->valueof("server_uuid");
+  foreach (@{$self->replication_group_members})
+  {
+    return 1 if $_->{member_id} eq $server_uuid && $_->{member_role} eq "PRIMARY" && $_->{member_state} eq "ONLINE";
+  }
+  return 0;
 }
 
 sub thread_id

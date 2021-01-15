@@ -743,7 +743,7 @@ sub check_innodb_cluster_replica_lag
   ### How many commits not yet applied.
   my $trx_lag= $self->instance->replication_group_member_stats->[0]->{count_transactions_remote_in_applier_queue};
   my $trx_status= compare_threshold($trx_lag, $self->{group_replication_lag_transactions});
-  $self->update_status($trx_status, sprintf("%d transactions are queued in Group Replication", $trx_lag)) if $trx_status;
+  $self->update_status($trx_status, sprintf("%d transactions are queued in Group Replication. ", $trx_lag)) if $trx_status;
 
   ### How many seconds between "STARTING APPLY" and "COMMITTED ORIGINAL"
   my $applier_time_lag= $self->instance->replication_applier_status->{group_replication_applier}->{_diff} // 0;

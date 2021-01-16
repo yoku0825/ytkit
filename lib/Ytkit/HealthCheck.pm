@@ -166,6 +166,18 @@ sub new
   }
   elsif ($role eq "innodb_cluster")
   {
+    ### Like a master-replica toporogy.
+    if ($self->instance->i_am_group_replication_primary)
+    {
+      $self->check_autoinc_usage;
+      $self->check_latest_deadlock;
+      $self->{role}= "innodb_cluster_PRIMARY"; ### For display
+    }
+    else
+    {
+      $self->{role}= "innodb_cluster_SECONDARY"; ### For display
+    }
+ 
     $self->check_innodb_cluster_node_count;
     $self->check_innodb_cluster_replica_lag;
 
@@ -174,13 +186,6 @@ sub new
     $self->check_gtid_hole;
     $self->check_uptime;
     $self->check_history_list_length;
- 
-    ### Like a master-replica toporogy.
-    if ($self->instance->i_am_group_replication_primary)
-    {
-      $self->check_autoinc_usage;
-      $self->check_latest_deadlock;
-    }
   }
   else
   {

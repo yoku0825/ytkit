@@ -736,7 +736,7 @@ sub check_innodb_cluster_node_count
   my $count= grep { $_->{member_state} eq "ONLINE" } @{$self->instance->replication_group_members};
   my $status= compare_threshold_reverse($count, { warning => 3, critical => 2 });
 
-  $self->update_status($status, sprintf("ONLINE Group Replication Member is %d", $count)) if $status;
+  $self->update_status($status, sprintf("ONLINE Group Replication Member is %d. ", $count)) if $status;
   return 0;
 }
 

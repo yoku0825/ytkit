@@ -164,7 +164,7 @@ sub new
     ### mikasafabric for MySQL specific checks.
     $self->check_fabric;
   }
-  elsif ($role eq "innodb_cluster")
+  elsif ($role eq "group_replication")
   {
     my $group_replication_primary= $self->instance->i_am_group_replication_primary;
 
@@ -174,12 +174,12 @@ sub new
       ### 1, if node is Group Replication PRIMARY.
       $self->check_autoinc_usage;
       $self->check_latest_deadlock;
-      $self->{role}= "innodb_cluster_PRIMARY"; ### For display
+      $self->{role}= "group_replication-PRIMARY"; ### For display
     }
     elsif (defined($group_replication_primary))
     {
       ### 0, if node is Group Replication SECONDARY
-      $self->{role}= "innodb_cluster_SECONDARY"; ### For display
+      $self->{role}= "group_replication-SECONDARY"; ### For display
     }
     else
     {
@@ -189,8 +189,8 @@ sub new
       return $self;
     }
  
-    $self->check_innodb_cluster_node_count;
-    $self->check_innodb_cluster_replica_lag;
+    $self->check_group_replication_node_count;
+    $self->check_group_replication_replica_lag;
 
     $self->check_long_query;
     $self->check_connection_count;
@@ -240,7 +240,7 @@ sub decide_role
   }
   elsif ($cluster)
   {
-    return "innodb_cluster";
+    return "group_replication";
   }
   else
   {
@@ -745,7 +745,7 @@ sub check_history_list_length
   return 0;
 }
 
-sub check_innodb_cluster_node_count
+sub check_group_replication_node_count
 {
   my ($self)= @_;
   
@@ -761,7 +761,7 @@ sub check_innodb_cluster_node_count
   return 0;
 }
 
-sub check_innodb_cluster_replica_lag
+sub check_group_replication_replica_lag
 {
   my ($self)= @_;
   return 0 unless $self->{group_replication_lag_enable};
@@ -864,7 +864,7 @@ Switching check-item as below,
       - Check only connectivity. For calling as library.
     - "fabric"
       - Checking for mikasafabric for MySQL.
-    - "innodb_cluster"
+    - "group_replication"
       - Long query
       - Connection count
       - AUTO_INCREMENT usage (If member_state is PRIMARY)
@@ -876,7 +876,7 @@ EOS
   my $yt_healthcheck_option=
   {
     role => { alias => ["role"],
-              isa  => ["auto", "master", "slave", "backup", "fabric", "none", "intermidiate", "innodb_cluster"],
+              isa  => ["auto", "master", "slave", "backup", "fabric", "none", "intermidiate", "group_replication"],
               default => "auto",
               text => $role_text },
     long_query =>

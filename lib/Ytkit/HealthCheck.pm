@@ -166,16 +166,27 @@ sub new
   }
   elsif ($role eq "innodb_cluster")
   {
+    my $group_replication_primary= $self->instance->i_am_group_replication_primary;
+
     ### Like a master-replica toporogy.
-    if ($self->instance->i_am_group_replication_primary)
+    if ($group_replication_primary)
     {
+      ### 1, if node is Group Replication PRIMARY.
       $self->check_autoinc_usage;
       $self->check_latest_deadlock;
       $self->{role}= "innodb_cluster_PRIMARY"; ### For display
     }
+    elsif (defined($group_replication_primary))
+    {
+      ### 0, if node is Group Replication SECONDARY
+      $self->{role}= "innodb_cluster_SECONDARY"; ### For display
+    }
     else
     {
-      $self->{role}= "innodb_cluster_SECONDARY"; ### For display
+      ### undef, if node is NOT IN Group Replication.
+      $self->{status}= NAGIOS_UNKNOWN;
+      $self->{output}= sprintf("--role=%s is specified but this node is NOT in Group Replication", $role);
+      return $self;
     }
  
     $self->check_innodb_cluster_node_count;

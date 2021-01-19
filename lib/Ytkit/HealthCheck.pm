@@ -766,6 +766,15 @@ sub check_innodb_cluster_replica_lag
   my ($self)= @_;
   return 0 unless $self->{group_replication_lag_enable};
 
+  ### If node is entering RECOVERING state, mysqlrouter is devide node from load-balancing,
+  ### Group Replication lag is not matter.
+  if ($self->instance->i_am_group_replication_recovering)
+  {
+    ### Change critical threshold to supernum to fall back as WARNING
+    $self->{group_replication_lag_transactions}->{critical}= 2 ** 63 - 1;
+    $self->{group_replication_lag_seconds}->{critical}= 2 ** 63 - 1;
+  }
+
   ### How many commits not yet applied.
   my $trx_lag= $self->instance->replication_group_member_stats->[0]->{count_transactions_remote_in_applier_queue};
   my $trx_status= compare_threshold($trx_lag, $self->{group_replication_lag_transactions});

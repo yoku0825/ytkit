@@ -752,6 +752,7 @@ subtest "--role=innodb_cluster" => sub
     $prog->{group_replication_lag_transactions}->{warning}= 1000;
     $prog->{group_replication_lag_transactions}->{critical}= 2000;
 
+    $prog->instance->{_replication_group_members}= $Ytkit::Test::SELECT_FROM_ps_repl_group_members::online3;
     $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80; ### For version number
     subtest "transactions OK" => sub
     {
@@ -857,6 +858,38 @@ subtest "--role=innodb_cluster" => sub
       $prog->instance->{_replication_applier_status}= $Ytkit::Test::SELECT_FROM_ps_repl_applier_status::applier_21s_lag;
       $prog->check_innodb_cluster_replica_lag;
       is($prog->{status}->{str}, "CRITICAL", "Trx: CRITICAL, Recovery: OK, Applier: CRITICAL");
+      &reset_param;
+
+      $prog->{group_replication_lag_enable}= 0;
+      $prog->check_innodb_cluster_replica_lag;
+      is($prog->{status}->{str}, "OK", "--group-replication-lag-enable=0");
+      &reset_param;
+
+      $prog->{group_replication_lag_enable}= 1;
+      done_testing;
+    };
+
+    subtest "WARNING if RECOVERING state" => sub
+    {
+      $prog->instance->{_replication_group_members}= $Ytkit::Test::SELECT_FROM_ps_repl_group_members::online3_recovering1;
+      $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80; ### For version number
+      $prog->instance->{_replication_group_member_stats}= $Ytkit::Test::SELECT_FROM_ps_repl_group_member_stats::all_synced;
+
+      $prog->instance->{_replication_applier_status}= $Ytkit::Test::SELECT_FROM_ps_repl_applier_status::applier_working_fine;
+      $prog->check_innodb_cluster_replica_lag;
+      ### check_innodb_cluster_replica_lag itself does not depend on RECOVERING state.
+      is($prog->{status}->{str}, "OK", "Trx: OK, Recovery: OK, Applier: OK, state: RECOVERING");
+      &reset_param;
+
+      $prog->instance->{_replication_applier_status}= $Ytkit::Test::SELECT_FROM_ps_repl_applier_status::applier_11s_lag;
+      $prog->check_innodb_cluster_replica_lag;
+      is($prog->{status}->{str}, "WARNING", "Trx: OK, Recovery: OK, Applier: WARNING, state: RECOVERING");
+      &reset_param;
+
+      $prog->instance->{_replication_applier_status}= $Ytkit::Test::SELECT_FROM_ps_repl_applier_status::applier_21s_lag;
+      $prog->check_innodb_cluster_replica_lag;
+      ### Falling back WARNING
+      is($prog->{status}->{str}, "WARNING", "Trx: OK, Recovery: OK, Applier: CRITICAL, state: RECOVERING");
       &reset_param;
 
       $prog->{group_replication_lag_enable}= 0;

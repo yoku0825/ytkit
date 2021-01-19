@@ -727,6 +727,20 @@ subtest "--role=innodb_cluster" => sub
     is($prog->{status}->{str}, "CRITICAL", "Group Replication 1 ONLINE nodes.");
     &reset_param;
 
+    $prog->instance->{_replication_group_members}= $Ytkit::Test::SELECT_FROM_ps_repl_group_members::online3_recovering1;
+    $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80; ### For version number
+
+    $prog->check_innodb_cluster_node_count;
+    is($prog->{status}->{str}, "WARNING", "Group Replication 3 ONLINE nodes but I'm RECOVERING state.");
+    &reset_param;
+
+    $prog->instance->{_replication_group_members}= $Ytkit::Test::SELECT_FROM_ps_repl_group_members::online1_recovering2;
+    $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80; ### For version number
+
+    $prog->check_innodb_cluster_node_count;
+    is($prog->{status}->{str}, "CRITICAL", "Group Replication 1 ONLINE nodes (+ I'm RECOVERING state.)");
+    &reset_param;
+
     done_testing;
   };
 

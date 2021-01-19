@@ -40,4 +40,46 @@ $offline1 = [
           }
         ];
 
+$online3_recovering1 = [
+          {
+            'member_id' => 'afcc243d-59f3-11eb-93f1-12eb6fefd3e3',
+            'member_state' => 'ONLINE',
+            'member_role' => 'SECONDARY'
+          },
+          {
+            'member_id' => $my_gtid,
+            'member_state' => 'RECOVERING',
+            'member_role' => 'SECONDARY'
+          },
+          {
+            'member_id' => 'b6508f73-59f3-11eb-ac8f-125e2dbc90c3',
+            'member_state' => 'ONLINE',
+            'member_role' => 'PRIMARY'
+          },
+          {
+            'member_id' => '90d425fc-XXXX-11eb-913c-127591ee184b',
+            'member_state' => 'ONLINE',
+            'member_role' => 'SECONDARY'
+          }
+        ];
+
+$online1_recovering2 = [
+          {
+            'member_id' => 'afcc243d-59f3-11eb-93f1-12eb6fefd3e3',
+            'member_state' => 'RECOVERING',
+            'member_role' => 'SECONDARY'
+          },
+          {
+            'member_id' => $my_gtid,
+            'member_state' => 'RECOVERING',
+            'member_role' => 'SECONDARY'
+          },
+          {
+            'member_id' => 'b6508f73-59f3-11eb-ac8f-125e2dbc90c3',
+            'member_state' => 'ONLINE',
+            'member_role' => 'PRIMARY'
+          }
+        ];
+
+
 return 1;

@@ -753,6 +753,11 @@ sub check_innodb_cluster_node_count
   my $status= compare_threshold_reverse($count, { warning => 3, critical => 2 });
 
   $self->update_status($status, sprintf("ONLINE Group Replication Member is %d. ", $count)) if $status;
+
+  if ($self->instance->i_am_group_replication_recovering)
+  {
+    $self->update_status(NAGIOS_WARNING, "Group Replication in RECOVERING state. ");
+  }
   return 0;
 }
 

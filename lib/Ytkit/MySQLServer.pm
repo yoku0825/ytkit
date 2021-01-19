@@ -921,6 +921,22 @@ sub i_am_group_replication_primary
   return 0;
 }
 
+sub i_am_group_replication_recovering
+{
+  my ($self)= @_;
+
+  my $rs= $self->replication_group_members;
+  ### undef if not in Group Replication
+  return undef if !(@$rs);
+
+  my $server_uuid= $self->valueof("server_uuid");
+  foreach (@$rs)
+  {
+    return 1 if $_->{member_id} eq $server_uuid && $_->{member_state} eq "RECOVERING";
+  }
+  return 0;
+}
+
 sub thread_id
 {
   my ($self)= @_;

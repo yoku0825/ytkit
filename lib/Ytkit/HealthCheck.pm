@@ -217,27 +217,25 @@ sub DESTROY
 sub decide_role
 {
   my ($self)= @_;
-  my $master= my $slave= 0;
+  my $master= my $slave= my $cluster= 0;
 
   $master= 1 if $self->show_slaves_via_processlist;
   $slave = 1 if ($self->instance->show_slave_status && $self->instance->show_slave_status->[0]);
+  $cluster= 1 if defined($self->instance->i_am_group_replication_primary);
 
-  if ($master && $slave)
+  ### SHOW SLAVE STATUS condition is advanced more than cluster.
+  if ($slave)
   {
     ### Intermidiate-master in a cascaded replication toporogy.
-    return "intermidiate";
-  }
-  elsif($master)
-  {
-    return "master";
-  }
-  elsif($slave)
-  {
+    return "intermidiate" if $master;
     return "slave";
+  }
+  elsif ($cluster)
+  {
+    return "innodb_cluster";
   }
   else
   {
-    ### Master server without any slaves.
     return "master";
   }
 }

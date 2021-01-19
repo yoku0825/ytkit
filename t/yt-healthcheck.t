@@ -47,27 +47,78 @@ is($prog->instance->hostname, "127.0.0.1", "Default hostname when connection has
 
 subtest "decide_role" => sub
 {
-  $prog->instance->{_show_slave_status}= [];
-  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_slave;
-  is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master without slave)");
+  subtest "Not in Group Replication" => sub
+  {
+    $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80; ### For version number
+    $prog->instance->{_replication_group_members}= [];  ### Not in Group Replication
 
-  $prog->instance->{_show_slave_status}= [];
-  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_nongtid;
-  is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with non-gtid slaves)");
+    $prog->instance->{_show_slave_status}= [];
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_slave;
+    is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master without slave)");
   
-  $prog->instance->{_show_slave_status}= [];
-  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_gtid;
-  is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with gtid slaves)");
+    $prog->instance->{_show_slave_status}= [];
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_nongtid;
+    is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with non-gtid slaves)");
+    
+    $prog->instance->{_show_slave_status}= [];
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_gtid;
+    is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with gtid slaves)");
+  
+    $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::OK;
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_slave;
+    is($prog->decide_role, "slave", "decide_role with SHOW SLAVE STATUS / PROCESSLIST(slave)");
+  
+    $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::OK;
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_nongtid;
+    is($prog->decide_role, "intermidiate", "decide_role with SHOW SLAVE STATUS / PROCESSLIST(intermidiate)");
+  
+    $prog->instance->{_show_slave_status}= [];
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_slave;
+    is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master without slave)");
 
-  $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::OK;
-  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_slave;
-  is($prog->decide_role, "slave", "decide_role with SHOW SLAVE STATUS / PROCESSLIST(slave)");
+    $prog->clear_cache;
+    done_testing;
+  };
 
-  $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::OK;
-  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_nongtid;
-  is($prog->decide_role, "intermidiate", "decide_role with SHOW SLAVE STATUS / PROCESSLIST(intermidiate)");
+  subtest "In Group Replication" => sub
+  {
+    $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80; ### For version number
+    $prog->instance->{_replication_group_members}= $Ytkit::Test::SELECT_FROM_ps_repl_group_members::online3;
 
-  $prog->clear_cache;
+    $prog->instance->{_show_slave_status}= [];
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_slave;
+    is($prog->decide_role, "innodb_cluster",
+       "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master without slave) + Group Replication");
+  
+    $prog->instance->{_show_slave_status}= [];
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_nongtid;
+    is($prog->decide_role, "innodb_cluster",
+       "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with non-gtid slaves) + Group Replication");
+    
+    $prog->instance->{_show_slave_status}= [];
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_gtid;
+    is($prog->decide_role, "innodb_cluster",
+       "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with gtid slaves) + Group Replication");
+  
+    $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::OK;
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_slave;
+    is($prog->decide_role, "slave",
+       "decide_role with SHOW SLAVE STATUS / PROCESSLIST(slave) + Group Replication");
+  
+    $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::OK;
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_nongtid;
+    is($prog->decide_role, "intermidiate",
+       "decide_role with SHOW SLAVE STATUS / PROCESSLIST(intermidiate) + Group Replication");
+  
+    $prog->instance->{_show_slave_status}= [];
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_slave;
+    is($prog->decide_role, "innodb_cluster",
+       "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master without slave) + Group Replication");
+
+    $prog->clear_cache;
+    done_testing;
+  };
+  done_testing;
 };
 
 subtest "check_long_query" => sub

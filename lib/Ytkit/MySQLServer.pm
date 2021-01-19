@@ -1039,7 +1039,7 @@ EOS
 sub _fetch_sys_innodb_lock_waits
 {
   my ($self)= @_;
-  return $self->query_arrayref("SELECT * FROM sys.innodb_lock_waits");
+  return $self->query_arrayref('SELECT * FROM sys.x$innodb_lock_waits');
 }
 
 sub latest_deadlock

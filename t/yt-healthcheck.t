@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2017, 2020  yoku0825
+# Copyright (C) 2017, 2021  yoku0825
 # Copyright (C) 2018        hacchuu0119
 #
 # This program is free software; you can redistribute it and/or
@@ -47,27 +47,78 @@ is($prog->instance->hostname, "127.0.0.1", "Default hostname when connection has
 
 subtest "decide_role" => sub
 {
-  $prog->instance->{_show_slave_status}= [];
-  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_slave;
-  is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master without slave)");
+  subtest "Not in Group Replication" => sub
+  {
+    $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80; ### For version number
+    $prog->instance->{_replication_group_members}= [];  ### Not in Group Replication
 
-  $prog->instance->{_show_slave_status}= [];
-  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_nongtid;
-  is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with non-gtid slaves)");
+    $prog->instance->{_show_slave_status}= [];
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_slave;
+    is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master without slave)");
   
-  $prog->instance->{_show_slave_status}= [];
-  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_gtid;
-  is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with gtid slaves)");
+    $prog->instance->{_show_slave_status}= [];
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_nongtid;
+    is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with non-gtid slaves)");
+    
+    $prog->instance->{_show_slave_status}= [];
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_gtid;
+    is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with gtid slaves)");
+  
+    $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::OK;
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_slave;
+    is($prog->decide_role, "slave", "decide_role with SHOW SLAVE STATUS / PROCESSLIST(slave)");
+  
+    $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::OK;
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_nongtid;
+    is($prog->decide_role, "intermidiate", "decide_role with SHOW SLAVE STATUS / PROCESSLIST(intermidiate)");
+  
+    $prog->instance->{_show_slave_status}= [];
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_slave;
+    is($prog->decide_role, "master", "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master without slave)");
 
-  $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::OK;
-  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_slave;
-  is($prog->decide_role, "slave", "decide_role with SHOW SLAVE STATUS / PROCESSLIST(slave)");
+    $prog->clear_cache;
+    done_testing;
+  };
 
-  $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::OK;
-  $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_nongtid;
-  is($prog->decide_role, "intermidiate", "decide_role with SHOW SLAVE STATUS / PROCESSLIST(intermidiate)");
+  subtest "In Group Replication" => sub
+  {
+    $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80; ### For version number
+    $prog->instance->{_replication_group_members}= $Ytkit::Test::SELECT_FROM_ps_repl_group_members::online3;
 
-  $prog->clear_cache;
+    $prog->instance->{_show_slave_status}= [];
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_slave;
+    is($prog->decide_role, "group_replication",
+       "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master without slave) + Group Replication");
+  
+    $prog->instance->{_show_slave_status}= [];
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_nongtid;
+    is($prog->decide_role, "group_replication",
+       "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with non-gtid slaves) + Group Replication");
+    
+    $prog->instance->{_show_slave_status}= [];
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_gtid;
+    is($prog->decide_role, "group_replication",
+       "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master with gtid slaves) + Group Replication");
+  
+    $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::OK;
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_slave;
+    is($prog->decide_role, "slave",
+       "decide_role with SHOW SLAVE STATUS / PROCESSLIST(slave) + Group Replication");
+  
+    $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::OK;
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_nongtid;
+    is($prog->decide_role, "intermidiate",
+       "decide_role with SHOW SLAVE STATUS / PROCESSLIST(intermidiate) + Group Replication");
+  
+    $prog->instance->{_show_slave_status}= [];
+    $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_slave;
+    is($prog->decide_role, "group_replication",
+       "decide_role with blank SHOW SLAVE STATUS / PROCESSLIST(master without slave) + Group Replication");
+
+    $prog->clear_cache;
+    done_testing;
+  };
+  done_testing;
 };
 
 subtest "check_long_query" => sub
@@ -636,8 +687,230 @@ subtest "check history_list_length" => sub
   done_testing;
 };
 
+subtest "--role=group_replication" => sub 
+{
+  $prog->instance->{_version}= undef; ### Clear cache
+  subtest "check_group_replication_node_count" => sub
+  {
+    $prog->instance->{_replication_group_members}= $Ytkit::Test::SELECT_FROM_ps_repl_group_members::online3;
+    $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80; ### For version number
+
+    $prog->check_group_replication_node_count;
+    is($prog->{status}->{str}, "OK", "Group Replication 3 ONLINE nodes.");
+    &reset_param;
+
+    $prog->instance->{_replication_group_members}= $Ytkit::Test::SELECT_FROM_ps_repl_group_members::online2_unreach1;
+    $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80; ### For version number
+
+    $prog->check_group_replication_node_count;
+    is($prog->{status}->{str}, "WARNING", "Group Replication 2 ONLINE nodes.");
+    &reset_param;
+
+    $prog->instance->{_replication_group_members}= $Ytkit::Test::SELECT_FROM_ps_repl_group_members::online2;
+    $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80; ### For version number
+
+    $prog->check_group_replication_node_count;
+    is($prog->{status}->{str}, "WARNING", "Group Replication 2 ONLINE nodes.");
+    &reset_param;
+
+    $prog->instance->{_replication_group_members}= $Ytkit::Test::SELECT_FROM_ps_repl_group_members::online1_unreach2;
+    $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80; ### For version number
+
+    $prog->check_group_replication_node_count;
+    is($prog->{status}->{str}, "CRITICAL", "Group Replication 1 ONLINE nodes.");
+    &reset_param;
+
+    $prog->instance->{_replication_group_members}= $Ytkit::Test::SELECT_FROM_ps_repl_group_members::offline1;
+    $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80; ### For version number
+
+    $prog->check_group_replication_node_count;
+    is($prog->{status}->{str}, "CRITICAL", "Group Replication 1 ONLINE nodes.");
+    &reset_param;
+
+    $prog->instance->{_replication_group_members}= $Ytkit::Test::SELECT_FROM_ps_repl_group_members::online3_recovering1;
+    $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80; ### For version number
+
+    $prog->check_group_replication_node_count;
+    is($prog->{status}->{str}, "WARNING", "Group Replication 3 ONLINE nodes but I'm RECOVERING state.");
+    &reset_param;
+
+    $prog->instance->{_replication_group_members}= $Ytkit::Test::SELECT_FROM_ps_repl_group_members::online1_recovering2;
+    $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80; ### For version number
+
+    $prog->check_group_replication_node_count;
+    is($prog->{status}->{str}, "CRITICAL", "Group Replication 1 ONLINE nodes (+ I'm RECOVERING state.)");
+    &reset_param;
+
+    done_testing;
+  };
+
+  subtest "check_group_replication_replica_lag" => sub
+  {
+    $prog->{group_replication_lag_enable}= 1;
+    $prog->{group_replication_lag_seconds}->{warning}= 10;
+    $prog->{group_replication_lag_seconds}->{critical}= 20;
+    $prog->{group_replication_lag_transactions}->{warning}= 1000;
+    $prog->{group_replication_lag_transactions}->{critical}= 2000;
+
+    $prog->instance->{_replication_group_members}= $Ytkit::Test::SELECT_FROM_ps_repl_group_members::online3;
+    $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80; ### For version number
+    subtest "transactions OK" => sub
+    {
+      $prog->instance->{_replication_group_member_stats}= $Ytkit::Test::SELECT_FROM_ps_repl_group_member_stats::all_synced;
+
+      subtest "group_replication_recovery not working" => sub
+      {
+        $prog->instance->{_replication_applier_status}= $Ytkit::Test::SELECT_FROM_ps_repl_applier_status::applier_working_fine;
+        $prog->check_group_replication_replica_lag;
+        is($prog->{status}->{str}, "OK", "Trx: OK, Recovery: OK, Applier: OK");
+        &reset_param;
+
+        $prog->instance->{_replication_applier_status}= $Ytkit::Test::SELECT_FROM_ps_repl_applier_status::applier_11s_lag;
+        $prog->check_group_replication_replica_lag;
+        is($prog->{status}->{str}, "WARNING", "Trx: OK, Recovery: OK, Applier: WARNING");
+        &reset_param;
+  
+        $prog->instance->{_replication_applier_status}= $Ytkit::Test::SELECT_FROM_ps_repl_applier_status::applier_21s_lag;
+        $prog->check_group_replication_replica_lag;
+        is($prog->{status}->{str}, "CRITICAL", "Trx: OK, Recovery: OK, Applier: CRITICAL");
+        &reset_param;
+  
+        $prog->{group_replication_lag_enable}= 0;
+        $prog->check_group_replication_replica_lag;
+        is($prog->{status}->{str}, "OK", "--group-replication-lag-enable=0");
+        &reset_param;
+  
+        $prog->{group_replication_lag_enable}= 1;
+        done_testing;
+      };
+
+      subtest "group_replication_recovery working" => sub
+      {
+        $prog->instance->{_replication_applier_status}= $Ytkit::Test::SELECT_FROM_ps_repl_applier_status::recovery_1s_lag;
+        $prog->check_group_replication_replica_lag;
+        is($prog->{status}->{str}, "OK", "Trx: OK, Recovery: OK, Applier: OK");
+        &reset_param;
+
+        $prog->instance->{_replication_applier_status}= $Ytkit::Test::SELECT_FROM_ps_repl_applier_status::recovery_11s_lag;
+        $prog->check_group_replication_replica_lag;
+        is($prog->{status}->{str}, "WARNING", "Trx: OK, Recovery: OK, Applier: WARNING");
+        &reset_param;
+  
+        $prog->instance->{_replication_applier_status}= $Ytkit::Test::SELECT_FROM_ps_repl_applier_status::recovery_21s_lag;
+        $prog->check_group_replication_replica_lag;
+        is($prog->{status}->{str}, "CRITICAL", "Trx: OK, Recovery: OK, Applier: CRITICAL");
+        &reset_param;
+  
+        $prog->{group_replication_lag_enable}= 0;
+        $prog->check_group_replication_replica_lag;
+        is($prog->{status}->{str}, "OK", "--group-replication-lag-enable=0");
+        &reset_param;
+  
+        $prog->{group_replication_lag_enable}= 1;
+        done_testing;
+      };
+
+      done_testing;
+    };
+
+    subtest "transactions WARNING" => sub
+    {
+      $prog->instance->{_replication_group_member_stats}= $Ytkit::Test::SELECT_FROM_ps_repl_group_member_stats::behind_1001;
+
+      $prog->instance->{_replication_applier_status}= $Ytkit::Test::SELECT_FROM_ps_repl_applier_status::applier_working_fine;
+      $prog->check_group_replication_replica_lag;
+      is($prog->{status}->{str}, "WARNING", "Trx: WARNING, Recovery: OK, Applier: OK");
+      &reset_param;
+
+      $prog->instance->{_replication_applier_status}= $Ytkit::Test::SELECT_FROM_ps_repl_applier_status::applier_11s_lag;
+      $prog->check_group_replication_replica_lag;
+      is($prog->{status}->{str}, "WARNING", "Trx: WARNING, Recovery: OK, Applier: WARNING");
+      &reset_param;
+
+      $prog->instance->{_replication_applier_status}= $Ytkit::Test::SELECT_FROM_ps_repl_applier_status::applier_21s_lag;
+      $prog->check_group_replication_replica_lag;
+      is($prog->{status}->{str}, "CRITICAL", "Trx: WARNING, Recovery: OK, Applier: CRITICAL");
+      &reset_param;
+
+      $prog->{group_replication_lag_enable}= 0;
+      $prog->check_group_replication_replica_lag;
+      is($prog->{status}->{str}, "OK", "--group-replication-lag-enable=0");
+      &reset_param;
+
+      $prog->{group_replication_lag_enable}= 1;
+      done_testing;
+    };
+
+    subtest "transactions CRITICAL" => sub
+    {
+      $prog->instance->{_replication_group_member_stats}= $Ytkit::Test::SELECT_FROM_ps_repl_group_member_stats::behind_2001;
+
+      $prog->instance->{_replication_applier_status}= $Ytkit::Test::SELECT_FROM_ps_repl_applier_status::applier_working_fine;
+      $prog->check_group_replication_replica_lag;
+      is($prog->{status}->{str}, "CRITICAL", "Trx: CRITICAL, Recovery: OK, Applier: OK");
+      &reset_param;
+
+      $prog->instance->{_replication_applier_status}= $Ytkit::Test::SELECT_FROM_ps_repl_applier_status::applier_11s_lag;
+      $prog->check_group_replication_replica_lag;
+      is($prog->{status}->{str}, "CRITICAL", "Trx: CRITICAL, Recovery: OK, Applier: WARNING");
+      &reset_param;
+
+      $prog->instance->{_replication_applier_status}= $Ytkit::Test::SELECT_FROM_ps_repl_applier_status::applier_21s_lag;
+      $prog->check_group_replication_replica_lag;
+      is($prog->{status}->{str}, "CRITICAL", "Trx: CRITICAL, Recovery: OK, Applier: CRITICAL");
+      &reset_param;
+
+      $prog->{group_replication_lag_enable}= 0;
+      $prog->check_group_replication_replica_lag;
+      is($prog->{status}->{str}, "OK", "--group-replication-lag-enable=0");
+      &reset_param;
+
+      $prog->{group_replication_lag_enable}= 1;
+      done_testing;
+    };
+
+    subtest "WARNING if RECOVERING state" => sub
+    {
+      $prog->instance->{_replication_group_members}= $Ytkit::Test::SELECT_FROM_ps_repl_group_members::online3_recovering1;
+      $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80; ### For version number
+      $prog->instance->{_replication_group_member_stats}= $Ytkit::Test::SELECT_FROM_ps_repl_group_member_stats::all_synced;
+
+      $prog->instance->{_replication_applier_status}= $Ytkit::Test::SELECT_FROM_ps_repl_applier_status::applier_working_fine;
+      $prog->check_group_replication_replica_lag;
+      ### check_group_replication_replica_lag itself does not depend on RECOVERING state.
+      is($prog->{status}->{str}, "OK", "Trx: OK, Recovery: OK, Applier: OK, state: RECOVERING");
+      &reset_param;
+
+      $prog->instance->{_replication_applier_status}= $Ytkit::Test::SELECT_FROM_ps_repl_applier_status::applier_11s_lag;
+      $prog->check_group_replication_replica_lag;
+      is($prog->{status}->{str}, "WARNING", "Trx: OK, Recovery: OK, Applier: WARNING, state: RECOVERING");
+      &reset_param;
+
+      $prog->instance->{_replication_applier_status}= $Ytkit::Test::SELECT_FROM_ps_repl_applier_status::applier_21s_lag;
+      $prog->check_group_replication_replica_lag;
+      ### Falling back WARNING
+      is($prog->{status}->{str}, "WARNING", "Trx: OK, Recovery: OK, Applier: CRITICAL, state: RECOVERING");
+      &reset_param;
+
+      $prog->{group_replication_lag_enable}= 0;
+      $prog->check_group_replication_replica_lag;
+      is($prog->{status}->{str}, "OK", "--group-replication-lag-enable=0");
+      &reset_param;
+
+      $prog->{group_replication_lag_enable}= 1;
+      done_testing;
+    };
+
+    done_testing;
+  };
+  &reset_param;
+  done_testing;
+};
+
 subtest "Issue 40" => sub
 {
+  $prog->instance->{_version}= undef;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql57_ps_on; ### For version number
   $prog->{autoinc_usage}->{warning}= 50;
   $prog->{autoinc_usage}->{critical}= 90;
   $prog->{autoinc_usage}->{enable}= 1;

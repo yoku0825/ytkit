@@ -223,13 +223,13 @@ sub decide_role
   $slave = 1 if ($self->instance->show_slave_status && $self->instance->show_slave_status->[0]);
 
   ### Stop _carp within internal version handling
-  my $saved_ignore= $self->{_ignore_unsupport_version};
-  $self->{_ignore_unsupport_version}= 1;
+  my $saved_ignore= $self->instance->{_ignore_unsupport_version};
+  $self->instance->{_ignore_unsupport_version}= 1;
 
   $cluster= 1 if defined($self->instance->i_am_group_replication_primary);
   
   ### Restore param
-  $self->{_ignore_unsupport_version}= $saved_ignore;
+  $self->instance->{_ignore_unsupport_version}= $saved_ignore;
 
   ### SHOW SLAVE STATUS condition is advanced more than cluster.
   if ($slave)

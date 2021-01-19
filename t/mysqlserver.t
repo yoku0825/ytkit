@@ -325,8 +325,8 @@ subtest "i_am_group_replication_primary" => sub
   server_reset($server);
 
   $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80_another_uuid;
-  $server->{_replication_group_members}= $Ytkit::Test::SELECT_FROM_ps_repl_group_members::offline1;
-  is($server->i_am_group_replication_primary, 0, "I'm not in Group Replication");
+  $server->{_replication_group_members}= [];
+  is($server->i_am_group_replication_primary, undef, "I'm not in Group Replication");
   server_reset($server);
 
   done_testing;

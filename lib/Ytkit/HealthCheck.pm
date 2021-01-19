@@ -183,7 +183,6 @@ sub new
 
     $self->check_long_query;
     $self->check_connection_count;
-    $self->check_gtid_hole;
     $self->check_uptime;
     $self->check_history_list_length;
   }

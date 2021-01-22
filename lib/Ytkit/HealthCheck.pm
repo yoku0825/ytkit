@@ -1,7 +1,7 @@
 package Ytkit::HealthCheck;
 
 ########################################################################
-# Copyright (C) 2017, 2020  yoku0825
+# Copyright (C) 2017, 2021  yoku0825
 # Copyright (C) 2018        hacchuu0119
 #
 # This program is free software; you can redistribute it and/or
@@ -164,6 +164,39 @@ sub new
     ### mikasafabric for MySQL specific checks.
     $self->check_fabric;
   }
+  elsif ($role eq "group_replication")
+  {
+    my $group_replication_primary= $self->instance->i_am_group_replication_primary;
+
+    ### Like a master-replica toporogy.
+    if ($group_replication_primary)
+    {
+      ### 1, if node is Group Replication PRIMARY.
+      $self->check_autoinc_usage;
+      $self->check_latest_deadlock;
+      $self->{role}= "group_replication-PRIMARY"; ### For display
+    }
+    elsif (defined($group_replication_primary))
+    {
+      ### 0, if node is Group Replication SECONDARY
+      $self->{role}= "group_replication-SECONDARY"; ### For display
+    }
+    else
+    {
+      ### undef, if node is NOT IN Group Replication.
+      $self->{status}= NAGIOS_UNKNOWN;
+      $self->{output}= sprintf("--role=%s is specified but this node is NOT in Group Replication", $role);
+      return $self;
+    }
+ 
+    $self->check_group_replication_node_count;
+    $self->check_group_replication_replica_lag;
+
+    $self->check_long_query;
+    $self->check_connection_count;
+    $self->check_uptime;
+    $self->check_history_list_length;
+  }
   else
   {
     ### Unexpected role was specified by user.
@@ -184,27 +217,33 @@ sub DESTROY
 sub decide_role
 {
   my ($self)= @_;
-  my $master= my $slave= 0;
+  my $master= my $slave= my $cluster= 0;
 
   $master= 1 if $self->show_slaves_via_processlist;
   $slave = 1 if ($self->instance->show_slave_status && $self->instance->show_slave_status->[0]);
 
-  if ($master && $slave)
+  ### Stop _carp within internal version handling
+  my $saved_ignore= $self->instance->{_ignore_unsupport_version};
+  $self->instance->{_ignore_unsupport_version}= 1;
+
+  $cluster= 1 if defined($self->instance->i_am_group_replication_primary);
+  
+  ### Restore param
+  $self->instance->{_ignore_unsupport_version}= $saved_ignore;
+
+  ### SHOW SLAVE STATUS condition is advanced more than cluster.
+  if ($slave)
   {
     ### Intermidiate-master in a cascaded replication toporogy.
-    return "intermidiate";
-  }
-  elsif($master)
-  {
-    return "master";
-  }
-  elsif($slave)
-  {
+    return "intermidiate" if $master;
     return "slave";
+  }
+  elsif ($cluster)
+  {
+    return "group_replication";
   }
   else
   {
-    ### Master server without any slaves.
     return "master";
   }
 }
@@ -706,6 +745,55 @@ sub check_history_list_length
   return 0;
 }
 
+sub check_group_replication_node_count
+{
+  my ($self)= @_;
+  
+  my $count= grep { $_->{member_state} eq "ONLINE" } @{$self->instance->replication_group_members};
+  my $status= compare_threshold_reverse($count, { warning => 3, critical => 2 });
+
+  $self->update_status($status, sprintf("ONLINE Group Replication Member is %d. ", $count)) if $status;
+
+  if ($self->instance->i_am_group_replication_recovering)
+  {
+    $self->update_status(NAGIOS_WARNING, "Group Replication in RECOVERING state. ");
+  }
+  return 0;
+}
+
+sub check_group_replication_replica_lag
+{
+  my ($self)= @_;
+  return 0 unless $self->{group_replication_lag_enable};
+
+  ### If node is entering RECOVERING state, mysqlrouter is devide node from load-balancing,
+  ### Group Replication lag is not matter.
+  if ($self->instance->i_am_group_replication_recovering)
+  {
+    ### Change critical threshold to supernum to fall back as WARNING
+    $self->{group_replication_lag_transactions}->{critical}= 2 ** 63 - 1;
+    $self->{group_replication_lag_seconds}->{critical}= 2 ** 63 - 1;
+  }
+
+  ### How many commits not yet applied.
+  my $trx_lag= $self->instance->replication_group_member_stats->[0]->{count_transactions_remote_in_applier_queue};
+  my $trx_status= compare_threshold($trx_lag, $self->{group_replication_lag_transactions});
+  $self->update_status($trx_status, sprintf("%d transactions are queued in Group Replication. ", $trx_lag)) if $trx_status;
+
+  ### How many seconds between "STARTING APPLY" and "COMMITTED ORIGINAL"
+  my $applier_time_lag= $self->instance->replication_applier_status->{group_replication_applier}->{_diff} // 0;
+  my $applier_status= compare_threshold($applier_time_lag, $self->{group_replication_lag_seconds});
+  $self->update_status($applier_status,
+                       sprintf("Group Replication Applier Seconds_Behind_Master is %d. ", $applier_time_lag)) if $applier_status;
+
+  my $recovery_time_lag= $self->instance->replication_applier_status->{group_replication_recovery}->{_diff} // 0;
+  my $recovery_status= compare_threshold($recovery_time_lag, $self->{group_replication_lag_seconds});
+  $self->update_status($recovery_status,
+                       sprintf("Group Replication Applier Seconds_Behind_Master is %d. ", $recovery_time_lag)) if $recovery_status;
+
+  return 0;
+}
+
 sub dump_detail
 {
   my ($self)= @_;
@@ -776,12 +864,19 @@ Switching check-item as below,
       - Check only connectivity. For calling as library.
     - "fabric"
       - Checking for mikasafabric for MySQL.
+    - "group_replication"
+      - Long query
+      - Connection count
+      - AUTO_INCREMENT usage (If member_state is PRIMARY)
+      - Group Replication status
+      - Group Replication delay
+      - Uptime
 EOS
 
   my $yt_healthcheck_option=
   {
     role => { alias => ["role"],
-              isa  => ["auto", "master", "slave", "backup", "fabric", "none", "intermidiate"],
+              isa  => ["auto", "master", "slave", "backup", "fabric", "none", "intermidiate", "group_replication"],
               default => "auto",
               text => $role_text },
     long_query =>
@@ -883,6 +978,22 @@ EOS
                    text => "Warning threshold for trx_rseg_history_len", },
       critical => { default => 500000,
                     text => "Critical threshold for trx_rseg_history_len", },
+    },
+    group_replication_lag_enable => { default => 1,
+                                      text    => qq{When set to 0, turn off Group Replication Lag check.} },
+    group_replication_lag_transactions =>
+    {
+      warning  => { default => 100,
+                    text    => qq{Warning threshold for Group Replication Lag (queued transactions)} },
+      critical => { default => 10000,
+                    text    => qq{Critical threshold for Group Replication Lag (queued transactions)} },
+    },
+    group_replication_lag_seconds =>
+    {
+      warning  => { default => 5,
+                    text    => qq{Warning threshold for Group Replication Lag (seconds)} },
+      critical => { default => 30,
+                    text    => qq{Critical threshold for Group Replication Lag (seconds)} },
     },
     dump_detail      => { alias   => ["dump-detail"],
                           text    => qq{When result is NOT NAGIOS_OK,\n} .

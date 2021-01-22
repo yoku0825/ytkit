@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2018, 2019  yoku0825
+# Copyright (C) 2018, 2021  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -36,7 +36,6 @@ sub server_reset
 {
   my ($server)= @_;
   $server->clear_cache;
-  $server->{_version}= 50719;
 }
 
 ### Connection failed.
@@ -88,6 +87,7 @@ subtest "show_variables" => sub
 
 subtest "select_autoinc_usage" => sub
 {
+  $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql57_ps_on; ### For mysqld_version
   $server->{_select_autoinc_usage}= $Ytkit::Test::AUTOINC_USAGE::VAR1;
   is_deeply($server->select_autoinc_usage, $Ytkit::Test::AUTOINC_USAGE::VAR1, "SELECT FROM i_s.columns");
   server_reset($server);
@@ -102,6 +102,7 @@ subtest "show_master_logs" => sub
 
 subtest "select_ps_digest" => sub
 {
+  $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql57_ps_on; ### For mysqld_version
   $server->{_select_ps_digest}= $Ytkit::Test::SELECT_FROM_ps_digest::VAR1;
   is_deeply($server->select_ps_digest, $Ytkit::Test::SELECT_FROM_ps_digest::VAR1,
             "SELECT FROM p_s.events_statements_summary_by_digest");
@@ -110,6 +111,7 @@ subtest "select_ps_digest" => sub
 
 subtest "select_ps_table" => sub
 {
+  $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql57_ps_on; ### For mysqld_version
   $server->{_select_ps_table}= $Ytkit::Test::SELECT_FROM_ps_table::VAR1;
   is_deeply($server->select_ps_table, $Ytkit::Test::SELECT_FROM_ps_table::VAR1,
             "SELECT FROM p_s.table_io_waits_summary_by_table");
@@ -118,6 +120,7 @@ subtest "select_ps_table" => sub
 
 subtest "select_is_table_by_size" => sub
 {
+  $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql57_ps_on; ### For mysqld_version
   $server->{_select_is_table_by_size}= $Ytkit::Test::SELECT_FROM_is_table::VAR1;
   is_deeply($server->select_is_table_by_size, $Ytkit::Test::SELECT_FROM_is_table::VAR1,
             "SELECT FROM i_s.tables");
@@ -281,13 +284,14 @@ subtest "SHOW WARNINGS" => sub
 subtest "Supported version handling" => sub
 {
   server_reset($server);
+  $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql57_ps_on; ### For mysqld_version
 
   my $warn_count= 0;
   local $SIG{__WARN__}= sub
   {
     $warn_count++;
   };
- 
+
   is($server->mysqld_version, 50719, "5.7.19 is set.");
   is($warn_count, 0, "No warnings yet.");
 
@@ -305,6 +309,26 @@ subtest "Supported version handling" => sub
   is($warn_count, 1, "No warning increment when _ignore_unsupport_version is set.");
 
   server_reset($server);
+  done_testing;
+};
+
+subtest "i_am_group_replication_primary" => sub
+{
+  $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80;
+  $server->{_replication_group_members}= $Ytkit::Test::SELECT_FROM_ps_repl_group_members::online3;
+  is($server->i_am_group_replication_primary, 1, "Group Replication PRIMARY Server");
+  server_reset($server);
+
+  $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80_another_uuid;
+  $server->{_replication_group_members}= $Ytkit::Test::SELECT_FROM_ps_repl_group_members::online3;
+  is($server->i_am_group_replication_primary, 0, "Group Replication SECONDARY Server");
+  server_reset($server);
+
+  $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80_another_uuid;
+  $server->{_replication_group_members}= [];
+  is($server->i_am_group_replication_primary, undef, "I'm not in Group Replication");
+  server_reset($server);
+
   done_testing;
 };
 

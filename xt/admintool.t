@@ -25,6 +25,7 @@ use Test::More;
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
+require "$Bin/xTest.pl";
 use Test::mysqld;
 
 use Ytkit::IO;
@@ -35,15 +36,12 @@ $ENV{ytkit_verbose}= $ENV{ytkit_verbose} == Ytkit::IO::NORMAL ?
                        Ytkit::IO::SILENT : 
                        $ENV{ytkit_verbose};
 
-my $test=
-{
-  "5.7" => { mysqld => "/usr/mysql/5.7.32/bin/mysqld" },
-  "8.0" => { mysqld => "/usr/mysql/8.0.22/bin/mysqld" },
-};
-
+my $test= $Ytkit::xTest::version;
 
 foreach (sort(keys(%$test)))
 {
+  ### Only test 5.7 and 8.0
+  next if $_ !~ /^(5\.7\.|8\.0\.)/;
   subtest "Testing via $_" => sub
   {
     $ENV{MYSQL_PWD}= "";
@@ -64,7 +62,7 @@ foreach (sort(keys(%$test)))
     ### adminview counts are different between 8.0 and others.
     my $adminview_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'adminview'";
     is($instance->_real_query_arrayref($adminview_count)->[0]->{c},
-       $_ eq "8.0" ? 26 : 15, "Create adminview tables");
+       $_ =~ "^8\.0\." ? 26 : 15, "Create adminview tables");
 
     subtest "Checking view definition is correct" => sub
     {

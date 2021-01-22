@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2020  yoku0825
+# Copyright (C) 2020, 2021  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -32,8 +32,8 @@ no warnings "once";
 use_ok("Ytkit::AdminTool");
 
 is(scalar(@{Ytkit::AdminTool::DDL::admintool_schema()}), 10, "10 tables in admintool");
-is(scalar(@{Ytkit::AdminTool::DDL::adminview_schema()}), 15, "15 views in adminview");
-is(scalar(@{Ytkit::AdminTool::DDL::adminview_schema_ex()}), 11, "11 views in adminview(8.0 only)");
+is(scalar(@{Ytkit::AdminTool::DDL::adminview_schema()}), 16, "16 views in adminview");
+is(scalar(@{Ytkit::AdminTool::DDL::adminview_schema_ex()}), 12, "12 views in adminview(8.0 only)");
 
 
 done_testing;

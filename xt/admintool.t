@@ -31,6 +31,7 @@ use Test::mysqld;
 
 use Ytkit::IO;
 use Ytkit::AdminTool;
+use Ytkit::AdminTool::DDL; ### For view counting
 
 ### Make silent without debugging
 $ENV{ytkit_verbose}= $ENV{ytkit_verbose} == Ytkit::IO::NORMAL ? 
@@ -58,12 +59,16 @@ foreach (sort(keys(%$test)))
     is($initialize->instance->_real_query_arrayref($schema_count)->[0]->{c}, 2, "Schema created");
   
     my $admintool_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'admintool'";
-    is($instance->_real_query_arrayref($admintool_count)->[0]->{c}, 10, "Create admintool tables");
+    is($instance->_real_query_arrayref($admintool_count)->[0]->{c},
+       scalar(@{Ytkit::AdminTool::DDL::admintool_schema()}),
+       "Create admintool tables");
   
     ### adminview counts are different between 8.0 and others.
     my $adminview_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'adminview'";
     is($instance->_real_query_arrayref($adminview_count)->[0]->{c},
-       $_ =~ "^8\.0\." ? 26 : 15, "Create adminview tables");
+       scalar(@{Ytkit::AdminTool::DDL::adminview_schema()}) +
+         ($_ =~ "^8\.0\." ? scalar(@{Ytkit::AdminTool::DDL::adminview_schema_ex()}) : 0),
+       "Create adminview tables");
 
     subtest "Checking view definition is correct" => sub
     {

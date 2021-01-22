@@ -483,6 +483,7 @@ CREATE SQL SECURITY INVOKER VIEW `table_status_list_last_month` AS
          `daily_table_row_list`.`table_schema` AS `table_schema`,
          `daily_table_row_list`.`table_name` AS `table_name`,
          `daily_table_row_list`.`table_rows` AS `table_rows`,
+         (`_date` - LAG(`_date`) OVER `w`) AS `_diff_date`,
          AVG(`daily_table_row_list`.`table_rows`) OVER `w7` AS `moving_avg_7`,
          FIRST_VALUE(`daily_table_row_list`.`table_rows`) OVER `w_all` AS `_first`,
          LAST_VALUE(`daily_table_row_list`.`table_rows`) OVER `w_all` AS `_last`,
@@ -504,6 +505,7 @@ CREATE SQL SECURITY INVOKER VIEW `table_status_list_analyze_33` AS
          `daily_table_row_list`.`table_schema` AS `table_schema`,
          `daily_table_row_list`.`table_name` AS `table_name`,
          `daily_table_row_list`.`table_rows` AS `table_rows`,
+         (`_date` - LAG(`_date`) OVER `w`) AS `_diff_date`,
          AVG(`daily_table_row_list`.`table_rows`) OVER `w7` AS `moving_avg_7`,
          FIRST_VALUE(`daily_table_row_list`.`table_rows`) OVER `w_all` AS `_first`,
          LAST_VALUE(`daily_table_row_list`.`table_rows`) OVER `w_all` AS `_last`,
@@ -524,6 +526,7 @@ CREATE SQL SECURITY INVOKER VIEW `table_status_list_analyze_90` AS
          `daily_table_row_list`.`table_schema` AS `table_schema`,
          `daily_table_row_list`.`table_name` AS `table_name`,
          `daily_table_row_list`.`table_rows` AS `table_rows`,
+         (`_date` - LAG(`_date`) OVER `w`) AS `_diff_date`,
          AVG(`daily_table_row_list`.`table_rows`) OVER `w7` AS `moving_avg_7`,
          FIRST_VALUE(`daily_table_row_list`.`table_rows`) OVER `w_all` AS `_first`,
          LAST_VALUE(`daily_table_row_list`.`table_rows`) OVER `w_all` AS `_last`,
@@ -544,6 +547,7 @@ CREATE SQL SECURITY INVOKER VIEW `table_read_list_analyze_last_month` AS
          `daily_table_latency_list`.`table_schema` AS `table_schema`,
          `daily_table_latency_list`.`table_name` AS `table_name`,
          `daily_table_latency_list`.`count_read` AS `count_read`,
+         (`_date` - LAG(`_date`) OVER `w`) AS `_diff_date`,
          AVG(`daily_table_latency_list`.`count_read`) OVER `w7` AS `moving_avg_7`,
          FIRST_VALUE(`daily_table_latency_list`.`count_read`) OVER `w_all` AS `_first`,
          LAST_VALUE(`daily_table_latency_list`.`count_read`) OVER `w_all` AS `_last`,
@@ -605,6 +609,7 @@ CREATE SQL SECURITY INVOKER VIEW `is_metrics_list_analyze_90` AS
          `daily_is_metrics_list`.`datadir` AS `datadir`,
          `daily_is_metrics_list`.`name` AS `name`,
          `daily_is_metrics_list`.`avg_count` AS `avg_count`,
+         (`_date` - LAG(`_date`) OVER `w`) AS `_diff_date`,
          FIRST_VALUE(`daily_is_metrics_list`.`avg_count`) OVER `w_all` AS `_first`,
          LAST_VALUE(`daily_is_metrics_list`.`avg_count`) OVER `w_all` AS `_last`
   FROM `last_90_days_calendar` LEFT JOIN `daily_is_metrics_list` USING(_date)
@@ -621,6 +626,7 @@ CREATE SQL SECURITY INVOKER VIEW `status_list_analyze_90` AS
          `daily_status_list`.`datadir` AS `datadir`,
          `daily_status_list`.`variable_name` AS `variable_name`,
          `daily_status_list`.`avg_count` AS `avg_count`,
+         (`_date` - LAG(`_date`) OVER `w`) AS `_diff_date`,
          FIRST_VALUE(`daily_status_list`.`avg_count`) OVER `w_all` AS `_first`,
          LAST_VALUE(`daily_status_list`.`avg_count`) OVER `w_all` AS `_last`
   FROM `last_90_days_calendar` LEFT JOIN `daily_status_list` USING(_date)

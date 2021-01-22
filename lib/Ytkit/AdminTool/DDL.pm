@@ -1,7 +1,7 @@
 package Ytkit::AdminTool::DDL;
 
 ########################################################################
-# Copyright (C) 2020  yoku0825
+# Copyright (C) 2020, 2021  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -610,6 +610,7 @@ CREATE SQL SECURITY INVOKER VIEW `is_metrics_list_analyze_90` AS
          `daily_is_metrics_list`.`name` AS `name`,
          `daily_is_metrics_list`.`avg_count` AS `avg_count`,
          (`_date` - LAG(`_date`) OVER `w`) AS `_diff_date`,
+         (`daily_is_metrics_list`.`avg_count` - LAG(`daily_is_metrics_list`.`avg_count`) OVER `w`) AS `_diff`,
          FIRST_VALUE(`daily_is_metrics_list`.`avg_count`) OVER `w_all` AS `_first`,
          LAST_VALUE(`daily_is_metrics_list`.`avg_count`) OVER `w_all` AS `_last`
   FROM `last_90_days_calendar` LEFT JOIN `daily_is_metrics_list` USING(_date)
@@ -627,6 +628,7 @@ CREATE SQL SECURITY INVOKER VIEW `status_list_analyze_90` AS
          `daily_status_list`.`variable_name` AS `variable_name`,
          `daily_status_list`.`avg_count` AS `avg_count`,
          (`_date` - LAG(`_date`) OVER `w`) AS `_diff_date`,
+         (`daily_status_list`.`avg_count` - LAG(`daily_status_list`.`avg_count`) OVER `w`) AS `_diff`,
          FIRST_VALUE(`daily_status_list`.`avg_count`) OVER `w_all` AS `_first`,
          LAST_VALUE(`daily_status_list`.`avg_count`) OVER `w_all` AS `_last`
   FROM `last_90_days_calendar` LEFT JOIN `daily_status_list` USING(_date)

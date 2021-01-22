@@ -20,6 +20,7 @@
 
 use strict;
 use warnings;
+no warnings "once";
 use utf8;
 use Test::More;
 

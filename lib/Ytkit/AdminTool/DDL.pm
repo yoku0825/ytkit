@@ -392,6 +392,23 @@ CREATE SQL SECURITY INVOKER VIEW `daily_status_list` AS
   GROUP BY `_date`, `hostname`, `ipaddr`, `port`, `datadir`, `variable_name`
 EOS
 
+my $daily_innodb_rows_read_list= << 'EOS';
+CREATE SQL SECURITY INVOKER VIEW `daily_innodb_rows_read_list` AS
+  SELECT CAST(`status_list`.`last_update` AS DATE) AS `_date`,
+         `status_list`.`hostname` AS `hostname`,
+         `status_list`.`ipaddr` AS `ipaddr`,
+         `status_list`.`port` AS `port`,
+         `status_list`.`datadir` AS `datadir`,
+         `status_list`.`variable_name` AS `variable_name`,
+         AVG(`status_list`.`value`) AS `avg_count`
+  FROM `status_list`
+  WHERE `status_list`.`variable_name` = 'Innodb_rows_read'
+  GROUP BY `_date`, `hostname`, `ipaddr`, `port`, `datadir`, `variable_name`
+EOS
+
+
+
+
 ### adminview_schema (for 8.0.11 and later)
 my $recent_status_list= << 'EOS';
 CREATE SQL SECURITY INVOKER VIEW `recent_status_list` AS
@@ -636,6 +653,23 @@ CREATE SQL SECURITY INVOKER VIEW `status_list_analyze_90` AS
          `w_all` AS (`w` RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
 EOS
 
+my $innodb_rows_read_analyze_90= << 'EOS';
+CREATE SQL SECURITY INVOKER VIEW `innodb_rows_read_analyze_90` AS
+  SELECT `last_90_days_calendar`.`_date` AS `_date`,
+         `daily_innodb_rows_read_list`.`hostname` AS `hostname`,
+         `daily_innodb_rows_read_list`.`ipaddr` AS `ipaddr`,
+         `daily_innodb_rows_read_list`.`port` AS `port`,
+         `daily_innodb_rows_read_list`.`datadir` AS `datadir`,
+         `daily_innodb_rows_read_list`.`variable_name` AS `variable_name`,
+         `daily_innodb_rows_read_list`.`avg_count` AS `avg_count`,
+         (`_date` - LAG(`_date`) OVER `w`) AS `_diff_date`,
+         (`daily_innodb_rows_read_list`.`avg_count` - LAG(`daily_innodb_rows_read_list`.`avg_count`) OVER `w`) AS `_diff`,
+         FIRST_VALUE(`daily_innodb_rows_read_list`.`avg_count`) OVER `w_all` AS `_first`,
+         LAST_VALUE(`daily_innodb_rows_read_list`.`avg_count`) OVER `w_all` AS `_last`
+  FROM `last_90_days_calendar` LEFT JOIN `daily_innodb_rows_read_list` USING(_date)
+  WINDOW `w` AS (PARTITION BY hostname, datadir, variable_name ORDER BY _date),
+         `w_all` AS (`w` RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING)
+EOS
 
 
 sub admintool_schema
@@ -653,7 +687,7 @@ sub adminview_schema
           $ps_digest_list, $ps_table_list, $status_list,
           $table_status_list, $variable_list, $daily_table_row_list,
           $daily_table_latency_list, $daily_digest_latency_list, $daily_is_metrics_list, ### 15
-          $daily_status_list];
+          $daily_status_list, $daily_innodb_rows_read_list];
 }
 
 sub adminview_schema_ex
@@ -662,7 +696,8 @@ sub adminview_schema_ex
   return [$recent_status_list, $recent_table_status_list, $last_33_days_calendar,
           $last_90_days_calendar, $table_status_list_last_month, $table_status_list_analyze_33,
           $table_status_list_analyze_90, $table_read_list_analyze_last_month, $table_read_list_analyze_90, ### 9
-          $digest_list_analyze_90, $is_metrics_list_analyze_90, $status_list_analyze_90]; ### 12
+          $digest_list_analyze_90, $is_metrics_list_analyze_90, $status_list_analyze_90, ### 12
+          $innodb_rows_read_analyze_90]; 
 }
 
 

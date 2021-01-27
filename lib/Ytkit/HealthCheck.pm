@@ -738,10 +738,19 @@ sub check_history_list_length
   my ($self)= @_;
   return 0 unless $self->{history_list}->{enable};
 
-  my $length= $self->instance->history_list_length;
-  my $status= compare_threshold($length, $self->{history_list});
+  if ($self->instance->support_version(50602))
+  {
+    my $length= $self->instance->history_list_length;
+    my $status= compare_threshold($length, $self->{history_list});
+    $self->update_status($status, sprintf("trx_rseg_history_len is %d", $length)) if $status;
+  }
+  else
+  {
+    ### Unsupported versions for --history-list-enable=1
+    _carpf("Version %s is not supported check_history_list_length. Use --history-list-enable=0 for turning off this function. ",
+           $self->instance->valueof("version"));
+  }
 
-  $self->update_status($status, sprintf("trx_rseg_history_len is %d", $length)) if $status;
   return 0;
 }
 

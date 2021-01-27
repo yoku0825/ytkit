@@ -188,6 +188,16 @@ sub exec_sql
   my ($self, $sql, $opt, @argv)= @_;
   my $ret;
 
+  my $caller= (caller 1)[3] || "";
+  my ($caller_name)= $caller =~ /::([^:]+)$/;
+  $caller_name ||= "";
+
+  ### Normalize SQL
+  $sql =~ s/\s+/ /g;
+ 
+  ### Add $caller as comment 
+  $sql = "/* ytkit $caller_name */ " . $sql;
+
   if (my $conn= $self->conn)
   {
     $self->_clear_error_buf;
@@ -662,7 +672,7 @@ sub check_warnings
   {
     eval
     {
-      @warn= @{$self->conn->selectall_arrayref("SHOW WARNINGS")};
+      @warn= @{$self->conn->selectall_arrayref("/* ytkit */ SHOW WARNINGS")};
       _debugf(\@warn) if @warn;
     };
   }

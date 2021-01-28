@@ -188,9 +188,7 @@ sub exec_sql
   my ($self, $sql, $opt, @argv)= @_;
   my $ret;
 
-  my $caller= (caller 1)[3] || "";
-  my ($caller_name)= $caller =~ /::([^:]+)$/;
-  $caller_name ||= "";
+  my $caller_name= _get_caller();
 
   ### Normalize SQL
   $sql =~ s/\s+/ /g;
@@ -517,9 +515,8 @@ sub show_grants
 sub query_arrayref
 {
   my ($self, $sql, @argv)= @_;
-  my $caller= (caller 1)[3] || "";
-  my ($caller_name)= $caller =~ /::([^:]+)$/;
-  $caller_name ||= "";
+
+  my $caller_name= _get_caller();
 
   ### Normalize SQL
   $sql =~ s/\s+/ /g;
@@ -600,9 +597,7 @@ sub _real_query_hashref
 sub query_hashref
 {
   my ($self, $sql, $key, @argv)= @_;
-  my $caller= (caller 1)[3] || "";
-  my ($caller_name)= $caller =~ /::([^:]+)$/;
-  $caller_name ||= "";
+  my $caller_name= _get_caller();
 
   ### Normalize SQL
   $sql =~ s/\s+/ /g;
@@ -1306,9 +1301,7 @@ sub support_version
   {
     if (!($self->{_ignore_unsupport_version}))
     {
-      my $caller= (caller 1)[3] || "";
-      my ($caller_name)= $caller =~ /::([^:]+)$/;
-      $caller_name ||= "";
+      my $caller_name= _get_caller();
       my $require_version_string= _sprintf("%d.%d.%d",
                                            int($require_version / 10000),
                                            int(($require_version % 10000) / 100),
@@ -1319,6 +1312,19 @@ sub support_version
     }
     return 0;
   }
+}
+
+sub _get_caller
+{
+  ### caller 0 .. _get_caller
+  ### caller 1 .. support_version/exec_sql/query_arrayref/query_hashref
+  ### caller 2 .. called "caller 1" (or eval)
+  my $caller= (caller 2)[3] || "";
+  $caller= (caller 3)[3] || "" if $caller eq "(eval)";
+  my ($caller_name)= $caller =~ /::([^:]+)$/;
+  $caller_name //= ""; 
+
+  return $caller_name;
 }
 
 

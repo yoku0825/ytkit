@@ -33,33 +33,37 @@ use_ok("Ytkit::AdminTool::ORM");
 
 
 
-ok(my $column= Ytkit::AdminTool::ORM::Column->new("--column_name=num",
-                                                  "--data_type=uulong",
-                                                  "--not_null=1"), "Make a NOT NULL NO DEFAULT object");
-is_deeply($column->modify, { pre   => q{MODIFY `num` BIGINT UNSIGNED NOT NULL },
-                             after => undef },
-          "Ytkit::AdminTool::ORM::Column::modify");
-is_deeply($column->drop, { pre   => q{DROP `num`}, after => undef },
-          "Ytkit::AdminTool::ORM::Column::drop");
-is_deeply($column->add, { pre   => q{ADD `num` BIGINT UNSIGNED NOT NULL DEFAULT '0'},
-                          after => q{MODIFY `num` BIGINT UNSIGNED NOT NULL } },
-          "Ytkit::AdminTool::ORM::Column::add(2-phase)");
-
-ok($column= Ytkit::AdminTool::ORM::Column->new("--column_name=val",
-                                               "--data_type=string",
-                                               "--not_null=0",
-                                               "--no_default=1"), "Make a NULLABLE NO DEFAULT object");
-is_deeply($column->modify, { pre   => q{MODIFY `val` VARCHAR(64)  },
-                             after => undef },
-          "Ytkit::AdminTool::ORM::Column::modify");
-is_deeply($column->drop, { pre   => q{DROP `val`}, after => undef },
-          "Ytkit::AdminTool::ORM::Column::drop");
-is_deeply($column->add, { pre   => q{ADD `val` VARCHAR(64)  },
-                          after => undef },
-          "Ytkit::AdminTool::ORM::Column::add(1-phase)");
+subtest "Simple 'new'" => sub
+{
+  ok(my $column= Ytkit::AdminTool::ORM::Column->new("--column_name=num",
+                                                    "--data_type=uulong",
+                                                    "--not_null=1"), "Make a NOT NULL NO DEFAULT object");
+  is_deeply($column->modify, { pre   => q{MODIFY `num` BIGINT UNSIGNED NOT NULL },
+                               after => undef },
+            "Ytkit::AdminTool::ORM::Column::modify");
+  is_deeply($column->drop, { pre   => q{DROP `num`}, after => undef },
+            "Ytkit::AdminTool::ORM::Column::drop");
+  is_deeply($column->add, { pre   => q{ADD `num` BIGINT UNSIGNED NOT NULL DEFAULT '0'},
+                            after => q{MODIFY `num` BIGINT UNSIGNED NOT NULL } },
+            "Ytkit::AdminTool::ORM::Column::add(2-phase)");
+  
+  ok($column= Ytkit::AdminTool::ORM::Column->new("--column_name=val",
+                                                 "--data_type=string",
+                                                 "--not_null=0",
+                                                 "--no_default=1"), "Make a NULLABLE NO DEFAULT object");
+  is_deeply($column->modify, { pre   => q{MODIFY `val` VARCHAR(64)  },
+                               after => undef },
+            "Ytkit::AdminTool::ORM::Column::modify");
+  is_deeply($column->drop, { pre   => q{DROP `val`}, after => undef },
+            "Ytkit::AdminTool::ORM::Column::drop");
+  is_deeply($column->add, { pre   => q{ADD `val` VARCHAR(64)  },
+                            after => undef },
+            "Ytkit::AdminTool::ORM::Column::add(1-phase)");
+};
 
 subtest "Variations not_null, default, no_default" => sub
 {
+  my $column;
   my @param= ("--column_name=colname", "--data_type=int");
 
   subtest "not_null=1" => sub
@@ -159,8 +163,23 @@ subtest "Variations not_null, default, no_default" => sub
   done_testing;
 };
 
+subtest "new_from_row" => sub
+{
+  my $test_hashre_user= $Ytkit::Test::SELECT_FROM_is_columns::mysql_user->{User};
+  ok(my $column= Ytkit::AdminTool::ORM::Column->new_from_row($test_hashre_user), "new_from_row");
+  #is_deeply($column->add, { pre => q{ADD `User` VARCHAR(64) NOT NULL },
+  #                          after => undef },
+  #          "add method normalizes char to VARCHAR");
 
-### new_from_row should be tested in xt/
+  done_testing;
+};
+
+
+
+
+
+### new_from_row should be test
+### compare should be test
 
 done_testing;
 

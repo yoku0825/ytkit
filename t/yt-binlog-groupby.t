@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2017, 2019  yoku0825
+# Copyright (C) 2017, 2021  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -129,8 +129,8 @@ subtest "parse all group-by" => sub
 
 subtest "Regression tests" => sub
 {
-  run_test("issue_23.txt", "issue_23.r", "--group-by=table");
-  run_test("issue_33.txt", "issue_33.r", "--group-by=all");
+  run_test("issue_23.txt", "issue_23.r", "--group-by=table", "--cell=1m");
+  run_test("issue_33.txt", "issue_33.r", "--group-by=all", "--cell=1m");
   done_testing;
 };
 
@@ -156,14 +156,19 @@ sub run_test
   open(my $in, "<", sprintf("%s/data/%s", $Bin, $infile)) or die;
   open(my $expect, "<", sprintf("%s/data/r/%s", $Bin, $resultfile)) or die;
   
+  my @output;
   while (<$in>)
   {
-    $prog->parse($_);
+    my $buff= $prog->parse($_);
+    push(@output, @$buff) if $buff;
   }
+  ### last 1 piece of buffer;
+  my $last= $prog->output;
+  push(@output, @$last);
 
   my @expect= <$expect>;
   close($in);
   close($expect);
 
-  is_deeply($prog->output, \@expect, $resultfile);
+  is_deeply(\@output, \@expect, $resultfile);
 }

@@ -1,7 +1,7 @@
 package Ytkit::ResourceCollector;
 
 ########################################################################
-# Copyright (C) 2018, 2020  yoku0825
+# Copyright (C) 2018, 2021  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -34,12 +34,12 @@ my $description= << "EOS";
 yt-resource-collector launches yt-collect processes following by conf-file
 EOS
 my $allow_extra_arvg= 0;
-my $config= _config();
 my $sleep_time= 10;
 
 sub new
 {
   my ($class, @orig_argv)= @_;
+  my $config= _config();
   $config->parse_argv(@orig_argv);
 
   my $self= { _config => $config,

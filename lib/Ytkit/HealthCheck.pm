@@ -71,12 +71,12 @@ and returns Nagios compatible result code,
   3 UNKNOWN
 EOS
 my $allow_extra_arvg= 0;
-my $config= _config();
 
 
 sub new
 {
   my ($class, @orig_argv)= @_;
+  my $config= _config();
   $config->parse_argv(@orig_argv);
 
   my $self= { _config => $config,

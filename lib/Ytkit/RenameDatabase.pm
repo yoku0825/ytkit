@@ -1,7 +1,7 @@
 package Ytkit::RenameDatabase;
 
 ########################################################################
-# Copyright (C) 2020  yoku0825
+# Copyright (C) 2020, 2021  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -35,12 +35,12 @@ If you have TRIGGERS, ROUTINES, EVENTS, VIEWS and Foreign Keys in from-schema,
 please do NOT use this script because this doesn't care them.
 EOS
 my $allow_extra_arvg= 0;
-my $config= _config();
 
 
 sub new
 {
   my ($class, @orig_argv)= @_;
+  my $config= _config();
   $config->parse_argv(@orig_argv);
 
   my $self= { _config => $config,

@@ -1,7 +1,7 @@
 package Ytkit::AlterProgress;
 
 ########################################################################
-# Copyright (C) 2018, 2019  yoku0825
+# Copyright (C) 2018, 2021  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -46,12 +46,12 @@ yt-alter-progress will try turn on there parameters(This needs Update_priv for p
 Already set these parameters, yt-alter-progress needs only Select_priv for performance_schema.
 EOS
 my $allow_extra_arvg= 0;
-my $config= _config();
 
 
 sub new
 {
   my ($class, @orig_argv)= @_;
+  my $config= _config();
   $config->parse_argv(@orig_argv);
 
   my $self= { _config => $config,

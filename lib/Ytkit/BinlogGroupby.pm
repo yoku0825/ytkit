@@ -1,7 +1,7 @@
 package Ytkit::BinlogGroupby;
 
 ########################################################################
-# Copyright (C) 2014, 2020  yoku0825
+# Copyright (C) 2014, 2021  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -39,6 +39,7 @@ my $description= << "EOS";
 yt-binlog-groupby aggregates stdout of mysqlbinlog.
 EOS
 my $allow_extra_arvg= 0;
+### $config is mutable, should be move into "new" (but testcase is wrong)
 my $config= _config();
 
 

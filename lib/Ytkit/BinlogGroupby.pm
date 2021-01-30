@@ -166,6 +166,7 @@ sub parse
           my $buff= $self->{_counter}->result;
           $self->{_counter}->clear;
           $self->{previous_time}= $self->{time_string};
+          $self->{_counter}->increment($event);
           return $buff;
         }
       }
@@ -174,8 +175,6 @@ sub parse
         $self->{previous_time}= $self->{time_string};
       }
       $self->{_counter}->increment($event);
-
-      $self->{time_string}= $self->{exec_time}= $dml= $table= "";
     }
   }
   return 0;

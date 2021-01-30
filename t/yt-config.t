@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2017, 2020  yoku0825
+# Copyright (C) 2017, 2021  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -395,6 +395,53 @@ subtest "Sample option printing" => sub
   is($config->{buffer}->{simple_no_default}->default_option_print, "", "No print non-default option");
   is($config->{buffer}->{simple_has_default}->default_option_print, "--simple_has_default=DEFAULT_VALUE", "Print default option");
   is($config->{buffer}->{multi_alias_default}->default_option_print, "--multi_alias_default=MULTI", "Choose longuest alias");
+  done_testing;
+};
+
+subtest "Issue #58, undef vs. empty" => sub
+{
+  subtest "default is undef" => sub
+  {
+    my $option_struct= { name => { default => undef } };
+    my $parse_undef= Ytkit::Config->new($option_struct);
+    $parse_undef->parse_argv();
+    is($parse_undef->{name}, undef, "When not specified");
+
+    my $parse_empty= Ytkit::Config->new($option_struct);
+    $parse_empty->parse_argv("--name=''");
+    is($parse_undef->{name}, "", "Passed empty string");
+
+    done_testing;
+  };
+
+  subtest "default is empty string" => sub
+  {
+    my $option_struct= { name => { default => "" } };
+    my $parse_undef= Ytkit::Config->new($option_struct);
+    $parse_undef->parse_argv();
+    is($parse_undef->{name}, "", "When not specified");
+
+    my $parse_empty= Ytkit::Config->new($option_struct);
+    $parse_empty->parse_argv("--name=''");
+    is($parse_undef->{name}, "", "Passed empty string");
+
+    done_testing;
+  };
+
+  subtest "default is something non-empty" => sub
+  {
+    my $option_struct= { name => { default => "a" } };
+    my $parse_undef= Ytkit::Config->new($option_struct);
+    $parse_undef->parse_argv();
+    is($parse_undef->{result}->{name}, "a", "When not specified");
+
+    my $parse_empty= Ytkit::Config->new($option_struct);
+    $parse_empty->parse_argv("--name=''");
+    is($parse_undef->{result}->{name}, "", "Passed empty string");
+
+    done_testing;
+  };
+
   done_testing;
 };
 

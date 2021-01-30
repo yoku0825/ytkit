@@ -40,12 +40,12 @@ yt-binlog-groupby aggregates stdout of mysqlbinlog.
 EOS
 my $allow_extra_arvg= 0;
 ### $config is mutable, should be move into "new" (but testcase is wrong)
-my $config= _config();
 
 
 sub new
 {
   my ($class, @orig_argv)= @_;
+  my $config= _config();
   $config->parse_argv(@orig_argv);
 
   my $self=

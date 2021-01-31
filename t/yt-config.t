@@ -409,7 +409,7 @@ subtest "Issue #58, undef vs. empty" => sub
 
     my $parse_empty= Ytkit::Config->new($option_struct);
     $parse_empty->parse_argv("--name=''");
-    is($parse_undef->{result}->{name}, "", "Passed empty string");
+    is($parse_empty->{result}->{name}, "", "Passed empty string");
 
     done_testing;
   };
@@ -423,7 +423,7 @@ subtest "Issue #58, undef vs. empty" => sub
 
     my $parse_empty= Ytkit::Config->new($option_struct);
     $parse_empty->parse_argv("--name=''");
-    is($parse_undef->{result}->{name}, "", "Passed empty string");
+    is($parse_empty->{result}->{name}, "", "Passed empty string");
 
     done_testing;
   };
@@ -437,7 +437,7 @@ subtest "Issue #58, undef vs. empty" => sub
 
     my $parse_empty= Ytkit::Config->new($option_struct);
     $parse_empty->parse_argv("--name=''");
-    is($parse_undef->{result}->{name}, "", "Passed empty string");
+    is($parse_empty->{result}->{name}, "", "Passed empty string");
 
     done_testing;
   };

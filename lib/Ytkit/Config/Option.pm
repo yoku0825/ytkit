@@ -115,6 +115,7 @@ sub set_value
     _carpf("Option %s is now deprecated.", $self->{alias}) if $self->{deprecated};
     if (_check_isa($value, $self->{isa}))
     {
+      _debugf("%s set to %s.", $self->{alias}, $value);
       $self->{value}= $value;
     }
     else

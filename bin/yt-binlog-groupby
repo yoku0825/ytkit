@@ -40,7 +40,7 @@ if (my $prog= Ytkit::BinlogGroupby->new(@ARGV))
       print @$ret;
     }
   }
-  
+
   print @{$prog->output};
 }
 else

@@ -40,12 +40,12 @@ yt-binlog-groupby aggregates stdout of mysqlbinlog.
 EOS
 my $allow_extra_arvg= 0;
 ### $config is mutable, should be move into "new" (but testcase is wrong)
-my $config= _config();
 
 
 sub new
 {
   my ($class, @orig_argv)= @_;
+  my $config= _config();
   $config->parse_argv(@orig_argv);
 
   my $self=
@@ -166,6 +166,7 @@ sub parse
           my $buff= $self->{_counter}->result;
           $self->{_counter}->clear;
           $self->{previous_time}= $self->{time_string};
+          $self->{_counter}->increment($event);
           return $buff;
         }
       }
@@ -174,8 +175,6 @@ sub parse
         $self->{previous_time}= $self->{time_string};
       }
       $self->{_counter}->increment($event);
-
-      $self->{time_string}= $self->{exec_time}= $dml= $table= "";
     }
   }
   return 0;

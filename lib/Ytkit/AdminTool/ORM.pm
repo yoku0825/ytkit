@@ -86,18 +86,20 @@ sub new_from_row
   return undef if !($one_row_hashref->{column_name});
 
   my $fixed_data_type= $one_row_hashref->{data_type} eq "varchar" ? "string" : 
+                       $one_row_hashref->{data_type} eq "char" ? "string" :
                        $one_row_hashref->{data_type} eq "int" ? "int" :
                        $one_row_hashref->{data_type} eq "bigint" ? "uulong" :
                        "clob"; ### not matched varchar, int, bigint
-  my ($default, $no_default)= defined($one_row_hashref->{default}) ?
-                                ($one_row_hashref->{default}, 0) :
+
+  my ($default, $no_default)= defined($one_row_hashref->{column_default}) ?
+                                ($one_row_hashref->{column_default}, 0) :
                                 (undef, 1);
 
   return Ytkit::AdminTool::ORM::Column->new("--column_name", $one_row_hashref->{column_name},
                                             "--data_type", $fixed_data_type,
                                             "--not_null", $one_row_hashref->{is_nullable} eq "NO" ? 1 : 0,
                                             defined($default) ? "--default='$default'" : "",
-                                            "--no-default", $no_default);
+                                            "--no-default=$no_default");
 }
 
 sub compare

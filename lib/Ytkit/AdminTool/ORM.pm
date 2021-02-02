@@ -82,6 +82,15 @@ sub new
 
 sub new_from_row
 {
+  ### Expected $one_row_hashref is generated from following query
+  ### --- 
+  ### SELECT column_name AS column_name,
+  ###        data_type AS data_type,
+  ###        is_nullable AS is_nullable,
+  ###        column_default AS column_default
+  ### FROM information_schema.columns
+  ### WHERE (table_schema, table_name, column_name)= (?, ?, ?)
+
   my ($class, $one_row_hashref)= @_;
   return undef if !($one_row_hashref->{column_name});
 
@@ -172,6 +181,114 @@ sub drop
   my $sql_part= sprintf(q{DROP `%s`}, $self->{column_name});
   return { pre => $sql_part, after => undef };
 }
+
+
+package Ytkit::AdminTool::ORM::Index;
+
+use strict;
+use warnings;
+use utf8;
+
+use Ytkit::Config;
+use Ytkit::IO qw{ _sprintf };
+
+
+my $option=
+{
+  column_name => { mandatory => 1, multi => 1 },
+  is_primary  => { isa => [0, 1], default => 0 },
+};
+
+sub new
+{
+  my ($class, @orig_argv)= @_;
+
+  my $config= Ytkit::Config->new($option);
+  $config->{_allow_extra_argv}= 0;
+  $config->parse_argv(@orig_argv);
+
+  my $self= { _config => $config,
+              %{$config->{result}}, };
+  bless $self => $class;
+
+  if ($self->{is_primary})
+  {
+    $self->{index_name}= "PRIMARY";
+  }
+  else
+  {
+    ### Create index name without specification(always auto-creation)
+    $self->{index_name}= _sprintf("idx_%s", join("_", @{$self->{column_name}}));
+  }
+
+  return $self;
+}
+
+sub new_from_row
+{
+  ### SELECT index_name AS index_name,
+  ###        non_unique AS non_unique,
+  ###        GROUP_CONCAT(column_name ORDER BY seq_in_index) AS _columns 
+  ### FROM information_schema.statistics
+  ### WHERE (table_schema, table_name, index_name)= (?, ?, ?) AND 
+  ###       index_name NOT IN (SELECT constraint_name
+  ###                          FROM information_schema.referential_constraints
+  ###                          WHERE (constraint_schema, table_name, constraint_name)= (table_schema, table_name, index_name))
+  ### GROUP BY index_name, non_unique;
+  my ($class, $one_row_hashref)= @_;
+  return undef if !($one_row_hashref->{index_name});
+
+  my @columns= split(",", $one_row_hashref->{_columns});
+  return Ytkit::AdminTool::ORM::Index->new("--non_unique", $one_row_hashref->{non_unique},
+                                           $one_row_hashref->{index_name} eq "PRIMARY" ? "--is_primary=1" : "",
+                                           map { sprintf("--column_name=%s", $_) } @columns);
+}
+
+sub add
+{
+  my ($self)= @_;
+
+  my $column_list= join(", ", map { _sprintf(q{`%s`}, $_) } @{$self->{column_name}});
+  if ($self->{is_primary})
+  {
+    return { pre   => _sprintf(q{ADD PRIMARY KEY (%s)}, $column_list),
+             after => undef };
+  }
+  else
+  {
+    return { pre   => _sprintf(q{ADD KEY `%s` (%s)}, $self->{index_name}, $column_list),
+             after => undef };
+  }
+}
+
+sub drop
+{
+  my ($self)= @_;
+
+  if ($self->{is_primary})
+  {
+    return { pre   => "DROP PRIMARY KEY", after => undef };
+  }
+  else
+  {
+    return { pre   => _sprintf(q{DROP KEY `%s`}, $self->{index_name}),
+             after => undef };
+  }
+}
+
+sub modify
+{
+  my ($self)= @_;
+
+  ### Index can't be modified, re-create.
+  return { pre   => $self->drop->{pre},
+           after => $self->create->{pre} };
+}
+
+sub compare
+{
+}
+
 
 
 package Ytkit::AdminTool::ORM::Table;

@@ -197,6 +197,7 @@ my $option=
 {
   column_name => { mandatory => 1, multi => 1 },
   is_primary  => { isa => [0, 1], default => 0 },
+  is_unique   => { isa => [0, 1], default => 0 },
 };
 
 sub new
@@ -218,7 +219,8 @@ sub new
   else
   {
     ### Create index name without specification(always auto-creation)
-    $self->{index_name}= _sprintf("idx_%s", join("_", @{$self->{column_name}}));
+    $self->{index_name}= _sprintf("%sidx_%s", $self->{is_unique} ? "u" : "",
+                                              join("_", @{$self->{column_name}}));
   }
 
   return $self;
@@ -239,7 +241,7 @@ sub new_from_row
   return undef if !($one_row_hashref->{index_name});
 
   my @columns= split(",", $one_row_hashref->{_columns});
-  return Ytkit::AdminTool::ORM::Index->new("--non_unique", $one_row_hashref->{non_unique},
+  return Ytkit::AdminTool::ORM::Index->new($one_row_hashref->{non_unique} == 0 ? "--is_unique=1" : "",
                                            $one_row_hashref->{index_name} eq "PRIMARY" ? "--is_primary=1" : "",
                                            map { sprintf("--column_name=%s", $_) } @columns);
 }
@@ -256,7 +258,9 @@ sub add
   }
   else
   {
-    return { pre   => _sprintf(q{ADD KEY `%s` (%s)}, $self->{index_name}, $column_list),
+    return { pre   => _sprintf(q{ADD %s KEY `%s` (%s)},
+                               $self->{is_unique} ? "UNIQUE" : "",
+                               $self->{index_name}, $column_list),
              after => undef };
   }
 }
@@ -285,19 +289,68 @@ sub modify
            after => $self->create->{pre} };
 }
 
-sub compare
-{
-}
-
-
-
 package Ytkit::AdminTool::ORM::Table;
 
 use strict;
 use warnings;
 use utf8;
+use Ytkit::IO qw{ _croakf };
 
-use Ytkit::Config;
+sub new
+{
+  my ($class, $self)= @_;
+  bless $self => $class;
+
+  ### Validation
+  _croakf("Ytkit::AdminTool::ORM::Table must have 1 or more column.") if !(@{$self->{column}});
+  _croakf("Ytkit::AdminTool::ORM::Table must have PRIMARY KEY.") if !($self->{primary_key});
+  return $self;
+}
+
+sub new_from_row
+{
+  ...;
+}
+
+sub add
+{
+  my ($self)= @_;
+
+  foreach (@{$self->{column}})
+  {
+  }
+
+}
+
+sub drop
+{
+  my ($self)= @_;
+
+  if ($self->{is_primary})
+  {
+    return { pre   => "DROP PRIMARY KEY", after => undef };
+  }
+  else
+  {
+    return { pre   => _sprintf(q{DROP KEY `%s`}, $self->{index_name}),
+             after => undef };
+  }
+}
+
+sub modify
+{
+  my ($self)= @_;
+
+  ### Index can't be modified, re-create.
+  return { pre   => $self->drop->{pre},
+           after => $self->create->{pre} };
+}
+
+sub compare
+{
+
+
+}
 
 
 

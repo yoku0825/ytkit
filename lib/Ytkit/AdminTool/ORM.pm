@@ -33,11 +33,13 @@ use utf8;
 
 use Ytkit::Config;
 use Ytkit::IO qw{ _croakf };
+use base "Exporter";
+our @EXPORT= qw{ make_column };
 
-my $option=
+my $column_option=
 {
   column_name => { mandatory => 1 },
-  data_type   => { isa => ["int", "string", "clob", "uulong"],
+  data_type   => { isa => ["int", "string", "clob", "uulong", "datetime", "autoinc"],
                    mandatory => 1 },
   not_null    => { isa => [0, 1],
                    default => 1 },
@@ -48,10 +50,12 @@ my $option=
 
 my $data_type_map=
 {
-  int    => { name => "INT", dummy => 0 },
-  string => { name => "VARCHAR(64)", dummy => '' },
-  clob   => { name => "TEXT", dummy => q{('')} },   ### Functional DEFAULT (because TEXT type can't have Literal DEFAULT)
-  uulong => { name => "BIGINT UNSIGNED", dummy => 0 },
+  int      => { name => "INT", dummy => 0 },
+  string   => { name => "VARCHAR(64)", dummy => '' },
+  clob     => { name => "TEXT", dummy => q{('')} },   ### Functional DEFAULT (because TEXT type can't have Literal DEFAULT)
+  uulong   => { name => "BIGINT UNSIGNED", dummy => 0 },
+  datetime => { name => "DATETIME", dummy => '1999-12-31 00:00:00' },
+  autoinc  => { name => "BIGINT UNSIGNED NOT NULL AUTO_INCREMENT", dummy => undef },
 };
 
 
@@ -59,7 +63,7 @@ sub new
 {
   my ($class, @orig_argv)= @_;
 
-  my $config= Ytkit::Config->new($option);
+  my $config= Ytkit::Config->new($column_option);
   $config->{_allow_extra_argv}= 0;
   $config->parse_argv(@orig_argv);
 
@@ -126,7 +130,7 @@ sub compare
   }
   else
   {
-    foreach (sort(keys(%$option)))
+    foreach (sort(keys(%$column_option)))
     {
       return $self->modify if $self->{$_} ne $target->{$_};
     }
@@ -134,6 +138,19 @@ sub compare
     ### 2 objects are same, nothing to do.
     return { pre => undef, after => undef };
   }
+}
+
+sub init
+{
+  my ($self)= @_;
+
+  my $sql_part= sprintf(q{`%s` %s %s %s},
+                        $self->{column_name},
+                        $data_type_map->{$self->{data_type}}->{name},
+                        $self->{not_null} ? "NOT NULL" : "",
+                        $self->{no_default} || !(defined($self->{default})) ? "" :
+                          sprintf("DEFAULT '%s'", $self->{default}));
+  return { pre => $sql_part, after => undef };
 }
 
 sub modify
@@ -182,6 +199,11 @@ sub drop
   return { pre => $sql_part, after => undef };
 }
 
+sub make_column
+{
+  return Ytkit::AdminTool::ORM::Column->new(@_);
+}
+
 
 package Ytkit::AdminTool::ORM::Index;
 
@@ -191,9 +213,11 @@ use utf8;
 
 use Ytkit::Config;
 use Ytkit::IO qw{ _sprintf };
+use base "Exporter";
+our @EXPORT= qw{ make_index };
 
 
-my $option=
+my $index_option=
 {
   column_name => { mandatory => 1, multi => 1 },
   is_primary  => { isa => [0, 1], default => 0 },
@@ -204,7 +228,7 @@ sub new
 {
   my ($class, @orig_argv)= @_;
 
-  my $config= Ytkit::Config->new($option);
+  my $config= Ytkit::Config->new($index_option);
   $config->{_allow_extra_argv}= 0;
   $config->parse_argv(@orig_argv);
 
@@ -244,6 +268,25 @@ sub new_from_row
   return Ytkit::AdminTool::ORM::Index->new($one_row_hashref->{non_unique} == 0 ? "--is_unique=1" : "",
                                            $one_row_hashref->{index_name} eq "PRIMARY" ? "--is_primary=1" : "",
                                            map { sprintf("--column_name=%s", $_) } @columns);
+}
+
+sub init
+{
+  my ($self)= @_;
+
+  my $column_list= join(", ", map { _sprintf(q{`%s`}, $_) } @{$self->{column_name}});
+  if ($self->{is_primary})
+  {
+    return { pre   => _sprintf(q{PRIMARY KEY (%s)}, $column_list),
+             after => undef };
+  }
+  else
+  {
+    return { pre   => _sprintf(q{%s KEY `%s` (%s)},
+                               $self->{is_unique} ? "UNIQUE" : "",
+                               $self->{index_name}, $column_list),
+             after => undef };
+  }
 }
 
 sub add
@@ -289,21 +332,46 @@ sub modify
            after => $self->create->{pre} };
 }
 
-package Ytkit::AdminTool::ORM::Table;
+sub make_index
+{
+  return Ytkit::AdminTool::ORM::Index->new(@_);
+}
+
+package Ytkit::AdminTool::ORM::ForeignKey;
 
 use strict;
 use warnings;
 use utf8;
-use Ytkit::IO qw{ _croakf };
+
+use Ytkit::Config;
+use Ytkit::IO qw{ _sprintf };
+use base "Exporter";
+our @EXPORT= qw{ make_fk };
+
+my $foreignkey_option=
+{
+  column_name => { mandatory => 1, multi => 1 },
+  reference_table => { alias => ["reference", "references", "reference_table"], mandatory => 1 },
+  ### cascade means both of ON UPDATE CASCADE ON DELETE CASCADE
+  action => { default => "restrict", isa => ["restrict", "cascade" ] },
+  ### Now we don't support FK between other names.
+};
 
 sub new
 {
-  my ($class, $self)= @_;
+  my ($class, @orig_argv)= @_;
+
+  my $config= Ytkit::Config->new($foreignkey_option);
+  $config->{_allow_extra_argv}= 0;
+  $config->parse_argv(@orig_argv);
+
+  my $self= { _config => $config,
+              %{$config->{result}}, };
   bless $self => $class;
 
-  ### Validation
-  _croakf("Ytkit::AdminTool::ORM::Table must have 1 or more column.") if !(@{$self->{column}});
-  _croakf("Ytkit::AdminTool::ORM::Table must have PRIMARY KEY.") if !($self->{primary_key});
+  ### Create index name without specification(always auto-creation)
+  $self->{index_name}= _sprintf("fidx_%s", join("_", @{$self->{column_name}}));
+
   return $self;
 }
 
@@ -312,29 +380,39 @@ sub new_from_row
   ...;
 }
 
+sub init
+{
+  my ($self)= @_;
+
+  my $column_list= join(", ", map { _sprintf(q{`%s`}, $_) } @{$self->{column_name}});
+  return { pre   => _sprintf(q{CONSTRAINT `%s` FOREIGN KEY `%s` (%s) REFERENCES `%s` (%s) %s},
+                               $self->{index_name}, $self->{index_name}, $column_list,
+                               $self->{reference_table}, $column_list,
+                               $self->{action} eq "restrict" ? "ON UPDATE RESTRICT ON DELETE RESTRICT" :
+                                 $self->{action} eq "cascade" ? "ON UPDATE CASCADE ON DELETE CASCADE" : ""),
+           after => undef };
+}
+
 sub add
 {
   my ($self)= @_;
 
-  foreach (@{$self->{column}})
-  {
-  }
+  my $column_list= join(", ", map { _sprintf(q{`%s`}, $_) } @{$self->{column_name}});
 
+  return { pre   => _sprintf(q{ADD CONSTRAINT `%s` FOREIGN KEY `%s` (%s) REFERENCES `%s` (%s) %s},
+                               $self->{index_name}, $self->{index_name}, $column_list,
+                               $self->{reference_table}, $column_list,
+                               $self->{action} eq "restrict" ? "ON UPDATE RESTRICT ON DELETE RESTRICT" :
+                                 $self->{action} eq "cascade" ? "ON UPDATE CASCADE ON DELETE CASCADE" : ""),
+           after => undef };
 }
 
 sub drop
 {
   my ($self)= @_;
 
-  if ($self->{is_primary})
-  {
-    return { pre   => "DROP PRIMARY KEY", after => undef };
-  }
-  else
-  {
-    return { pre   => _sprintf(q{DROP KEY `%s`}, $self->{index_name}),
-             after => undef };
-  }
+  return { pre   => _sprintf(q{DROP FOREIGN KEY `%s`}, $self->{index_name}),
+           after => undef };
 }
 
 sub modify
@@ -346,12 +424,60 @@ sub modify
            after => $self->create->{pre} };
 }
 
-sub compare
+sub make_fk
 {
-
-
+  return Ytkit::AdminTool::ORM::ForeignKey->new(@_);
 }
 
+package Ytkit::AdminTool::ORM::Table;
+
+use strict;
+use warnings;
+use utf8;
+use Ytkit::IO qw{ _croakf };
+use base "Exporter";
+our @EXPORT= qw{ make_table };
+
+### Expected structure
+### $table=
+### {
+###   table_name    => "table_name",
+###   column        => [Ytkit::AdminTool::ORM::Column, ..],
+###   primary_key   => Ytkit::AdminTool::ORM::Index,
+###   secondary_key => [Ytkit::AdminTool::ORM::Index, ..],
+###   foreign_key   => [Ytkit::AdminTool::ORM::ForeignKey, ..],
+### }
+
+sub new
+{
+  my ($class, $self)= @_;
+  bless $self => $class;
+
+  ### Validation
+  _croakf("Ytkit::AdminTool::ORM::Table must have 1 or more column.") if !(@{$self->{column}});
+  #_croakf("Ytkit::AdminTool::ORM::Table must have PRIMARY KEY.") if !($self->{primary_key});
+  return $self;
+}
+
+sub new_from_row
+{
+  ...;
+}
+
+sub init
+{
+  ...;
+}
+
+sub compare
+{
+  ...;
+}
+
+sub make_table
+{
+  return Ytkit::AdminTool::ORM::Table->new(@_);
+}
 
 
 return 1;

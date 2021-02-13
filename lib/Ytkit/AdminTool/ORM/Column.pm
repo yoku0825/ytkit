@@ -40,11 +40,11 @@ my $column_option=
 my $data_type_map=
 {
   int      => { name => "INT", dummy => 0 },
-  string   => { name => "VARCHAR(64)", dummy => '' },
-  clob     => { name => "TEXT", dummy => q{('')} },   ### Functional DEFAULT (because TEXT type can't have Literal DEFAULT)
+  string   => { name => "VARCHAR(64)", dummy => "''" },
+  clob     => { name => "TEXT", dummy => "('')" },   ### Functional DEFAULT (because TEXT type can't have Literal DEFAULT)
   uulong   => { name => "BIGINT UNSIGNED", dummy => 0 },
-  datetime => { name => "DATETIME", dummy => '1999-12-31 00:00:00' },
-  autoinc  => { name => "BIGINT UNSIGNED NOT NULL AUTO_INCREMENT", dummy => undef },
+  datetime => { name => "DATETIME", dummy => "'1999-12-31 00:00:00'" },
+  autoinc  => { name => "BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT", dummy => undef },
 };
 
 
@@ -68,6 +68,14 @@ sub new
   elsif (!($self->{no_default}) && !(defined($self->{default})))
   {
     _croakf("--no-default=0 but --default is NOT specified.");
+  }
+
+  ### autoinc specific
+  if ($self->{data_type} eq "autoinc")
+  {
+    ### Only not_null=1, default=undef, no_default=1 are acceptable.
+    _croakf("--data_type=autoinc only supports --not_null=1 --no_default=1 (you can't specify --default)")
+      if !($self->{no_default} == 1 && $self->{not_null} == 1);
   }
 
   return $self;
@@ -94,13 +102,13 @@ sub new_from_row
                        "clob"; ### not matched varchar, int, bigint
 
   my ($default, $no_default)= defined($one_row_hashref->{column_default}) ?
-                                ($one_row_hashref->{column_default}, 0) :
+                                (_handle_default($one_row_hashref->{column_default}, $fixed_data_type), 0) :
                                 (undef, 1);
 
   return Ytkit::AdminTool::ORM::Column->new("--column_name", $one_row_hashref->{column_name},
                                             "--data_type", $fixed_data_type,
                                             "--not_null", $one_row_hashref->{is_nullable} eq "NO" ? 1 : 0,
-                                            defined($default) ? "--default='$default'" : "",
+                                            defined($default) ? qq{--default="$default"} : "",
                                             "--no-default=$no_default");
 }
 
@@ -133,24 +141,38 @@ sub init
 {
   my ($self)= @_;
 
+  if ($self->{data_type} eq "autoinc")
+  {
+    ### AUTO_INCREMENT special handle..
+    return { pre   => sprintf(q{`%s` %s}, $self->{column_name}, $data_type_map->{$self->{data_type}}->{name}),
+             after => undef };
+  }
+
   my $sql_part= sprintf(q{`%s` %s %s %s},
                         $self->{column_name},
                         $data_type_map->{$self->{data_type}}->{name},
                         $self->{not_null} ? "NOT NULL" : "",
                         $self->{no_default} || !(defined($self->{default})) ? "" :
-                          sprintf("DEFAULT '%s'", $self->{default}));
+                          sprintf("DEFAULT %s", $self->{default}));
   return { pre => $sql_part, after => undef };
 }
 
 sub modify
 {
   my ($self)= @_;
+
+  if ($self->{data_type} eq "autoinc")
+  {
+    ### AUTO_INCREMENT doesn't support MODIFY(in my module)
+    return { pre => undef, after => undef };
+  }
+ 
   my $sql_part= sprintf(q{MODIFY `%s` %s %s %s},
                         $self->{column_name},
                         $data_type_map->{$self->{data_type}}->{name},
                         $self->{not_null} ? "NOT NULL" : "",
                         $self->{no_default} || !(defined($self->{default})) ? "" :
-                          sprintf("DEFAULT '%s'", $self->{default}));
+                          sprintf("DEFAULT %s", $self->{default}));
   return { pre => $sql_part, after => undef };
 }
 
@@ -158,12 +180,18 @@ sub add
 {
   my ($self)= @_;
 
+  if ($self->{data_type} eq "autoinc")
+  {
+    ### AUTO_INCREMENT doesn't support MODIFY(in my module)
+    return { pre => undef, after => undef };
+  }
+
   if ($self->{not_null} && ($self->{no_default} || !(defined($self->{default}))))
   {
     ### When adding NOT NULL && don't have DEFAULT column to existent table, use 2-phase ALTER.
     ### 1. add NOT NULL with dummy DEFAULT
     ### 2. remove DEFAULT
-    my $sql_part= sprintf(q{ADD `%s` %s NOT NULL DEFAULT '%s'},
+    my $sql_part= sprintf(q{ADD `%s` %s NOT NULL DEFAULT %s},
                           $self->{column_name},
                           $data_type_map->{$self->{data_type}}->{name},
                           $data_type_map->{$self->{data_type}}->{dummy});
@@ -176,7 +204,7 @@ sub add
                           $data_type_map->{$self->{data_type}}->{name},
                           $self->{not_null} ? "NOT NULL" : "",
                           $self->{no_default} || !(defined($self->{default})) ? "" :
-                            sprintf("DEFAULT '%s'", $self->{default}));
+                            sprintf("DEFAULT %s", $self->{default}));
     return { pre => $sql_part, after => undef };
   }
 }
@@ -187,5 +215,16 @@ sub drop
   my $sql_part= sprintf(q{DROP `%s`}, $self->{column_name});
   return { pre => $sql_part, after => undef };
 }
+
+sub _handle_default
+{
+  my ($default, $data_type)= @_;
+
+  if (!(defined($default)) || $default eq "")
+  {
+    return $data_type_map->{$data_type}->{dummy};
+  }
+}
+
 
 return 1;

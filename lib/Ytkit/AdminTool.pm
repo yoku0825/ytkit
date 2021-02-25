@@ -37,7 +37,7 @@ EOS
 
 my $allow_extra_arvg= 1;
 my $config= _config();
-my $subcommand= [qw{ initialize upgrade register collect list }];
+my $subcommand= [qw{ initialize upgrade register collect list full-collect }];
 
 sub new
 {
@@ -80,6 +80,8 @@ sub run
     }
     elsif ($command eq "register")
     {
+      _croakf("No ipaddr:port is specified.\nyt-admin register ipaddr:port [ipaddr:port ..]") if !(@argv);
+
       ### register expects "ipaddr:port" or "ipaddr" (port is 3306 implicitly)
       foreach (@argv)
       {
@@ -88,6 +90,16 @@ sub run
         _croakf("Invalid host (%s)", $_) if !($ipaddr);
         _infof("Registering Host: %s, Port: %d", $ipaddr, $port);
         my $instance= $self->instance;
+
+        ### Check already registered
+        my $ret= $instance->_real_query_arrayref("SELECT ipaddr, port " .
+                                                 "FROM admintool.instance_info " .
+                                                 "WHERE (ipaddr, port) = (?, ?)", $ipaddr, $port);
+        if (@$ret)
+        {
+          _carpf("Host: %s, Port: %d has been already registered. skippking.", $ipaddr, $port);
+          next;
+        }
 
         ### INSERT INTO admintool.instance_info
         $instance->exec_sql_with_croak("INSERT INTO admintool.instance_info " .
@@ -99,13 +111,36 @@ sub run
         $self->full_collect($ipaddr, $port);
       }
     }
-    elsif ($command eq "collect")
+    elsif ($command eq "collect" || $command eq "full-collect")
     {
+      my $instance_list;
+      if (@argv)
+      {
+        foreach (@argv)
+        {
+          my ($ipaddr, $port)= split_host_port($_);
+          push(@$instance_list, { ipaddr => $ipaddr, port => $port });
+        }
+      }
+      else
+      {
+        $instance_list= $self->_fetch_instance_info;
+      }
+
       ### typical_collect for registed in instance_info
-      foreach my $row (@{$self->_fetch_instance_info})
+      foreach my $row (@$instance_list)
       {
         _infof("Fetcing for %s:%d", $row->{ipaddr}, $row->{port});
-        $self->typical_collect($row->{ipaddr}, $row->{port});
+
+        if ($command eq "collect")
+        {
+          $self->typical_collect($row->{ipaddr}, $row->{port});
+        }
+        elsif ($command eq "full-collect")
+        {
+          $self->full_collect($row->{ipaddr}, $row->{port});
+        }
+
         _infof("Fetcing done %s:%d", $row->{ipaddr}, $row->{port});
       }
     }
@@ -229,6 +264,20 @@ sub full_collect
   my $buff; ### For empty resultset (SHOW SLAVE STATUS for master, SELECT p_s. for p_s=OFF)
   my $collect= $self->_make_collector($ipaddr, $port);
 
+  ### test connection.
+  eval
+  {
+    $collect->prepare;
+  };
+  if ($@)
+  {
+    _carpf("%s, Collect data skipping", $@);
+    ### Destroy for next collector
+    delete($self->{_collector});
+
+    return 1;
+  }
+
   ### admintool.variable_info
   eval
   {
@@ -268,6 +317,20 @@ sub typical_collect
   my $buff; ### For empty resultset (SHOW SLAVE STATUS for master, SELECT p_s. for p_s=OFF)
   my $collect= $self->_make_collector($ipaddr, $port);
  
+  ### test connection.
+  eval
+  {
+    $collect->prepare;
+  };
+  if ($@)
+  {
+    _carpf("%s, Collect data skipping", $@);
+    ### Destroy for next collector
+    delete($self->{_collector});
+
+    return 1;
+  }
+
   ### admintool.table_status_info
   eval
   {
@@ -329,7 +392,7 @@ sub _make_collector
 sub _fetch_instance_info
 {
   my ($self)= @_;
-  return $self->instance->query_arrayref("SELECT ipaddr, port FROM admintool.instance_info");
+  return $self->instance->query_arrayref("SELECT ipaddr, port FROM admintool.instance_info WHERE monitoring_enable = 1");
 }
 
 sub list_instance_info

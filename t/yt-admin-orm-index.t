@@ -64,7 +64,8 @@ subtest "new_from_row" => sub
   #+----------------+------------+---------------------------------+
   #| idx_lastupdate |          1 | last_update                     |
   #+----------------+------------+---------------------------------+
-  my $test_hashref_simple= $Ytkit::Test::SELECT_FROM_i_s_statistics::schema_table_name->{admintool}->{status_info}->{idx_lastupdate};
+  my $test_data= $Ytkit::Test::SELECT_FROM_i_s_statistics::indexes;
+  my $test_hashref_simple= $test_data->[9];
   ok(my $index= Ytkit::AdminTool::ORM::Index->new_from_row($test_hashref_simple), "1 Column Secondary Index new_from_row");
   is_deeply($index->add, { pre => q{ADD  KEY `idx_last_update` (`last_update`)},
                            after => undef },
@@ -76,7 +77,7 @@ subtest "new_from_row" => sub
   my $empty= Ytkit::AdminTool::ORM::Index->new_from_row($empty_hashref);
   is($empty, undef, "new_from_row vs empty");
 
-  my $test_2columns_hashref= $Ytkit::Test::SELECT_FROM_i_s_statistics::schema_table_name->{admintool}->{table_status_info}->{idx_dummy};
+  my $test_2columns_hashref= $test_data->[15];
   ok(my $index_2_secondary= Ytkit::AdminTool::ORM::Index->new_from_row($test_2columns_hashref),
      "2 Column Secondary Index new_from_row");
   is_deeply($index_2_secondary->add, { pre => q{ADD UNIQUE KEY `uidx_last_update_dummy_column` (`last_update`, `dummy_column`)},
@@ -85,7 +86,7 @@ subtest "new_from_row" => sub
   is_deeply($index_2_secondary->drop, { pre => q{DROP KEY `uidx_last_update_dummy_column`}, after => undef },
             "Drop 2 column Secondary Index");
 
-  my $simple_pkey_hashref= $Ytkit::Test::SELECT_FROM_i_s_statistics::schema_table_name->{admintool}->{table_status_info}->{PRIMARY};
+  my $simple_pkey_hashref= $test_data->[12];
   ok(my $simple_pkey= Ytkit::AdminTool::ORM::Index->new_from_row($simple_pkey_hashref),
      "1 Column Primary Index new_from_row");
   is_deeply($simple_pkey->add, { pre => q{ADD PRIMARY KEY (`seq`)}, after => undef },
@@ -93,7 +94,7 @@ subtest "new_from_row" => sub
   is_deeply($simple_pkey->drop, { pre => q{DROP PRIMARY KEY}, after => undef },
             "Drop 1 column Primary Index");
 
-  my $complexed_pkey_hashref= $Ytkit::Test::SELECT_FROM_i_s_statistics::schema_table_name->{admintool}->{ytkit_option}->{PRIMARY};
+  my $complexed_pkey_hashref= $test_data->[14];
   ok(my $complexed_pkey= Ytkit::AdminTool::ORM::Index->new_from_row($complexed_pkey_hashref),
      "2 Column Primary Index new_from_row");
   is_deeply($complexed_pkey->add, { pre => q{ADD PRIMARY KEY (`program_name`, `option_name`)}, after => undef },

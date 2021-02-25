@@ -25,6 +25,7 @@ use utf8;
 use Ytkit::Config;
 use Ytkit::IO qw{ _sprintf };
 
+### Foreign Key is only support on CREATE TABLE
 my $foreignkey_option=
 {
   column_name => { mandatory => 1, multi => 1 },
@@ -52,11 +53,6 @@ sub new
   return $self;
 }
 
-sub new_from_row
-{
-  ...;
-}
-
 sub init
 {
   my ($self)= @_;
@@ -68,37 +64,6 @@ sub init
                                $self->{action} eq "restrict" ? "ON UPDATE RESTRICT ON DELETE RESTRICT" :
                                  $self->{action} eq "cascade" ? "ON UPDATE CASCADE ON DELETE CASCADE" : ""),
            after => undef };
-}
-
-sub add
-{
-  my ($self)= @_;
-
-  my $column_list= join(", ", map { _sprintf(q{`%s`}, $_) } @{$self->{column_name}});
-
-  return { pre   => _sprintf(q{ADD CONSTRAINT `%s` FOREIGN KEY `%s` (%s) REFERENCES `%s` (%s) %s},
-                               $self->{index_name}, $self->{index_name}, $column_list,
-                               $self->{reference_table}, $column_list,
-                               $self->{action} eq "restrict" ? "ON UPDATE RESTRICT ON DELETE RESTRICT" :
-                                 $self->{action} eq "cascade" ? "ON UPDATE CASCADE ON DELETE CASCADE" : ""),
-           after => undef };
-}
-
-sub drop
-{
-  my ($self)= @_;
-
-  return { pre   => _sprintf(q{DROP FOREIGN KEY `%s`}, $self->{index_name}),
-           after => undef };
-}
-
-sub modify
-{
-  my ($self)= @_;
-
-  ### Index can't be modified, re-create.
-  return { pre   => $self->drop->{pre},
-           after => $self->create->{pre} };
 }
 
 return 1;

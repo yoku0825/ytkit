@@ -322,12 +322,13 @@ subtest "new_from_row" => sub
   #+-------------+-----------+-------------+----------------+
   #| User        | char      | NO          |                |
   #+-------------+-----------+-------------+----------------+
-  my $test_hashref_user= $Ytkit::Test::SELECT_FROM_is_columns::mysql_user->{User};
+  my $test_data= $Ytkit::Test::AdminTool::Column::columns;
+  my $test_hashref_user= $test_data->[40];
   ok(my $column= Ytkit::AdminTool::ORM::Column->new_from_row($test_hashref_user), "new_from_row");
-  is_deeply($column->add, { pre => q{ADD `User` VARCHAR(64) NOT NULL DEFAULT ''},
+  is_deeply($column->add, { pre => q{ADD `ipaddr` VARCHAR(64) NOT NULL DEFAULT ''},
                             after => undef },
             "add method normalizes char to VARCHAR");
-  is_deeply($column->modify, { pre => q{MODIFY `User` VARCHAR(64) NOT NULL DEFAULT ''},
+  is_deeply($column->modify, { pre => q{MODIFY `ipaddr` VARCHAR(64) NOT NULL DEFAULT ''},
                                 after => undef },
             "modify method normalizes char to VARCHAR");
   
@@ -339,7 +340,7 @@ subtest "new_from_row" => sub
 
 subtest "compare" => sub
 {
-  ok(my $column_from_hand= Ytkit::AdminTool::ORM::Column->new("--column_name=User",
+  ok(my $column_from_hand= Ytkit::AdminTool::ORM::Column->new("--column_name=ipaddr",
                                                               "--data_type=string",
                                                               "--not_null=1",
                                                               q{--default="''"},
@@ -350,28 +351,29 @@ subtest "compare" => sub
   #+-------------+-----------+-------------+----------------+
   #| User        | char      | NO          |                |
   #+-------------+-----------+-------------+----------------+
-  my $test_hashref_user= $Ytkit::Test::SELECT_FROM_is_columns::mysql_user->{User};
+  my $test_data= $Ytkit::Test::AdminTool::Column::columns;
+  my $test_hashref_user= $test_data->[40];
   ok(my $column_from_row= Ytkit::AdminTool::ORM::Column->new_from_row($test_hashref_user), "new_from_row");
 
   is_deeply($column_from_hand->compare($column_from_row),
             { pre => undef, after => undef }, "2 columns are same");
 
-  ok(my $another_attribute= Ytkit::AdminTool::ORM::Column->new("--column_name=User",
+  ok(my $another_attribute= Ytkit::AdminTool::ORM::Column->new("--column_name=ipaddr",
                                                                 "--data_type=clob",
                                                                 "--not_null=1",
                                                                 "--default=''",
                                                                 "--no-default=0"), "another by hand");
   is_deeply($column_from_hand->compare($another_attribute),
-            { pre => q{MODIFY `User` VARCHAR(64) NOT NULL DEFAULT ''}, after => undef },
+            { pre => q{MODIFY `ipaddr` VARCHAR(64) NOT NULL DEFAULT ''}, after => undef },
             "Use MODIFY to substitude different attribute");
 
   my $column_from_empty_row= Ytkit::AdminTool::ORM::Column->new_from_row({});
   is($column_from_empty_row, undef, "new_from_row vs Empty column");
   is_deeply($column_from_hand->compare($column_from_empty_row),
-            { pre => q{ADD `User` VARCHAR(64) NOT NULL DEFAULT ''}, after => undef },
+            { pre => q{ADD `ipaddr` VARCHAR(64) NOT NULL DEFAULT ''}, after => undef },
             "Use ADD to add a new column");
 
-  my $another_hashref= $Ytkit::Test::SELECT_FROM_is_columns::mysql_user->{Host};
+  my $another_hashref= $test_data->[41];
   my $another_column= Ytkit::AdminTool::ORM::Column->new_from_row($another_hashref);
   eval
   {

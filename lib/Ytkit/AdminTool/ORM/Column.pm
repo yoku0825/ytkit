@@ -47,6 +47,16 @@ my $data_type_map=
   autoinc  => { name => "BIGINT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT", dummy => undef },
 };
 
+my $column_data_fix_map=
+{
+  varchar  => "string",
+  char     => "string",
+  int      => "int",
+  smallint => "int",
+  bigint   => "uulong",
+  datetime => "datetime",
+  dummy    => "clob",  ### If not matched above
+};
 
 sub new
 {
@@ -83,33 +93,29 @@ sub new
 
 sub new_from_row
 {
-  ### Expected $one_row_hashref is generated from following query
-  ### --- 
-  ### SELECT column_name AS column_name,
-  ###        data_type AS data_type,
-  ###        is_nullable AS is_nullable,
-  ###        column_default AS column_default
-  ### FROM information_schema.columns
-  ### WHERE (table_schema, table_name, column_name)= (?, ?, ?)
-
   my ($class, $one_row_hashref)= @_;
   return undef if !($one_row_hashref->{column_name});
 
-  my $fixed_data_type= $one_row_hashref->{data_type} eq "varchar" ? "string" : 
-                       $one_row_hashref->{data_type} eq "char" ? "string" :
-                       $one_row_hashref->{data_type} eq "int" ? "int" :
-                       $one_row_hashref->{data_type} eq "bigint" ? "uulong" :
-                       "clob"; ### not matched varchar, int, bigint
+  if ($one_row_hashref->{column_extra} eq "auto_increment")
+  {
+    return Ytkit::AdminTool::ORM::Column->new("--column_name", $one_row_hashref->{column_name},
+                                              "--data_type=autoinc");
+  }
+  else
+  {
+    my $fixed_data_type= $column_data_fix_map->{$one_row_hashref->{data_type}};
+    $fixed_data_type //= $column_data_fix_map->{dummy}; ### Fallback to clob
 
-  my ($default, $no_default)= defined($one_row_hashref->{column_default}) ?
-                                (_handle_default($one_row_hashref->{column_default}, $fixed_data_type), 0) :
-                                (undef, 1);
+    my ($default, $no_default)= defined($one_row_hashref->{column_default}) ?
+                                  (_handle_default($one_row_hashref->{column_default}, $fixed_data_type), 0) :
+                                  (undef, 1);
 
-  return Ytkit::AdminTool::ORM::Column->new("--column_name", $one_row_hashref->{column_name},
-                                            "--data_type", $fixed_data_type,
-                                            "--not_null", $one_row_hashref->{is_nullable} eq "NO" ? 1 : 0,
-                                            defined($default) ? qq{--default="$default"} : "",
-                                            "--no-default=$no_default");
+    return Ytkit::AdminTool::ORM::Column->new("--column_name", $one_row_hashref->{column_name},
+                                              "--data_type", $fixed_data_type,
+                                              "--not_null", $one_row_hashref->{is_nullable} eq "NO" ? 1 : 0,
+                                              defined($default) ? qq{--default="$default"} : "",
+                                              "--no-default=$no_default");
+  }
 }
 
 sub compare
@@ -129,7 +135,7 @@ sub compare
   {
     foreach (sort(keys(%$column_option)))
     {
-      return $self->modify if $self->{$_} ne $target->{$_};
+      return $self->modify if ($self->{$_} // "") ne ($target->{$_} // "");
     }
 
     ### 2 objects are same, nothing to do.

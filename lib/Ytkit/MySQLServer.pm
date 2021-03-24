@@ -937,7 +937,8 @@ sub i_am_group_replication_recovering
   my $server_uuid= $self->valueof("server_uuid");
   foreach (@$rs)
   {
-    return 1 if $_->{member_id} eq $server_uuid && $_->{member_state} eq "RECOVERING";
+    return 1 if $_->{member_id} && $_->{member_id} eq $server_uuid && 
+                $_->{member_state} && $_->{member_state} eq "RECOVERING";
   }
   return 0;
 }

@@ -929,6 +929,23 @@ subtest "Issue 40" => sub
   done_testing;
 };
 
+subtest "Issue 62" => sub
+{
+  $prog->instance->{_version}= undef; ### Clear cache
+  $prog->instance->{_replication_group_members}= $Ytkit::Test::Issue62::replication_group_members;
+  $prog->instance->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80; ### For version number
+  $prog->instance->{_replication_group_member_stats}= $Ytkit::Test::Issue62::replication_group_member_stats;
+
+  $prog->check_group_replication_node_count;
+  is($prog->{status}->{str}, "CRITICAL", "Group Replication 0 ONLINE nodes");
+  &reset_param;
+ 
+  $prog->check_group_replication_replica_lag;
+  ok($prog->{status}->{str}, "OK, if method runs without carp or croak");
+  &reset_param;
+  done_testing; 
+};
+
 
 subtest "config description" => sub
 {

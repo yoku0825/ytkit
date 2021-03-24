@@ -758,7 +758,7 @@ sub check_group_replication_node_count
 {
   my ($self)= @_;
   
-  my $count= grep { $_->{member_state} eq "ONLINE" } @{$self->instance->replication_group_members};
+  my $count= grep { $_->{member_state} && $_->{member_state} eq "ONLINE" } @{$self->instance->replication_group_members};
   my $status= compare_threshold_reverse($count, { warning => 3, critical => 2 });
 
   $self->update_status($status, sprintf("ONLINE Group Replication Member is %d. ", $count)) if $status;
@@ -785,7 +785,7 @@ sub check_group_replication_replica_lag
   }
 
   ### How many commits not yet applied.
-  my $trx_lag= $self->instance->replication_group_member_stats->[0]->{count_transactions_remote_in_applier_queue};
+  my $trx_lag= $self->instance->replication_group_member_stats->[0]->{count_transactions_remote_in_applier_queue} // 0;
   my $trx_status= compare_threshold($trx_lag, $self->{group_replication_lag_transactions});
   $self->update_status($trx_status, sprintf("%d transactions are queued in Group Replication. ", $trx_lag)) if $trx_status;
 

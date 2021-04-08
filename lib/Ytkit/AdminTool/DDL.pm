@@ -200,12 +200,19 @@ CREATE SQL SECURITY INVOKER VIEW `instance_list` AS
   SELECT `hostname_list`.`hostname` AS `hostname`,
          `admintool`.`instance_info`.`ipaddr` AS `ipaddr`,
          `admintool`.`instance_info`.`port` AS `port`,
-         `datadir_list`.`datadir` AS `datadir`,
+         CASE `admintool`.`instance_info`.`healthcheck_role`
+           WHEN 'fabric' THEN 'fabric'
+           ELSE `datadir_list`.`datadir` 
+         END AS `datadir`,
          `version_list`.`version` AS `version`,
-         CAST(COALESCE(CONCAT(`admintool`.`slave_info`.`master_ipaddr`,
-                              ':',
-                              `admintool`.`slave_info`.`master_port`),
-                       'master') AS CHAR CHARSET utf8mb4) AS `master`,
+         CASE
+           WHEN `admintool`.`slave_info`.`master_ipaddr` IS NOT NULL
+             THEN CONCAT(`admintool`.`slave_info`.`master_ipaddr`, ':', `admintool`.`slave_info`.`master_port`)
+             ELSE CASE `admintool`.`instance_info`.`healthcheck_role`
+                    WHEN 'auto' THEN 'master'
+                    ELSE `admintool`.`instance_info`.`healthcheck_role`
+                  END
+           END AS `master`,
          IF(`admintool`.`instance_info`.`monitoring_enable` = 1, 'ACTIVE', 'INACTIVE') AS `monitor`
   FROM `admintool`.`instance_info` 
     LEFT JOIN `hostname_list` USING (ipaddr)

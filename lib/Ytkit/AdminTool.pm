@@ -38,14 +38,15 @@ SUBCOMMAND:
 - initialize: CREATE SCHEMA admintool and adminview, for freshly installed admintool server.
 - upgrade: Re-CREATE SCHEMA adminview. You should execute this when yt-admin is upgraded.
 - register: INSERT INTO admintool.instance_info. Registering new mysqld into admintool.
-- collect: Fetch data from registered mysqlds.
 - list: Print registered mysqlds.
+- collect: Fetch data from registered mysqlds.
 - full-collect: Fetch data from registered mysqlds, more information will be fetched than "collect".
+- purge: DELETE FROM table_status_info/is_innodb_metrics/ps_digest_info/ps_table_info/status_info WHERE last_update < ?.
 EOS
 
 my $allow_extra_arvg= 1;
 my $config= _config();
-my $subcommand= [qw{ initialize upgrade register collect list full-collect }];
+my $subcommand= [qw{ initialize upgrade register collect list full-collect purge }];
 
 sub new
 {
@@ -165,6 +166,10 @@ sub run
                 $row->{version},
                 $row->{master});
       }
+    }
+    elsif ($command eq "purge")
+    {
+      $self->purge_old_records();
     }
     else
     {
@@ -419,6 +424,8 @@ sub purge_old_records
 
   foreach my $table (qw{ is_innodb_metrics ps_digest_info ps_table_info status_info table_status_info })
   {
+    _infof("Starting purge admintool.%s", $table);
+
     ### DELETE all records before 1 year ago
     my $purge_by_yearly= _sprintf("DELETE FROM admintool.%s USE INDEX(idx_lastupdate) " .
                                   "WHERE last_update < CURDATE() - INTERVAL 1 YEAR", $table);
@@ -429,6 +436,8 @@ sub purge_old_records
                                   "WHERE last_update < CURDATE() - INTERVAL 1 MONTH AND " .
                                         "WEEKDAY(last_update) <> 1");
     $self->instance->exec_sql_with_carp($purge_by_weekly);
+
+    _infof("Finished purge admintool.%s", $table);
   }
 }
 

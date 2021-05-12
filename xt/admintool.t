@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2020  yoku0825
+# Copyright (C) 2021  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -128,6 +128,16 @@ foreach (sort(keys(%$test)))
     is($instance->_real_query_arrayref("SELECT COUNT(*) AS c FROM admintool.status_info")->[0]->{c},
        $table_rows * 2,
        "status_info collected");
+
+    $ENV{MYSQL_PWD}= "";
+    my $purge= Ytkit::AdminTool->new("--host=localhost",
+                                     "--socket",  $mysqld->base_dir . "/tmp/mysql.sock",
+                                     "--user=root",
+                                     "--monitor-user=monitor",
+                                     "--monitor-password=password",
+                                     "purge");
+    $purge->run;
+    ok($purge, "purge does not raise error");
 
     done_testing;
   };

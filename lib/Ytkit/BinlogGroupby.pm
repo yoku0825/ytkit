@@ -68,52 +68,15 @@ sub new
 sub decide_counter
 {
   my ($self)= @_;
-  my $group_by= sort_csv($self->{_config}->{result}->{group_by});
 
-  if ($group_by eq "table")
+  my $need_full_sort;
+  ($need_full_sort, $self->{_counter})= Ytkit::GroupbyHelper::make_group_by_class($self->{_config}->{result}->{group_by});
+
+  if ($need_full_sort)
   {
-    $self->{_counter}= Ytkit::GroupbyHelper::Groupby_Table->new;
-
     ### Force set "--sort", see https://github.com/yoku0825/ytkit/issues/23
     $self->{sort}= 1;
-  }
-  elsif ($group_by eq "statement")
-  {
-    $self->{_counter}= Ytkit::GroupbyHelper::Groupby_Statement->new;
-
-    ### Force set "--sort", see https://github.com/yoku0825/ytkit/issues/23
-    $self->{sort}= 1;
-  }
-  elsif ($group_by eq "time")
-  {
-    $self->{_counter}= Ytkit::GroupbyHelper::Groupby_Time->new;
-  }
-  elsif ($group_by eq "statement,time")
-  {
-    $self->{_counter}= Ytkit::GroupbyHelper::Groupby_TimeStatement->new;
-  }
-  elsif ($group_by eq "statement,table")
-  {
-    $self->{_counter}= Ytkit::GroupbyHelper::Groupby_TableStatement->new;
-
-    ### Force set "--sort", see https://github.com/yoku0825/ytkit/issues/23
-    $self->{sort}= 1;
-  }
-  elsif ($group_by eq "table,time")
-  {
-    $self->{_counter}= Ytkit::GroupbyHelper::Groupby_TimeTable->new;
-  }
-  elsif ($group_by eq "all" || $group_by eq "statement,table,time")
-  {
-    $self->{_counter}= Ytkit::GroupbyHelper::Groupby_TimeTableStatement->new;
-  }
-  elsif ($group_by eq "all,exec" || $group_by eq "exec,statement,table,time")
-  {
-    $self->{_counter}= Ytkit::GroupbyHelper::Groupby_TimeTableStatementExec->new;
-  }
-  else
-  {
-    $self->{_counter}= undef;
+    _debugf("Truning on --sort for --group-by=%s", $self->{_config}->{result}->{group_by});
   }
 }
 
@@ -192,12 +155,6 @@ sub output
          _sprintf($self->{print_format}, $self->{last_seen} // ""));
 
   return $self->{_counter}->result;
-}
-
-sub sort_csv
-{
-  my ($csv)= @_;
-  return join(",", sort(split(/,/, $csv)));
 }
 
 sub build_line

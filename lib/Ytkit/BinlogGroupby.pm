@@ -23,6 +23,8 @@ use warnings;
 use utf8;
 use base "Ytkit";
 use Ytkit::IO;
+use FindBin qw{ $Bin };
+require "$Bin/../lib/Ytkit/GroupbyHelper.pm";
 
 use constant
 {
@@ -70,44 +72,44 @@ sub decide_counter
 
   if ($group_by eq "table")
   {
-    $self->{_counter}= Ytkit::BinlogGroupby::Groupby_Table->new;
+    $self->{_counter}= Ytkit::GroupbyHelper::Groupby_Table->new;
 
     ### Force set "--sort", see https://github.com/yoku0825/ytkit/issues/23
     $self->{sort}= 1;
   }
   elsif ($group_by eq "statement")
   {
-    $self->{_counter}= Ytkit::BinlogGroupby::Groupby_Statement->new;
+    $self->{_counter}= Ytkit::GroupbyHelper::Groupby_Statement->new;
 
     ### Force set "--sort", see https://github.com/yoku0825/ytkit/issues/23
     $self->{sort}= 1;
   }
   elsif ($group_by eq "time")
   {
-    $self->{_counter}= Ytkit::BinlogGroupby::Groupby_Time->new;
+    $self->{_counter}= Ytkit::GroupbyHelper::Groupby_Time->new;
   }
   elsif ($group_by eq "statement,time")
   {
-    $self->{_counter}= Ytkit::BinlogGroupby::Groupby_TimeStatement->new;
+    $self->{_counter}= Ytkit::GroupbyHelper::Groupby_TimeStatement->new;
   }
   elsif ($group_by eq "statement,table")
   {
-    $self->{_counter}= Ytkit::BinlogGroupby::Groupby_TableStatement->new;
+    $self->{_counter}= Ytkit::GroupbyHelper::Groupby_TableStatement->new;
 
     ### Force set "--sort", see https://github.com/yoku0825/ytkit/issues/23
     $self->{sort}= 1;
   }
   elsif ($group_by eq "table,time")
   {
-    $self->{_counter}= Ytkit::BinlogGroupby::Groupby_TimeTable->new;
+    $self->{_counter}= Ytkit::GroupbyHelper::Groupby_TimeTable->new;
   }
   elsif ($group_by eq "all" || $group_by eq "statement,table,time")
   {
-    $self->{_counter}= Ytkit::BinlogGroupby::Groupby_TimeTableStatement->new;
+    $self->{_counter}= Ytkit::GroupbyHelper::Groupby_TimeTableStatement->new;
   }
   elsif ($group_by eq "all,exec" || $group_by eq "exec,statement,table,time")
   {
-    $self->{_counter}= Ytkit::BinlogGroupby::Groupby_TimeTableStatementExec->new;
+    $self->{_counter}= Ytkit::GroupbyHelper::Groupby_TimeTableStatementExec->new;
   }
   else
   {
@@ -294,184 +296,5 @@ sub _config
   return $config;
 } 
 
-package Ytkit::BinlogGroupby::Groupby_Base;
-
-use strict;
-use warnings;
-use utf8;
-
-sub new
-{
-  my ($class)= @_;
-  return bless {} => $class;
-}
-
-sub clear
-{
-  my ($self)= @_;
-  foreach (keys(%$self))
-  {
-    delete($self->{$_})
-  }
-}
-
-sub increment
-{
-  ### This should be implemented in each class.
-}
-
-sub _print_n_element
-{
-  my ($hash, $n)= @_;
-  my @ret;
-
-  if ($n == 1)
-  {
-    foreach (sort(keys(%$hash)))
-    {
-      push(@ret, sprintf("%s\t%d\n", $_, $hash->{$_}));
-    }
-  }
-  else
-  {
-    foreach (sort(keys(%$hash)))
-    {
-      foreach my $buff (@{_print_n_element($hash->{$_}, $n - 1)})
-      {
-        push(@ret, sprintf("%s\t%s", $_, $buff));
-      }
-    }
-  }
-  return \@ret;
-}
-
-package Ytkit::BinlogGroupby::Groupby_Time;
-
-use base "Ytkit::BinlogGroupby::Groupby_Base";
-
-sub increment
-{
-  my ($self, $event)= @_;
-  $self->{$event->{time_string}}++;
-}
-
-sub result
-{
-  my ($self)= @_;
-  $self->_print_n_element(1);
-}
- 
-package Ytkit::BinlogGroupby::Groupby_Table;
-
-use base "Ytkit::BinlogGroupby::Groupby_Base";
-
-sub increment
-{
-  my ($self, $event)= @_;
-  $self->{$event->{table}}++;
-}
-
-sub result
-{
-  my ($self)= @_;
-  $self->_print_n_element(1);
-}
- 
-package Ytkit::BinlogGroupby::Groupby_Statement;
-
-use base "Ytkit::BinlogGroupby::Groupby_Base";
-
-sub increment
-{
-  my ($self, $event)= @_;
-  $self->{$event->{statement}}++;
-}
-
-sub result
-{
-  my ($self)= @_;
-  $self->_print_n_element(1);
-}
- 
-package Ytkit::BinlogGroupby::Groupby_TimeStatement;
-
-use base "Ytkit::BinlogGroupby::Groupby_Base";
-
-sub increment
-{
-  my ($self, $event)= @_;
-  $self->{$event->{time_string}}->{$event->{statement}}++;
-}
-
-sub result
-{
-  my ($self)= @_;
-  $self->_print_n_element(2);
-}
-
-package Ytkit::BinlogGroupby::Groupby_TimeTable;
-
-use base "Ytkit::BinlogGroupby::Groupby_Base";
-
-sub increment
-{
-  my ($self, $event)= @_;
-  $self->{$event->{time_string}}->{$event->{table}}++;
-}
-
-sub result
-{
-  my ($self)= @_;
-  $self->_print_n_element(2);
-}
-
-package Ytkit::BinlogGroupby::Groupby_TableStatement;
-
-use base "Ytkit::BinlogGroupby::Groupby_Base";
-
-sub increment
-{
-  my ($self, $event)= @_;
-  $self->{$event->{table}}->{$event->{statement}}++;
-}
-
-sub result
-{
-  my ($self)= @_;
-  $self->_print_n_element(2);
-}
-
-package Ytkit::BinlogGroupby::Groupby_TimeTableStatement;
-
-use base "Ytkit::BinlogGroupby::Groupby_Base";
-
-sub increment
-{
-  my ($self, $event)= @_;
-  $self->{$event->{time_string}}->{$event->{table}}->{$event->{statement}}++;
-}
-
-sub result
-{
-  my ($self)= @_;
-  $self->_print_n_element(3);
-}
- 
-package Ytkit::BinlogGroupby::Groupby_TimeTableStatementExec;
-
-use base "Ytkit::BinlogGroupby::Groupby_Base";
-
-sub increment
-{
-  my ($self, $event)= @_;
-  $self->{$event->{time_string}}->{$event->{table}}->{$event->{statement}}->{$event->{exec_time}}++;
-}
-
-sub result
-{
-  my ($self)= @_;
-  $self->_print_n_element(4);
-}
- 
 
 return 1;

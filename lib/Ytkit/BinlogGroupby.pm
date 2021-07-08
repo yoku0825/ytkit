@@ -23,8 +23,7 @@ use warnings;
 use utf8;
 use base "Ytkit";
 use Ytkit::IO;
-use FindBin qw{ $Bin };
-require "$Bin/../lib/Ytkit/GroupbyHelper.pm";
+use Ytkit::GroupbyHelper;
 
 use constant
 {

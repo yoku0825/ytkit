@@ -539,6 +539,16 @@ subtest "--role=fabric" => sub
     &reset_param;
     $prog->clear_cache;
 
+    $prog->{"_dump.health"}   = $Ytkit::Test::DUMP_HEALTH::NO_SECONDARY;
+    $prog->{"_manage.openfds"}= $Ytkit::Test::MANAGE_OPENFDS::VAR1;
+    $prog->{fabric_faulty}= "warning";
+    $prog->{fabric_no_candidate}= "warning";
+    $prog->check_fabric;
+    is($prog->{status}->{str}, "WARNING", "Group has no SECONDARY (Fallback to WARNING)");
+    &reset_param;
+    $prog->clear_cache;
+
+
     ### openfds 65/1024
     $prog->{"_dump.health"}   = $Ytkit::Test::DUMP_HEALTH::NO_FAULTY;
     $prog->{"_manage.openfds"}= $Ytkit::Test::MANAGE_OPENFDS::VAR1;

@@ -496,9 +496,17 @@ sub check_fabric
 
       if ($group->{secondary} < 1)
       {
-        $status= NAGIOS_CRITICAL;
         $output= sprintf("group %s does not have Candidate-Slave Server", $group_id);
-        $self->update_status($status, $output);
+        if ($self->{fabric_no_candidate} eq "critical")
+        {
+          $status= NAGIOS_CRITICAL;
+          $self->update_status($status, $output);
+        }
+        elsif ($self->{fabric_no_candidate} eq "warning")
+        {
+          $status= NAGIOS_WARNING;
+          $self->update_status($status, $output);
+        }
       }
 
       if ($group->{faulty} > 0)
@@ -953,6 +961,12 @@ EOS
       isa     => ["ignore", "warning", "critical"],
       default => "ignore",
       text    => q{Reporting level when mikasafabric has faulty-state managed server.}
+    },
+    fabric_no_candidate =>
+    {
+      isa     => ["ignore", "warning", "critical"],
+      default => "critical",
+      text    => q{Reporting level when managed group has no Candidate-Slave server.}
     },
     gtid_hole =>
     {

@@ -105,7 +105,7 @@ sub new
 
   return $self if $self->{role} ne "fabric" && $self->check_offline_mode;
 
-  if ($role eq "master")
+  if ($role eq "master" || $role eq "primary" || $role eq "source")
   {
     ### Check too long query, connection count, AUTO_INCREMENT usage, read_only should be OFF.
     $self->check_long_query;
@@ -118,7 +118,7 @@ sub new
     $self->check_uptime;
     $self->check_history_list_length;
   }
-  elsif ($role eq "slave")
+  elsif ($role eq "slave" || $role eq "replica" || $role eq "read" || $role eq "standby" || $role eq "secondary")
   {
     ### Check too long query, replication threads, replication delay, connection count, read_only should be ON.
     $self->check_long_query;
@@ -130,7 +130,7 @@ sub new
     $self->check_uptime;
     $self->check_history_list_length;
   }
-  elsif ($role eq "intermidiate")
+  elsif ($role eq "intermidiate" || $role eq "cascade")
   {
     ### Intermidiate master in cascaded replication toporogy.
     $self->check_long_query;
@@ -850,20 +850,20 @@ sub _config
 {
   my $role_text= << "EOS";
 Switching check-item as below,
-    - "master"
+    - "master", "source", "primary"
       - Long query
       - Connection count
       - AUTO_INCREMENT usage
       - read_only should be OFF
       - Uptime
-    - "slave"
+    - "slave", "read", "replica", "standby", "secondary"
       - Long query
       - Replication threads
       - Replication delay
       - Connection count
       - read_only should be ON
       - Uptime
-    - "intermidiate"
+    - "intermidiate", "cascade"
       - Long query
       - Connection count
       - AUTO_INCREMENT usage
@@ -893,7 +893,7 @@ EOS
   my $yt_healthcheck_option=
   {
     role => { alias => ["role"],
-              isa  => ["auto", "master", "slave", "backup", "fabric", "none", "intermidiate", "group_replication"],
+              isa  => ["auto", "master", "source", "primary", "slave", "replica", "read", "standby", "secondary", "backup", "fabric", "none", "intermidiate", "cascade", "group_replication"],
               default => "auto",
               text => $role_text },
     long_query =>

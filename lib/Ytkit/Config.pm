@@ -156,6 +156,19 @@ sub new
   return $self;
 }
 
+sub export_env
+{
+  my ($self)= @_;
+  my @buff;
+
+  ### You have to call this after parse_argv.
+  foreach (sort(keys(%{$self->{result}})))
+  {
+    push(@buff, sprintf("%s='%s'", $_, $self->{result}->{$_} // ""));
+  }
+  return join(" ", @buff);
+}
+
 sub parse_argv
 {
   my ($self, @argv)= @_;
@@ -169,6 +182,7 @@ sub parse_argv
     my $arg= shift(@argv);
 
     my ($key, $value)= _simple_parse($arg);
+    my $one_more_flag= 0;
 
     if (defined($value))
     {
@@ -184,6 +198,7 @@ sub parse_argv
 
         ### Decide bool style or "--option value", "-o value" style.
         my $next= shift(@argv);
+        $one_more_flag= 1;
 
         ### Next element doesn't exists(last part of argv is evaluating now) or
         ### next element starts with "-", current part is bool style option.
@@ -194,6 +209,7 @@ sub parse_argv
           $value= 1;
           ### write back next element.
           unshift(@argv, $next);
+          $one_more_flag= 0;
         }
         else
         {
@@ -216,6 +232,7 @@ sub parse_argv
       {
         $opt->set_value(1);
         unshift(@argv, $value) if $value ne "1";
+        $one_more_flag= 0;
       }
       else
       {
@@ -223,6 +240,7 @@ sub parse_argv
         {
           ### if $value was quoted and include space, need more argument.
           $value .= " " . shift(@argv);
+          $one_more_flag= 1;
         }
       }
     }
@@ -230,6 +248,7 @@ sub parse_argv
     {
       ### Unknown option, left in argv.
       push(@left_argv, $arg);
+      push(@left_argv, $value) if $one_more_flag;
     }
     ($key, $value)= ();
   } ### End while parsing argument.

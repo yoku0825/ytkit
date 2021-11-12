@@ -445,6 +445,14 @@ subtest "Issue #58, undef vs. empty" => sub
   done_testing;
 };
 
+subtest "Issue#66" => sub
+{
+  my $config= Ytkit::Config->new({a => ["a"], b => ["b"]});
+  $config->parse_argv("-a", "1", "-c", "2");
+  is_deeply($config->{left_argv}, ["-c", "2"], "Don't miss left_argv");
+  done_testing;
+};
+
 
 done_testing;
 

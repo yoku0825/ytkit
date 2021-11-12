@@ -160,6 +160,7 @@ sub parse_argv
 {
   my ($self, @argv)= @_;
   my @left_argv;
+  _debugf("original_argv: %s", \@argv);
 
   ### Evaluate arguments
   while(@argv)
@@ -250,7 +251,9 @@ sub parse_argv
     }
   }
   $self->{result}= $ret;
+  _debugf("result: %s", $ret);
   $self->{left_argv}= \@left_argv;
+  _debugf("left_argv: %s", \@left_argv);
 
   ### Issue#42, some options are on, skip check_mandatory_option
   return 1 if ($self->{result}->{help} || $self->{result}->{version});

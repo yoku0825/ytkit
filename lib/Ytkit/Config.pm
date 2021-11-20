@@ -156,19 +156,6 @@ sub new
   return $self;
 }
 
-sub export_env
-{
-  my ($self)= @_;
-  my @buff;
-
-  ### You have to call this after parse_argv.
-  foreach (sort(keys(%{$self->{result}})))
-  {
-    push(@buff, sprintf("%s='%s'", $_, $self->{result}->{$_} // ""));
-  }
-  return join(" ", @buff);
-}
-
 sub parse_argv
 {
   my ($self, @argv)= @_;

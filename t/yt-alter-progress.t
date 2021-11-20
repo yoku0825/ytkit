@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2018  yoku0825
+# Copyright (C) 2018, 2021  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -101,6 +101,15 @@ subtest "alter_table_progress" => sub
 #  ### This is hooked by bin/yt-alter-progress
 #  $prog->restore_setting;
 #};
+
+subtest "Issue #65" => sub
+{
+  $prog->instance->{_alter_table_progress}= $Ytkit::Test::alter_table_progress::alter_with_lr_and_spaces;
+  is($prog->alter_table_progress, "[ 100.00% ( 0 sec | 12 sec) ] stage/innodb/alter table (flush) : ALTER TABLE sbtest1 ADD KEY (c) , ADD KEY (pad)", "Trim space and LF");
+  prog_reset($prog);
+
+  done_testing;
+};
 
 subtest "config description" => sub
 {

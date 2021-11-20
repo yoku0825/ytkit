@@ -12,7 +12,7 @@ $VAR1 = [
           }
         ];
 
-$alter_with_lr_and_spaces = [
+$alter_with_lf_and_spaces = [
           {
             'thread_id' => 32,
             'event_name' => 'stage/innodb/alter table (flush)',

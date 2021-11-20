@@ -213,6 +213,10 @@ sub alter_table_progress
   ### Don't cache.
   delete($self->instance->{_alter_table_progress});
 
+  ### Implement #65
+  $row->{sql_text} =~ s/\n/ /g;
+  $row->{sql_text} =~ s/\s+/ /g;
+
   return sprintf("[ %4.2f%% ( %d sec | %d sec) ] %s : %s",
                  $row->{progress} // 0, $row->{estimated} // 0,
                  $row->{elapsed} // 0, $row->{event_name} // "",

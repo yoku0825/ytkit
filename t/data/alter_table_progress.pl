@@ -12,4 +12,17 @@ $VAR1 = [
           }
         ];
 
+$alter_with_lf_and_spaces = [
+          {
+            'thread_id' => 32,
+            'event_name' => 'stage/innodb/alter table (flush)',
+            'processlist_id' => 7,
+            'sql_text' => 'ALTER TABLE sbtest1  ADD KEY (c)     ,
+                         ADD KEY (pad)',
+            'progress' => '100.000000000',
+            'estimated' => '0',
+            'elapsed' => '12.716780226'
+          }
+        ];
+
 return 1;

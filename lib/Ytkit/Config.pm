@@ -159,6 +159,8 @@ sub new
 sub parse_argv
 {
   my ($self, @argv)= @_;
+  my @orig_argv= @argv;
+  $self->{_orig_argv}= \@orig_argv;
   my @left_argv;
   _debugf("original_argv: %s", \@argv);
 

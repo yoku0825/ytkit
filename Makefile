@@ -25,7 +25,7 @@ test:
 	prove
 
 .PHONY: fatpack
-fatpack: setup yt-alter-progress yt-binlog-groupby yt-collect yt-data-dumper yt-healthcheck yt-innostat yt-querystat yt-resource-collector yt-wait-replication yt-print-information yt-extract yt-rename-database
+fatpack: setup yt-alter-progress yt-binlog-groupby yt-collect yt-data-dumper yt-healthcheck yt-innostat yt-querystat yt-resource-collector yt-wait-replication yt-print-information yt-extract yt-rename-database yt-config
 
 fatinstall:
 	cp fatpack/* $(INSTALL)/bin
@@ -79,4 +79,7 @@ yt-extract: bin/yt-extract lib/Ytkit/Extract.pm $(MANDATORY_PACKAGE)
 	$(fatpack)
 
 yt-rename-database: bin/yt-rename-database lib/Ytkit/RenameDatabase.pm $(MANDATORY_PACKAGE)
+	$(fatpack)
+
+yt-config: bin/yt-config lib/Ytkit/Config/CLI.pm $(MANDATORY_PACKAGE)
 	$(fatpack)

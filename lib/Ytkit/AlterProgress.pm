@@ -1,7 +1,7 @@
 package Ytkit::AlterProgress;
 
 ########################################################################
-# Copyright (C) 2018, 2021  yoku0825
+# Copyright (C) 2018, 2022  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -213,15 +213,20 @@ sub alter_table_progress
   ### Don't cache.
   delete($self->instance->{_alter_table_progress});
 
-  ### Implement #65
-  $row->{sql_text} =~ s/\n/ /g;
-  $row->{sql_text} =~ s/\s+/ /g;
+  ### Fix #73
+  if ($row->{sql_text})
+  {
+    ### Implement #65
+    $row->{sql_text} =~ s/\n/ /g;
+    $row->{sql_text} =~ s/\s+/ /g;
 
-  return sprintf("[ %4.2f%% ( %d sec | %d sec) ] %s : %s",
+    return sprintf("[ %4.2f%% ( %d sec | %d sec) ] %s : %s",
                  $row->{progress} // 0, $row->{estimated} // 0,
                  $row->{elapsed} // 0, $row->{event_name} // "",
                  $row->{sql_text} // "") if $row;
+  }
 }
+
 
 sub _config
 {

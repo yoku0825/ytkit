@@ -25,4 +25,6 @@ $alter_with_lf_and_spaces = [
           }
         ];
 
+$no_rows_in_alter_progress= [];
+
 return 1;

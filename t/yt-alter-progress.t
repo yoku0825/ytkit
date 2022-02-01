@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2018, 2021  yoku0825
+# Copyright (C) 2018, 2022  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -109,6 +109,13 @@ subtest "Issue #65" => sub
   prog_reset($prog);
 
   done_testing;
+};
+
+subtest "Issue #73" => sub
+{
+  $prog->instance->{_alter_table_progress}= $Ytkit::Test::alter_table_progress::no_rows_in_alter_progress;
+  is($prog->alter_table_progress, undef, "No row printing, No warning if no row returns");
+  prog_reset($prog);
 };
 
 subtest "config description" => sub

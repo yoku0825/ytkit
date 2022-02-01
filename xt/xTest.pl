@@ -1,7 +1,7 @@
 package Ytkit::xTest;
 
 #########################################################################
-# Copyright (C) 2020, 2021  yoku0825
+# Copyright (C) 2020, 2022  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -20,8 +20,8 @@ package Ytkit::xTest;
 
 our $mysql55= "5.5.62";
 our $mysql56= "5.6.51";
-our $mysql57= "5.7.36";
-our $mysql80= "8.0.27";
+our $mysql57= "5.7.37";
+our $mysql80= "8.0.28";
 
 our $version=
 {

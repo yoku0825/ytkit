@@ -23,8 +23,7 @@ use warnings;
 use utf8;
 use base "Ytkit";
 use Ytkit::IO;
-use FindBin qw{ $Bin };
-require "$Bin/../lib/Ytkit/GroupbyHelper.pm";
+use Ytkit::GroupbyHelper;
 
 use constant
 {
@@ -155,23 +154,6 @@ sub output
          _sprintf($self->{print_format}, $self->{last_seen} // ""));
 
   return $self->{_counter}->result;
-}
-
-sub build_line
-{
-  my ($self, @args)= @_;
-  my $seperator= $self->{output} eq "tsv" ? "\t" : $self->{output} eq "csv" ? "," : "\n";
-
-  ### last element of @args is exec_time_hash_element
-  my $exec_time_hash_element= pop(@args);
-
-  if ($exec_time_hash_element && $self->{verbose})
-  {
-    my @sorted= sort { $a <=> $b } @$exec_time_hash_element;
-    push(@args, sprintf("mid:%d", $sorted[int($#sorted / 2)]));
-    push(@args, sprintf("max:%d", $sorted[$#sorted]));
-  }
-  return sprintf("%s\n", join($seperator, @args));
 }
 
 ### set regexp for parsing datetime.

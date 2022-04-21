@@ -42,7 +42,6 @@ subtest "Basic behavior" => sub
   $prog->instance->{_show_processlist}= $Ytkit::Test::SHOW_PROCESSLIST::processlist_at_master_gtid;
   
   $prog->search_candidate_port;
-  $DB::single= 1;
   $prog->search_candidate_ipaddr;
   
   is_deeply($prog->{_candidate_port}, [20796, 20797, 3306, 33061], "Updated candidate_port");

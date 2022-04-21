@@ -1,7 +1,7 @@
 package Ytkit::IO;
 
 ########################################################################
-# Copyright (C) 2020  yoku0825
+# Copyright (C) 2020, 2022  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,7 +25,8 @@ use utf8;
 use Carp qw{ carp croak };
 use Term::ReadKey;
 use base "Exporter";
-our @EXPORT= qw{ _infof _notef _carpf _croakf _debugf _sprintf _printf split_host_port };
+our @EXPORT= qw{ _infof _notef _carpf _croakf _debugf _sprintf _printf
+                 split_host_port uniq_push_arrayref };
 
 use constant
 {
@@ -36,6 +37,18 @@ use constant
 };
 $ENV{ytkit_verbose} //= NORMAL;
 $ENV{ytkit_force} //= 0;
+
+sub uniq_push_arrayref
+{
+  my ($arrayref, @argv)= @_;
+  return $arrayref if !(@argv);
+
+  my %buff;
+  @buff{ grep { $_ } @$arrayref, @argv}= 1;
+  my @ret= sort(keys(%buff));
+
+  return \@ret;
+}
 
 sub split_host_port
 {

@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2020  yoku0825
+# Copyright (C) 2020, 2022  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -251,6 +251,19 @@ subtest "Output format" => sub
   };
   like($@, qr{ERROR: test\nERROR: test2\n}, "_croakf adds ERROR: each line");
 
+
+  done_testing;
+};
+
+subtest "uniq_push_arrayref" => sub
+{
+  is_deeply(uniq_push_arrayref([1, 2, 3], (1, 2)), [1, 2, 3], "Same element was not pushed");
+  is_deeply(uniq_push_arrayref([1, 2, 3], (1, 9)), [1, 2, 3, 9], "Different element was pushed");
+  is_deeply(uniq_push_arrayref([3, 2, 1], (9, 8, 7)), [1, 2, 3, 7, 8, 9], "Result are sorted (as char)");
+  is_deeply(uniq_push_arrayref([1], 2), [1, 2], "Push scalar");
+  is_deeply(uniq_push_arrayref([1], ()), [1], "Push empty array");
+  is_deeply(uniq_push_arrayref([1], undef), [1], "Push undef") or diag _infof uniq_push_arrayref([1], undef);
+  is_deeply(uniq_push_arrayref([1], (2, undef)), [1, 2], "Push including undef") or diag _infof uniq_push_arrayref([1], (2, undef));
 
   done_testing;
 };

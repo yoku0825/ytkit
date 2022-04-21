@@ -53,6 +53,23 @@ $ yt-alter-progress -h127.0.0.1 -uroot -p'password'
 (Need Ctrl + C for exit)
 ```
 
+## yt-repl-topology
+
+- Display topology of Asynchronous replication
+
+  - Search replica and source recursively.
+
+```
+$ yt-repl-topology -h127.0.0.1 -uroot -p'passwd'
+Base_source:3306 => Replica1:3306
+Base_source:3306 => Replica2:3306
+Base_source:3306 => Intermidiate:3306
+Circular:3306 => Base_source:3306
+Intermidiate:3306 => Cascade_Replica1:3306
+Intermidiate:3306 => Cascade_Replica2:3306
+Intermidiate:3306 => Cascade_Replica3:3306
+```
+
 # Installation
 
 ## Install by rpm

@@ -85,7 +85,7 @@ subtest "Issue #34" => sub
 };
 
 my $basedir= "$Bin/../";
-my @db_single= `grep -r DB::single --exclude=ytkit.t --exclude=HEAD --exclude=COMMIT_EDITMSG --exclude=master $basedir`;
+my @db_single= `grep -r DB::single --exclude=ytkit.t --exclude-dir=.git $basedir`;
 ok(!(@db_single), "DB::single has been removed.");
 
 done_testing;

@@ -27,11 +27,12 @@ use FindBin qw{$Bin};
 use lib "$Bin/../lib";
 require "$Bin/Test.pl";
 
+use JSON qw{ from_json };
 no warnings "once";
 
 use_ok("Ytkit::ReplTopology");
 
-subtest "Basic behavior" => sub
+subtest "Search candidates" => sub
 {
   ok(my $prog= Ytkit::ReplTopology->new("--host=test.com", "--port=33061"), "Init");
   is_deeply($prog->{_candidate_port}, [33061], "Initial candidate_port");
@@ -46,6 +47,58 @@ subtest "Basic behavior" => sub
   
   is_deeply($prog->{_candidate_port}, [20796, 20797, 3306, 33061], "Updated candidate_port");
   is_deeply($prog->{_candidate_ipaddr}, ["172.17.0.3", "172.17.0.5", "localhost", "test.com"], "Updated candidate_port");
+
+  done_testing;
+};
+
+subtest "Print topology" => sub
+{
+  ok(my $prog= Ytkit::ReplTopology->new("--host=test.com", "--port=33061"), "Init");
+  $prog->{_topology}= [{ "Base_source:3306" => "Replica1:3306" },
+                       { "Replica1:3306" => "Cascaded1:3307" },
+                       { "Base_source:3306" => "Replica2:13306" },
+                       { "Base_source:3306" => "Circular1:3306" },
+                       { "Circular1:3306" => "Circular2:3306" },
+                       { "Circular2:3306" => "Circular1:3306" },
+                       { "Base_source:3306" => "MultiSource:3306" },
+                       { "Another_source:3306" => "MultiSource:3306" }];
+  my $expected_text= << "EOS";
+Another_source:3306 => MultiSource:3306
+Base_source:3306 => Circular1:3306
+Base_source:3306 => MultiSource:3306
+Base_source:3306 => Replica1:3306
+Base_source:3306 => Replica2:13306
+Circular1:3306 => Circular2:3306
+Circular2:3306 => Circular1:3306
+Replica1:3306 => Cascaded1:3307
+EOS
+  is(join("", $prog->print_topology_text), $expected_text, "Text style");
+
+  my $expected_json= << "EOS";
+{ "Another_source:3306": { "source": [], "replica": [ "MultiSource:3306" ] },
+  "Base_source:3306": { "source": [], "replica": [ "Circular1:3306", "MultiSource:3306", "Replica1:3306", "Replica2:13306" ] },
+  "Circular1:3306": { "source": [ "Base_source:3306", "Circular2:3306"], "replica": [ "Circular2:3306" ] },
+  "Circular2:3306": { "source": [ "Circular1:3306" ], "replica": [ "Circular1:3306" ] },
+  "Replica1:3306": { "source": [ "Base_source:3306"], "replica": [ "Cascaded1:3307" ] },
+  "MultiSource:3306": { "source": [ "Another_source:3306", "Base_source:3306" ], "replica": [] },
+  "Replica2:13306": { "source": [ "Base_source:3306" ], "replica": [] },
+  "Cascaded1:3307": { "source": [ "Replica1:3306" ], "replica": [] } }
+EOS
+  is_deeply(from_json($prog->print_topology_json), from_json($expected_json), "JSON style");
+
+  my $expected_dot= << "EOS";
+digraph graph_name {
+  "Another_source:3306" -> "MultiSource:3306"
+  "Base_source:3306" -> "Circular1:3306"
+  "Base_source:3306" -> "MultiSource:3306"
+  "Base_source:3306" -> "Replica1:3306"
+  "Base_source:3306" -> "Replica2:13306"
+  "Circular1:3306" -> "Circular2:3306"
+  "Circular2:3306" -> "Circular1:3306"
+  "Replica1:3306" -> "Cascaded1:3307"
+}
+EOS
+  is($prog->print_topology_dot, $expected_dot, "dot style");
 
   done_testing;
 };

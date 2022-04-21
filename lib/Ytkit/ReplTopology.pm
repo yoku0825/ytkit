@@ -25,6 +25,7 @@ use base "Ytkit";
 
 use Ytkit::IO;
 use Ytkit::MySQLServer;
+use JSON qw{ to_json };
 
 my $synopsis= q{ $ yt-repl-topology --host=mysql_host --port=mysql_port } .
               q{--user=mysql_account --password=mysql_password};
@@ -122,6 +123,29 @@ sub run
 sub topology
 {
   my ($self)= @_;
+
+  if ($self->{output} eq "text")
+  {
+    return $self->print_topology_text;
+  }
+  elsif ($self->{output} eq "json")
+  {
+    return $self->print_topology_json;
+  }
+  elsif ($self->{output} eq "dot")
+  {
+    return $self->print_topology_dot;
+  }
+  else
+  {
+    ### Something wrong, print as --output=text
+    return $self->print_topology_text;
+  }
+}
+
+sub print_topology_text
+{
+  my ($self)= @_;
   my @buff;
 
   foreach (@{$self->{_topology}})
@@ -132,6 +156,55 @@ sub topology
     }
   }
   return sort(@buff);
+}
+
+sub print_topology_json
+{
+  my ($self)= @_;
+  my $buff;
+
+  foreach (@{$self->{_topology}})
+  {
+    while (my ($source, $replica)= each(%$_))
+    {
+      if (!(defined($buff->{$source})))
+      {
+        $buff->{$source}= { source => [], replica => [$replica] };
+      }
+      else
+      {
+        $buff->{$source}->{replica}= uniq_push_arrayref($buff->{$source}->{replica}, $replica);
+      }
+
+      if (!(defined($buff->{$replica})))
+      {
+        $buff->{$replica}= { source => [$source], replica => [] };
+      }
+      else
+      {
+        $buff->{$replica}->{source}= uniq_push_arrayref($buff->{$replica}->{source}, $source);
+      }
+    }
+  }
+  return to_json($buff);
+}
+
+sub print_topology_dot
+{
+  my ($self)= @_;
+  my @buff;
+
+  foreach (@{$self->{_topology}})
+  {
+    while (my ($source, $replica)= each(%$_))
+    {
+      push(@buff, sprintf(q|  "%s" -> "%s"|, $source, $replica));
+    }
+  }
+  @buff= sort(@buff);
+  unshift(@buff, "digraph graph_name {");
+  push(@buff, "}\n");
+  return join("\n", @buff);
 }
 
 sub search_candidate_ipaddr
@@ -215,8 +288,11 @@ sub _config
 {
   my $program_option=
   {
+    output   => { alias => ["output", "o"],
+                  isa   => ["text", "json", "dot"],
+                  default => "text",
+                  text  => "Output type" },
   };
-
   my $config= Ytkit::Config->new({ %$program_option, 
                                    %$Ytkit::Config::CONNECT_OPTION,
                                    %$Ytkit::Config::COMMON_OPTION });

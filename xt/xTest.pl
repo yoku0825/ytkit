@@ -20,8 +20,8 @@ package Ytkit::xTest;
 
 our $mysql55= "5.5.62";
 our $mysql56= "5.6.51";
-our $mysql57= "5.7.37";
-our $mysql80= "8.0.28";
+our $mysql57= "5.7.38";
+our $mysql80= "8.0.29";
 
 our $version=
 {

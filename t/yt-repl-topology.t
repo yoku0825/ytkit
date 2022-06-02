@@ -100,6 +100,19 @@ digraph graph_name {
 EOS
   is($prog->print_topology_dot, $expected_dot, "dot style");
 
+  my $expected_member= << "EOS";
+Another_source 3306
+Base_source 3306
+Cascaded1 3307
+Circular1 3306
+Circular2 3306
+MultiSource 3306
+Replica1 3306
+Replica2 13306
+EOS
+  chomp($expected_member);
+  is($prog->print_topology_member, $expected_member, "member list");
+
   done_testing;
 };
 

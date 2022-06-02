@@ -136,6 +136,10 @@ sub topology
   {
     return $self->print_topology_dot;
   }
+  elsif ($self->{output} eq "member")
+  {
+    return $self->print_topology_member;
+  }
   else
   {
     ### Something wrong, print as --output=text
@@ -205,6 +209,22 @@ sub print_topology_dot
   unshift(@buff, "digraph graph_name {");
   push(@buff, "}\n");
   return join("\n", @buff);
+}
+
+sub print_topology_member
+{
+  my ($self)= @_;
+  my $buff;
+
+  foreach (@{$self->{_topology}})
+  {
+    while (my ($source, $replica)= each(%$_))
+    {
+      $buff= uniq_push_arrayref($buff, join(" ", split_host_port($source)));
+      $buff= uniq_push_arrayref($buff, join(" ", split_host_port($replica)));
+    }
+  }
+  return join("\n", sort(@$buff));
 }
 
 sub search_candidate_ipaddr
@@ -289,9 +309,9 @@ sub _config
   my $program_option=
   {
     output   => { alias => ["output", "o"],
-                  isa   => ["text", "json", "dot"],
+                  isa   => ["text", "json", "dot", "member"],
                   default => "text",
-                  text  => "Output type" },
+                  text  => "Output type (member is for command-line tool)" },
   };
   my $config= Ytkit::Config->new({ %$program_option, 
                                    %$Ytkit::Config::CONNECT_OPTION,

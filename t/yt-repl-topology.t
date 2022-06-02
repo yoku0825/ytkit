@@ -110,7 +110,6 @@ MultiSource 3306
 Replica1 3306
 Replica2 13306
 EOS
-  chomp($expected_member);
   is($prog->print_topology_member, $expected_member, "member list");
 
   done_testing;

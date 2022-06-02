@@ -224,7 +224,7 @@ sub print_topology_member
       $buff= uniq_push_arrayref($buff, join(" ", split_host_port($replica)));
     }
   }
-  return join("\n", sort(@$buff));
+  return join("\n", sort(@$buff)) . "\n";
 }
 
 sub search_candidate_ipaddr

@@ -96,7 +96,7 @@ sub run
           $count++;
         }
         my $add_replica_ipaddr= _search_candidate_replica_ipaddr_by_instance($replica);
-        my $add_source_ipaddr= _search_candidate_replica_ipaddr_by_instance($replica);
+        my $add_source_ipaddr= _search_candidate_source_ipaddr_by_instance($replica);
  
         if (@$add_replica_ipaddr || $add_source_ipaddr)
         {
@@ -233,6 +233,7 @@ sub search_candidate_ipaddr
   my $replica= _search_candidate_replica_ipaddr_by_instance($self->instance);
   my $source= _search_candidate_source_ipaddr_by_instance($self->instance);
   $self->{_candidate_ipaddr}= uniq_push_arrayref($self->{_candidate_ipaddr}, @$replica, @$source);
+  _debugf("candidate_ippaddr: %s", $self->{_candidate_ipaddr});
   return 1;
 }
 
@@ -251,6 +252,7 @@ sub _search_candidate_replica_ipaddr_by_instance
       push(@buff, $ipaddr);    ### port is unused.
     }
   }
+  _debugf("detected_candidate_replica: %s", \@buff);
   return \@buff; 
 }
 
@@ -264,6 +266,7 @@ sub _search_candidate_source_ipaddr_by_instance
   {
     push(@buff, $one_master->{Master_Host});
   }
+  _debugf("detected_candidate_source %s", \@buff);
   return \@buff;
 }
  

@@ -25,7 +25,7 @@ use utf8;
 use Ytkit::IO;
 use Ytkit::Config::Option;
 
-my $_version= "0.5.1";
+my $_version= "0.5.2";
 
 our $CONNECT_OPTION=
 {

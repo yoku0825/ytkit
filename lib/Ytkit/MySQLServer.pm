@@ -822,37 +822,47 @@ SELECT
   processlist_id AS processlist_id,
   event_name AS event_name,
   sql_text AS sql_text,
-  @progress:= (work_completed / work_estimated) * 100 AS progress,
-  @elapsed:= (timer_current - timer_start) / power(10, 12) AS elapsed,
-  @elapsed * (100 / @progress) - @elapsed AS estimated
+  progress,
+  elapsed,
+  elapsed * (100 / progress) - elapsed AS estimated
 FROM
-  (SELECT
-     processlist_id AS processlist_id,
-     stage.thread_id AS thread_id,
-     stage.event_name AS event_name,
-     work_completed AS work_completed,
-     work_estimated AS work_estimated,
-     (SELECT
-        timer_start
-      FROM
-        performance_schema.events_statements_current
-          JOIN
-        performance_schema.threads
-          USING(thread_id)
-      WHERE
-        processlist_id = @@pseudo_thread_id
-     ) AS timer_current,
-     statement.timer_start AS timer_start,
-     sql_text AS sql_text
-   FROM
-     performance_schema.events_stages_current AS stage
-       JOIN
-     performance_schema.events_statements_current AS statement
-       USING(thread_id)
-       JOIN
-     performance_schema.threads
-       USING(thread_id)
-  ) AS dummy
+  (
+    SELECT
+      thread_id AS thread_id,
+      processlist_id AS processlist_id,
+      event_name AS event_name,
+      sql_text AS sql_text,
+      (work_completed / work_estimated) * 100 AS progress,
+      (timer_current - timer_start) / power(10, 12) AS elapsed
+    FROM
+      (SELECT
+         processlist_id AS processlist_id,
+         stage.thread_id AS thread_id,
+         stage.event_name AS event_name,
+         work_completed AS work_completed,
+         work_estimated AS work_estimated,
+         (SELECT
+            timer_start
+          FROM
+            performance_schema.events_statements_current
+              JOIN
+            performance_schema.threads
+              USING(thread_id)
+          WHERE
+            processlist_id = CONNECTION_ID()
+         ) AS timer_current,
+         statement.timer_start AS timer_start,
+         sql_text AS sql_text
+       FROM
+         performance_schema.events_stages_current AS stage
+           JOIN
+         performance_schema.events_statements_current AS statement
+           USING(thread_id)
+           JOIN
+         performance_schema.threads
+           USING(thread_id)
+    ) AS dummy
+  ) AS calc
 EOS
   return $self->query_arrayref($sql);
 }

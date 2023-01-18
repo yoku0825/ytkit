@@ -277,6 +277,7 @@ sub search_candidate_port
   my $replica= _search_candidate_replica_port_by_instance($self->instance);
   my $source = _search_candidate_source_port_by_instance($self->instance);
   $self->{_candidate_port}= uniq_push_arrayref($self->{_candidate_port}, @$replica, @$source);
+  _debugf("Candidate_port is now %s", $self->{_candidate_port});
   return 1;
 }
 

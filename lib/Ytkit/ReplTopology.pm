@@ -1,7 +1,7 @@
 package Ytkit::ReplTopology;
 
 ########################################################################
-# Copyright (C) 2022  yoku0825
+# Copyright (C) 2022, 2023  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -274,9 +274,11 @@ sub _search_candidate_source_ipaddr_by_instance
 sub search_candidate_port
 {
   my ($self)= @_;
+  my $self_port= $self->instance->port;
   my $replica= _search_candidate_replica_port_by_instance($self->instance);
   my $source = _search_candidate_source_port_by_instance($self->instance);
-  $self->{_candidate_port}= uniq_push_arrayref($self->{_candidate_port}, @$replica, @$source);
+  $self->{_candidate_port}= uniq_push_arrayref($self->{_candidate_port}, $self_port, @$replica, @$source);
+  _debugf("Candidate_port is now %s", $self->{_candidate_port});
   return 1;
 }
 

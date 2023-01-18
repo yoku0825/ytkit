@@ -84,6 +84,20 @@ subtest "Issue #34" => sub
   done_testing; 
 };
 
+subtest "connect_param" => sub
+{
+  my $ytkit= {};
+  bless $ytkit => "Ytkit";
+
+  $ytkit->{user}= "ytkituser";
+  $ytkit->{host}= "ytkithost";
+  $ytkit->{port}= undef;  ### should be ignored
+  $ytkit->{not_connect_param}= "test";      ### should be ignored
+
+  is(join(" ", $ytkit->connect_param), "--user ytkituser --host ytkithost", "user, host");
+  done_testing;
+};
+
 my $basedir= "$Bin/../";
 my @db_single= `grep -r DB::single --exclude=ytkit.t --exclude-dir=.git $basedir`;
 ok(!(@db_single), "DB::single has been removed.");

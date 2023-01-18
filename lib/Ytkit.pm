@@ -118,4 +118,20 @@ sub test_connect
   }
 }
 
+sub connect_param
+{
+  my ($self)= @_;
+
+  my @ret;
+  push(@ret, "--user", $self->{user}) if $self->{user};
+  push(@ret, "--host", $self->{host}) if $self->{host};
+  push(@ret, "--port", $self->{port}) if $self->{port};
+  push(@ret, "--socket", $self->{socket}) if $self->{socket};
+  push(@ret, "--password", $self->{password}) if $self->{password};
+  push(@ret, "--timeout", $self->{timeout}) if $self->{timeout};
+
+  return @ret;
+}
+
+
 return 1;

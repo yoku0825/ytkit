@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2022  yoku0825
+# Copyright (C) 2022, 2023  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -36,7 +36,7 @@ subtest "Search candidates" => sub
 {
   ok(my $prog= Ytkit::ReplTopology->new("--host=test.com", "--port=33061"), "Init");
   is_deeply($prog->{_candidate_port}, [33061], "Initial candidate_port");
-  is_deeply($prog->{_candidate_ipaddr}, ["test.com"], "Initial candidate_port");
+  is_deeply($prog->{_candidate_ipaddr}, ["test.com"], "Initial candidate_ipaddr");
   
   $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::with_channel;
   $prog->instance->{_show_slave_hosts}= $Ytkit::Test::SHOW_SLAVE_HOSTS::TWO_HOSTS;
@@ -46,7 +46,7 @@ subtest "Search candidates" => sub
   $prog->search_candidate_ipaddr;
   
   is_deeply($prog->{_candidate_port}, [20796, 20797, 3306, 33061], "Updated candidate_port");
-  is_deeply($prog->{_candidate_ipaddr}, ["172.17.0.3", "172.17.0.5", "localhost", "test.com"], "Updated candidate_port");
+  is_deeply($prog->{_candidate_ipaddr}, ["172.17.0.3", "172.17.0.5", "localhost", "test.com"], "Updated candidate_ipaddr");
 
   done_testing;
 };

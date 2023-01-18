@@ -34,9 +34,9 @@ use_ok("Ytkit::ReplTopology");
 
 subtest "Search candidates" => sub
 {
-  ok(my $prog= Ytkit::ReplTopology->new("--host=test.com", "--port=33061"), "Init");
+  ok(my $prog= Ytkit::ReplTopology->new("--host=127.0.0.1", "--port=33061"), "Init");
   is_deeply($prog->{_candidate_port}, [33061], "Initial candidate_port");
-  is_deeply($prog->{_candidate_ipaddr}, ["test.com"], "Initial candidate_ipaddr");
+  is_deeply($prog->{_candidate_ipaddr}, ["127.0.0.1"], "Initial candidate_ipaddr");
   
   $prog->instance->{_show_slave_status}= $Ytkit::Test::SHOW_SLAVE_STATUS::with_channel;
   $prog->instance->{_show_slave_hosts}= $Ytkit::Test::SHOW_SLAVE_HOSTS::TWO_HOSTS;
@@ -46,14 +46,14 @@ subtest "Search candidates" => sub
   $prog->search_candidate_ipaddr;
   
   is_deeply($prog->{_candidate_port}, [20796, 20797, 3306, 33061], "Updated candidate_port");
-  is_deeply($prog->{_candidate_ipaddr}, ["172.17.0.3", "172.17.0.5", "localhost", "test.com"], "Updated candidate_ipaddr");
+  is_deeply($prog->{_candidate_ipaddr}, ["127.0.0.1", "172.17.0.3", "172.17.0.5", "localhost"], "Updated candidate_ipaddr");
 
   done_testing;
 };
 
 subtest "Print topology" => sub
 {
-  ok(my $prog= Ytkit::ReplTopology->new("--host=test.com", "--port=33061"), "Init");
+  ok(my $prog= Ytkit::ReplTopology->new("--host=127.0.0.1", "--port=33061"), "Init");
   $prog->{_topology}= [{ "Base_source:3306" => "Replica1:3306" },
                        { "Replica1:3306" => "Cascaded1:3307" },
                        { "Base_source:3306" => "Replica2:13306" },

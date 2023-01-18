@@ -230,9 +230,10 @@ sub print_topology_member
 sub search_candidate_ipaddr
 {
   my ($self)= @_;
+  my $self_host= $self->instance->hostname;
   my $replica= _search_candidate_replica_ipaddr_by_instance($self->instance);
   my $source= _search_candidate_source_ipaddr_by_instance($self->instance);
-  $self->{_candidate_ipaddr}= uniq_push_arrayref($self->{_candidate_ipaddr}, @$replica, @$source);
+  $self->{_candidate_ipaddr}= uniq_push_arrayref($self->{_candidate_ipaddr}, $self_host, @$replica, @$source);
   _debugf("candidate_ippaddr: %s", $self->{_candidate_ipaddr});
   return 1;
 }

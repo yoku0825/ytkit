@@ -25,7 +25,7 @@ use Test::More;
 use JSON qw{ from_json };
 
 use Test::MockTime;
-Test::MockTime::set_fixed_time("2018-06-06 12:27:34 +0900", "%Y-%m-%d %H:%M:%S %z");
+Test::MockTime::set_absolute_time("2018-06-06T03:27:34Z");
 $ENV{TZ}= "Asia/Tokyo";
 
 use FindBin qw{$Bin};

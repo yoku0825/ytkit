@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2018, 2019  yoku0825
+# Copyright (C) 2018, 2023  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,7 +25,7 @@ use Test::More;
 use JSON qw{ from_json };
 
 use Test::MockTime;
-Test::MockTime::set_fixed_time("2018-06-06 12:27:34 +0900", "%Y-%m-%d %H:%M:%S %z");
+Test::MockTime::set_absolute_time("2018-06-06T03:27:34Z");
 $ENV{TZ}= "Asia/Tokyo";
 
 use FindBin qw{$Bin};

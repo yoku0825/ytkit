@@ -25,7 +25,7 @@ use utf8;
 use Test::More;
 
 use Test::MockTime;
-Test::MockTime::set_fixed_time("2018-06-06 12:27:34 +0900", "%Y-%m-%d %H:%M:%S %z");
+Test::MockTime::set_absolute_time("2018-06-06T03:27:34Z");
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
@@ -596,24 +596,24 @@ subtest "Parse SHOW ENGINE INNODB STATUS" => sub
   $prog->{deadlock}->{warning}= 300;
   $prog->{deadlock}->{critical}= 60;
 
-  ### Test data LATEST DEADLOCK is "2019-07-11 18:33:38"
+  ### Test data LATEST DEADLOCK is "2019-07-11 18:33:38 JST"
 
-  Test::MockTime::set_fixed_time("2019-07-11 18:34:37 +0900", "%Y-%m-%d %H:%M:%S %z");
+  Test::MockTime::set_absolute_time("2019-07-11T09:34:37Z");
   $prog->check_latest_deadlock;
   is($prog->{status}->{str}, "CRITICAL", "LATEST DETECTED DEADLOCK occurs last 60 seconds");
   &reset_param;
 
-  Test::MockTime::set_fixed_time("2019-07-11 18:34:39 +0900", "%Y-%m-%d %H:%M:%S %z");
+  Test::MockTime::set_absolute_time("2019-07-11T09:34:39Z");
   $prog->check_latest_deadlock;
   is($prog->{status}->{str}, "WARNING", "LATEST DETECTED DEADLOCK occurs last 300 seconds");
   &reset_param;
 
-  Test::MockTime::set_fixed_time("2019-07-12 18:34:39 +0900", "%Y-%m-%d %H:%M:%S %z");
+  Test::MockTime::set_absolute_time("2019-07-12T09:34:39Z");
   $prog->check_latest_deadlock;
   is($prog->{status}->{str}, "OK", "LATEST DETECTED DEADLOCK does not occur last 300 seconds");
   &reset_param;
 
-  Test::MockTime::set_fixed_time("2019-07-11 18:34:37 +0900", "%Y-%m-%d %H:%M:%S %z");
+  Test::MockTime::set_absolute_time("2019-07-11T09:34:37Z");
   $prog->{deadlock}->{enable}= 0;
   $prog->check_latest_deadlock;
   is($prog->{status}->{str}, "OK", "LATEST DETECTED DEADLOCK occur last 60 seconds but deadlock_enable is OFF");
@@ -621,7 +621,7 @@ subtest "Parse SHOW ENGINE INNODB STATUS" => sub
 
   $prog->{deadlock}->{enable}= 1;
   $prog->instance->{_show_engine_innodb_status}= $Ytkit::Test::SHOW_ENGINE_INNODB_STATUS::mysql57_no_deadlock;
-  Test::MockTime::set_fixed_time("2019-07-11 18:34:37 +0900", "%Y-%m-%d %H:%M:%S %z");
+  Test::MockTime::set_absolute_time("2019-07-11T09:34:37Z");
   $prog->check_latest_deadlock;
   is($prog->{status}->{str}, "OK", "LATEST DETECTED DEADLOCK does not occur");
   &reset_param;

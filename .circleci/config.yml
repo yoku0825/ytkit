@@ -37,10 +37,28 @@ jobs:
           command: "make test"
           environment:
             TZ: "UTC-9"
-
+  test_on_ubuntu2204:
+    docker: 
+      - image: ubuntu:22.04
+    working_directory: ~/ytkit
+    steps:
+      - checkout
+      - restore_cache:
+          key: v0.1.14-4
+      - run: apt update
+      - run: apt install -y cpanminus gcc libmysqlclient-dev libdbd-mysql-perl libjson-perl libtest-mocktime-perl libterm-readkey-perl
+      - run: cpanm --installdeps .
+      - save_cache:
+          key: v0.1.14-4
+          paths: ~/perl5
+      - run:
+          command: "make test"
+          environment:
+            TZ: "UTC-9"
 workflows:
   version: 2
   test:
     jobs:
       - test_on_centos7
       - test_on_centos8
+      - test_on_ubuntu2204

@@ -46,7 +46,7 @@ jobs:
       - restore_cache:
           key: v0.1.14-4
       - run: apt update
-      - run: apt install cpanminus gcc libmysqlclient-dev libdbd-mysql-perl libjson-perl libtest-mocktime-perl libterm-readkey-perl
+      - run: apt install -y cpanminus gcc libmysqlclient-dev libdbd-mysql-perl libjson-perl libtest-mocktime-perl libterm-readkey-perl
       - run: cpanm --installdeps .
       - save_cache:
           key: v0.1.14-4

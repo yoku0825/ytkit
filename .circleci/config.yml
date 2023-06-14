@@ -61,3 +61,4 @@ workflows:
     jobs:
       - test_on_centos7
       - test_on_centos8
+      - test_on_ubuntu2204

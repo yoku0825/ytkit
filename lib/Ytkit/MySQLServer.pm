@@ -863,6 +863,8 @@ FROM
            USING(thread_id)
     ) AS dummy
   ) AS calc
+WHERE
+  event_name LIKE 'stage/innodb/alter table%'
 EOS
   return $self->query_arrayref($sql);
 }

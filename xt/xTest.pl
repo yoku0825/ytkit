@@ -20,8 +20,9 @@ package Ytkit::xTest;
 
 our $mysql55= "5.5.62";
 our $mysql56= "5.6.51";
-our $mysql57= "5.7.41";
-our $mysql80= "8.0.32";
+our $mysql57= "5.7.43";
+our $mysql80= "8.0.34";
+our $mysql81= "8.1.0";
 
 our $version=
 {
@@ -29,6 +30,7 @@ our $version=
   $mysql56 => { mysqld => "/usr/mysql/$mysql56/bin/mysqld", mysql_install_db => "/usr/mysql/$mysql56/scripts/mysql_install_db" },
   $mysql57 => { mysqld => "/usr/mysql/$mysql57/bin/mysqld" },
   $mysql80 => { mysqld => "/usr/mysql/$mysql80/bin/mysqld" },
+  $mysql81 => { mysqld => "/usr/mysql/$mysql81/bin/mysqld" },
 };
 
 

@@ -36,7 +36,8 @@ our $CONNECT_OPTION=
             default => "localhost",
             text  => "MySQL host" },
   port => { alias => ["P", "port"],
-            text  => "MySQL port number" },
+            text  => "MySQL port number",
+            default => 3306 },
   socket => { alias => ["S", "socket"],
               text  => "Path to mysql.sock\n" .
                        "  (this parameter is used when --host=localhost)" },

@@ -73,7 +73,7 @@ subtest "new Ytkit::Config::File interface" => sub
       my $config= Ytkit::Config->new($Ytkit::Config::CONNECT_OPTION);
       $config->parse_argv(@{$file->{server2}});
       is_deeply($config->{result}, { host => "localhost",
-                                     port => undef,
+                                     port => 3306,
                                      user => undef,
                                      password => "",
                                      ask_pass => 0,
@@ -87,7 +87,7 @@ subtest "new Ytkit::Config::File interface" => sub
       my $config= Ytkit::Config->new($Ytkit::Config::CONNECT_OPTION);
       $config->parse_argv(@{$file->{no_setting_section}});
       is_deeply($config->{result}, { host => "localhost",
-                                     port => undef,
+                                     port => 3306,
                                      user => undef,
                                      password => "",
                                      ask_pass => 0,
@@ -101,7 +101,7 @@ subtest "new Ytkit::Config::File interface" => sub
       my $config= Ytkit::Config->new($Ytkit::Config::CONNECT_OPTION);
       $config->parse_argv(@{$file->{quotes}});
       is_deeply($config->{result}, { host => "localhost",
-                                     port => undef,
+                                     port => 3306,
                                      user => undef,
                                      password => "",
                                      ask_pass => 0,
@@ -119,7 +119,7 @@ subtest "new Ytkit::Config::File interface" => sub
       my $config= Ytkit::Config->new($Ytkit::Config::CONNECT_OPTION);
       $config->parse_argv(@{$file->{space_around_equal}});
       is_deeply($config->{result}, { host => "localhost",
-                                     port => undef,
+                                     port => 3306,
                                      user => "mysql",
                                      password => "",
                                      ask_pass => 0,
@@ -158,7 +158,7 @@ subtest "with [global] section" => sub
     my $config= Ytkit::Config->new($Ytkit::Config::CONNECT_OPTION);
     $config->parse_argv(@{$file->{server2}});
     is_deeply($config->{result}, { host => "localhost",
-                                   port => undef,
+                                   port => 3306,
                                    user => "global_user",
                                    password => "",
                                    ask_pass => 0,

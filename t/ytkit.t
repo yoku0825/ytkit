@@ -95,17 +95,17 @@ subtest "copy_connect_param" => sub
   $ytkit->{not_connect_param}= "test";      ### should be ignored
 
   is(join(" ", $ytkit->copy_connect_param),
-     "--host='ytkithost' --password='' --timeout='1' --user='ytkituser'",
+     "--host='ytkithost' --password='' --port='3306' --timeout='1' --user='ytkituser'",
      "user, host, password, timeout");
 
   $ytkit->{ask_pass}= 0;
   is(join(" ", $ytkit->copy_connect_param),
-     "--host='ytkithost' --password='' --timeout='1' --user='ytkituser'",
+     "--host='ytkithost' --password='' --port='3306' --timeout='1' --user='ytkituser'",
      "--ask_pass is noarg option, skipped");
 
   $ytkit->{ask_pass}= 1;
   is(join(" ", $ytkit->copy_connect_param),
-     "--ask_pass --host='ytkithost' --password='' --timeout='1' --user='ytkituser'",
+     "--ask_pass --host='ytkithost' --password='' --port='3306' --timeout='1' --user='ytkituser'",
      "--ask_pass is noarg option, but specified, appear in copy");
 
   done_testing;

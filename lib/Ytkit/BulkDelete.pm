@@ -189,7 +189,7 @@ sub _pickup_replica
 {
   my ($self)= @_;
 
-  my $prog= Ytkit::ReplTopology->new("--output=json", $self->connect_param);
+  my $prog= Ytkit::ReplTopology->new("--output=json", $self->copy_connect_param);
   $prog->run;
   my $topology= from_json($prog->topology);
 
@@ -200,7 +200,7 @@ sub _pickup_replica
       ### When it has source, it's replica.
       _infof("Detected replica: %s", $key);
       my ($host, $port)= split_host_port($key);
-      push(@{$self->{_replica_wait}}, Ytkit::WaitReplication->new($self->connect_param,
+      push(@{$self->{_replica_wait}}, Ytkit::WaitReplication->new($self->copy_connect_param,
                                                                   "--host", $host, ### Override
                                                                   "--port", $port, ### Override
                                                                   "--seconds_behind_master", $self->{timer_wait},

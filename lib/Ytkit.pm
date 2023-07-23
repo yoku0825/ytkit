@@ -118,17 +118,38 @@ sub test_connect
   }
 }
 
-sub connect_param
+sub copy_connect_param
 {
   my ($self)= @_;
 
   my @ret;
-  push(@ret, "--user", $self->{user}) if $self->{user};
-  push(@ret, "--host", $self->{host}) if $self->{host};
-  push(@ret, "--port", $self->{port}) if $self->{port};
-  push(@ret, "--socket", $self->{socket}) if $self->{socket};
-  push(@ret, "--password", $self->{password}) if $self->{password};
-  push(@ret, "--timeout", $self->{timeout}) if $self->{timeout};
+  foreach my $key (sort(keys(%${Ytkit::Config::CONNECT_OPTION})))
+  {
+    my $value;
+
+    if (defined($Ytkit::Config::CONNECT_OPTION->{$key}->{noarg}))
+    {
+      if ($self->{$key})
+      {
+        ### Only append NO_ARG option
+        push(@ret, _sprintf("--%s", $key));
+        next;
+      }
+    }
+    elsif ($self->{$key})
+    {
+      $value= $self->{$key};   ### Inherit from $prog
+    }
+    else
+    {
+      $value= $Ytkit::Config::CONNECT_OPTION->{$key}->{default};   ### Default value
+    }
+
+    ### Missed get from $Ytkit::Config::CONNECT_OPTION's default, nothing to do.
+    next if !(defined($value));
+
+    push(@ret, _sprintf("--%s='%s'", $key, $value));
+  }
 
   return @ret;
 }

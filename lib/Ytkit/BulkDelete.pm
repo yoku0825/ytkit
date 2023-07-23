@@ -28,6 +28,7 @@ use Ytkit::ReplTopology;
 use Ytkit::WaitReplication;
 use JSON qw{ from_json };
 use Time::HiRes qw{ time sleep };
+use Parallel::ForkManager;
 
 my $synopsis= q{  $ yt-bulk-delete --host=mysql_host --port=mysql_port } .
               q{--user=mysql_account --password=mysql_password } .
@@ -49,7 +50,8 @@ sub new
   my $self=
   {
     _config => $config,
-    _replica_wait => [],
+    _replica_wait => [],     ### For original mode, observer
+    _replica_execute => [],  ### For disable_sql_log_bin mode, executor
     %{$config->{result}},
   };
   bless $self => $class;
@@ -89,6 +91,43 @@ sub prepare
 sub bulk_delete
 {
   my ($self)= @_;
+
+  if ($self->{disable_sql_log_bin})
+  {
+    ### Parallelize here
+    my $replica_count= scalar(@{$self->{_replica_execute}});
+    my $pm= Parallel::ForkManager->new($replica_count);
+
+    foreach my $replica_executor (@{$self->{_replica_execute}})
+    {
+      $pm->start and next;
+
+      ### Child process
+      ### Prepare has done on parent process, go to bulk delete
+      $replica_executor->_bulk_delete_low;
+      $pm->finish;
+    }
+
+    ### Child processes are deleting all Replica servers.
+    ### For ReplicationSource server, parent process executes bulk delete by myself.
+    $self->_bulk_delete_low;
+
+    ### After ReplicationSrouce deletion(by parent),
+    ### Wait until all replicas are deleted.
+    $pm->wait_all_children;
+  }
+  else
+  {
+    ### Using replication, observe Seconds_Behind_Source and
+    ### DELETE statements are only executing on Source (Original implementation)
+    $self->_bulk_delete_low;
+  }
+}
+
+
+sub _bulk_delete_low
+{
+  my ($self)= @_;
   my $delete_base  = sprintf("DELETE FROM %s ", $self->{table});
   my $current_limit= $self->{delete_row_start};
   my $smooth_time= 0;
@@ -99,34 +138,51 @@ sub bulk_delete
   {
     sleep($self->{sleep});
     my $start= time();
+    $self->instance->exec_sql("SET SESSION sql_log_bin=OFF") if ($self->{disable_sql_log_bin});
     my $deleted_row= $self->instance->exec_sql($delete_base . " LIMIT $current_limit");
     my $end= time();
-    _infof("%d rows are deleted during %3.3f sec", $deleted_row, $end - $start);
+    _infof("Server: (%s:%d) %d rows are deleted during %3.3f sec",
+           $self->{host}, $self->{port}, $deleted_row, $end - $start);
 
     if ($self->instance->error)
     {
-      _croakf("DELETE statement failure by %s", $self->instance->error);
+      _croakf("Server: (%s:%d) DELETE statement failure by %s",
+              $self->{host}, $self->{port}, $self->instance->error);
     }
 
     last if $deleted_row == 0;
 
-    my $wait_replica_time= $self->wait_replica;
-    _debugf("wait_replica_time: %f", $wait_replica_time);
+    ### Original replication mode, $wait_replica_time points Replication Conversion without me.
+    ### disable_sql_log_bin mode, $wait_replica_time points Replication Conversion  myself.
+    my $wait_replica_time= 0;
+    
+    if ($self->{disable_sql_log_bin})
+    {
+      my $ret= $self->instance->show_slave_status;
+      $wait_replica_time= $ret->{Seconds_Behind_Master};
+    }
+    else
+    {
+      $wait_replica_time= $self->wait_replica;
+    }
+    _debugf("Server: (%s:%d) wait_replica_time: %f", $self->{host}, $self->{port}, $wait_replica_time);
 
-    if ($wait_replica_time >= $self->{timer_wait})
+    if ($wait_replica_time > $self->{timer_wait})
     {
       ### Replication was too delay.
       $current_limit= int($current_limit / ($self->{delete_row_multiplier} ** int($wait_replica_time))) + 1;
-      _notef("Replication was too delay (%3.3f sec), limit_clause decreasing to %d", $wait_replica_time, $current_limit);
+      _notef("Server: (%s:%d) Replication was too delay (%3.3f sec), limit_clause decreasing to %d",
+             $self->{host}, $self->{port}, $wait_replica_time, $current_limit);
       $smooth_time--;
     }
     else
     {
-      if ($end - $start >= $self->{timer_wait})
+      if ($end - $start > $self->{timer_wait})
       {
         ### Replication is smooth but DELETE statement took a time.
         $current_limit= int($current_limit / ($self->{delete_row_multiplier} ** int($end - $start))) + 1;
-        _notef("DELETE statement takes %3.3f sec, limit_clause decreasing to %d", $end - $start, $current_limit);
+        _notef("Server: (%s:%d) DELETE statement takes %3.3f sec, limit_clause decreasing to %d",
+               $self->{host}, $self->{port}, $end - $start, $current_limit);
         $smooth_time--;
       }
       else
@@ -135,7 +191,8 @@ sub bulk_delete
         {
           ### Bumpup LIMIT Clause.
           $current_limit= int($current_limit * $self->{delete_row_multiplier});
-          _notef("It seems well %d times, limit_clause increasing to %d", $smooth_time, $current_limit);
+          _notef("Server: (%s:%d) It seems well %d times, limit_clause increasing to %d",
+                 $self->{host}, $self->{port}, $smooth_time, $current_limit);
           $smooth_time= 0;
         }
       }
@@ -156,7 +213,8 @@ sub _table_check
   if ($self->instance->error)
   {
     ### Table does not exist or access denied.
-    _croakf("Can't access %s. (%s)", $target_table, $@);
+    _croakf("Server: (%s:%d) Can't access %s. (%s)",
+            $self->{host}, $self->{port}, $target_table, $@);
   }
 
   my $create_table_statement= $show_create_table->[0]->{"Create Table"};
@@ -189,10 +247,42 @@ sub _pickup_replica
 {
   my ($self)= @_;
 
+  ### Just return if --without-replica
+  return 0 if $self->{without_replica};
+
+  foreach (@{$self->_search_replica})
+  {
+    if ($self->{disable_sql_log_bin})
+    {
+      ### Not using binlog, generate Ytkit::BulkDelete itself with --without-replica flag.
+      push(@{$self->{_replica_execute}}, Ytkit::BulkDelete->new($self->copy_all_param,
+                                                                "--host", $_->{host}, ### Override
+                                                                "--port", $_->{port}, ### Override
+                                                                "--disable_sql_log_bin" ,
+                                                                "--without_replica"   ### Internal flag
+                                                               ));
+    }
+    else
+    {
+      ### Using binlog & replication, generate Ytkit::WaitReplication for observe delay.
+      push(@{$self->{_replica_wait}}, Ytkit::WaitReplication->new($self->copy_connect_param,
+                                                                  "--host", $_->{host}, ### Override
+                                                                  "--port", $_->{port}, ### Override
+                                                                  "--seconds_behind_master", $self->{timer_wait},
+                                                                  "--sleep", 1));
+    }
+  }
+}
+
+sub _search_replica
+{
+  my ($self)= @_;
+
   my $prog= Ytkit::ReplTopology->new("--output=json", $self->copy_connect_param);
   $prog->run;
   my $topology= from_json($prog->topology);
 
+  my @buff;
   foreach my $key (keys(%$topology))
   {
     if (@{$topology->{$key}->{source}})
@@ -200,18 +290,17 @@ sub _pickup_replica
       ### When it has source, it's replica.
       _infof("Detected replica: %s", $key);
       my ($host, $port)= split_host_port($key);
-      push(@{$self->{_replica_wait}}, Ytkit::WaitReplication->new($self->copy_connect_param,
-                                                                  "--host", $host, ### Override
-                                                                  "--port", $port, ### Override
-                                                                  "--seconds_behind_master", $self->{timer_wait},
-                                                                  "--sleep", 1));
+      push(@buff, { host => $host, port => $port });
     }
   }
+
+  return \@buff;
 }
 
 sub wait_replica
 {
   my ($self)= @_;
+  return -1 if $self->{without_replica}; ### even if wait_timer=0, 
 
   my $start= time();
   foreach (@{$self->{_replica_wait}})
@@ -254,6 +343,16 @@ sub _config
                noarg => 1,
                default => 0,
                isa => sub { $ENV{ytkit_force}= 1; }},
+    disable_sql_log_bin => { alias => ["disable_sql_log_bin", "sql_log_bin_off", "disable_log_bin"],
+                             text  => "Execute 'SET sql_log_bin = OFF' before run DELETE statement. " .
+                                      "Automatically execute DELETE queries all servers in replication topology.",
+                             noarg => 1,
+                             default => 0, },
+    without_replica => { alias => ["without_replica"],
+                         text => "Turn off observation of replication delay (danger). " .
+                                 "This is flag for internal.",
+                         default => 0,
+                         noarg => 1, },
   };
 
   my $config= Ytkit::Config->new({ %$own_option, 

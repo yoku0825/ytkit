@@ -7,3 +7,4 @@ requires "Clone";
 requires "JSON";
 requires "Term::ReadKey";
 requires "Data::Dumper";
+requires "Parallel::ForkManager";

@@ -121,13 +121,25 @@ sub test_connect
 sub copy_connect_param
 {
   my ($self)= @_;
+  return $self->_copy_param($Ytkit::Config::CONNECT_OPTION);
+}
+
+sub copy_all_param
+{
+  my ($self)= @_;
+  return $self->_copy_param($self->{_config}->{buffer});
+}
+
+sub _copy_param
+{
+  my ($self, $target_param_hashref)= @_;
 
   my @ret;
-  foreach my $key (sort(keys(%${Ytkit::Config::CONNECT_OPTION})))
+  foreach my $key (sort(keys(%$target_param_hashref)))
   {
     my $value;
 
-    if (defined($Ytkit::Config::CONNECT_OPTION->{$key}->{noarg}))
+    if (defined($target_param_hashref->{$key}->{noarg}))
     {
       if ($self->{$key})
       {
@@ -142,7 +154,7 @@ sub copy_connect_param
     }
     else
     {
-      $value= $Ytkit::Config::CONNECT_OPTION->{$key}->{default};   ### Default value
+      $value= $target_param_hashref->{$key}->{default};   ### Default value
     }
 
     ### Missed get from $Ytkit::Config::CONNECT_OPTION's default, nothing to do.

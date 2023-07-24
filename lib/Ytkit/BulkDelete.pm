@@ -134,7 +134,7 @@ sub bulk_delete
         if (++$smooth_time > $self->{accelerating_throttling})
         {
           ### Bumpup LIMIT Clause.
-          $current_limit= int($current_limit * $self->{delete_row_multiplier});
+          $current_limit= int($current_limit * $self->{delete_row_multiplier}) + 1;
           _notef("It seems well %d times, limit_clause increasing to %d", $smooth_time, $current_limit);
           $smooth_time= 0;
         }

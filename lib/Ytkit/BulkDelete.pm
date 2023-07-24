@@ -159,7 +159,8 @@ sub _bulk_delete_low
     if ($self->{disable_sql_log_bin})
     {
       my $ret= $self->instance->show_slave_status;
-      $wait_replica_time= $ret->{Seconds_Behind_Master};
+      $wait_replica_time= $ret->[0]->{Seconds_Behind_Master} // 0;
+      $self->instance->{_show_slave_status}= undef;   ### Reset cache
     }
     else
     {

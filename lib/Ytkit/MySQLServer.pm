@@ -130,15 +130,17 @@ sub warn_if_error
 sub exec_sql_with_croak
 {
   my ($self, $sql, $opt, @argv)= @_;
-  $self->exec_sql($sql, $opt, @argv);
+  my $ret= $self->exec_sql($sql, $opt, @argv);
   $self->raise_if_error;
+  return $ret;
 }
 
 sub exec_sql_with_carp
 {
   my ($self, $sql, $opt, @argv)= @_;
-  $self->exec_sql($sql, $opt, @argv);
+  my $ret= $self->exec_sql($sql, $opt, @argv);
   $self->warn_if_error;
+  return $ret;
 }
 
 sub use

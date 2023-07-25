@@ -23,6 +23,7 @@ use warnings;
 use utf8;
 use base "Ytkit";
 
+use Ytkit::MySQLServer;
 use Ytkit::IO;
 use Ytkit::ReplTopology;
 use Ytkit::WaitReplication;
@@ -77,6 +78,7 @@ sub prepare
   ### Server is not read_only?
   if ($self->instance->valueof("read_only") eq "ON")
   {
+    ### Only checking once, specified by "-h"
     _croakf("Specified MySQL is read_only = ON, aborting.");
   }
 
@@ -96,31 +98,56 @@ sub bulk_delete
   {
     ### Parallelize here
     my $replica_count= scalar(@{$self->{_replica_execute}});
-    my $pm= Parallel::ForkManager->new($replica_count);
+    my $pm= Parallel::ForkManager->new($replica_count + 1);
 
     foreach my $replica_executor (@{$self->{_replica_execute}})
     {
       $pm->start and next;
 
+      _notef("Child process spawned for %s:%d", $replica_executor->{host}, $replica_executor->{port});
+
       ### Child process
       ### Prepare has done on parent process, go to bulk delete
       $replica_executor->_bulk_delete_low;
+      _notef("Server: (%s:%d) Finished to cleanup %s",
+             $replica_executor->{host}, $replica_executor->{port}, $replica_executor->{table});
+
+      _notef(Ytkit::MySQLServer::_print_table(
+               $replica_executor->instance->query_arrayref(
+                 _sprintf('SELECT @@hostname, @@port, COUNT(*) FROM %s', $replica_executor->{table})
+               )
+            ));
+
       $pm->finish;
     }
 
-    ### Child processes are deleting all Replica servers.
-    ### For ReplicationSource server, parent process executes bulk delete by myself.
-    $self->_bulk_delete_low;
+    _notef("Parent process processed for %s:%d", $self->{host}, $self->{port});
+    ### Last one child process, processing on Replication Source
+    my $executor= Ytkit::BulkDelete->new($self->copy_all_param,
+                                         "--disable_sql_log_bin" ,
+                                         "--without_replica"   ### Internal flag
+                                         );
 
-    ### After ReplicationSrouce deletion(by parent),
+    $executor->_bulk_delete_low;
+    _notef("Server: (%s:%d) Finished to cleanup %s",
+           $executor->{host}, $executor->{port}, $executor->{table});
+    _notef(Ytkit::MySQLServer::_print_table(
+             $executor->instance->query_arrayref(
+               _sprintf('SELECT @@hostname, @@port, COUNT(*) FROM %s', $executor->{table})
+             )
+          ));
+
     ### Wait until all replicas are deleted.
+    ### During processing,  parent process has responsibility to stop child processes
     $pm->wait_all_children;
+    _notef("All instances deletion has done with --disable-log-gin mode. Exit successfully.");
   }
   else
   {
     ### Using replication, observe Seconds_Behind_Source and
     ### DELETE statements are only executing on Source (Original implementation)
     $self->_bulk_delete_low;
+    _notef("All instances deletion has done with replication. Exit successfully.");
   }
 }
 
@@ -134,22 +161,23 @@ sub _bulk_delete_low
 
   ### Initial wait for replication conversion.
   $self->wait_replica;
+
+  ### For disable logging.
+  $self->instance->exec_sql("SET SESSION sql_log_bin=OFF") if ($self->{disable_sql_log_bin});
   while ()
   {
     sleep($self->{sleep});
     my $start= time();
-    $self->instance->exec_sql("SET SESSION sql_log_bin=OFF") if ($self->{disable_sql_log_bin});
-    my $deleted_row= $self->instance->exec_sql($delete_base . " LIMIT $current_limit");
+    my $deleted_row= $self->instance->exec_sql_with_carp($delete_base . " LIMIT $current_limit");
     my $end= time();
     _infof("Server: (%s:%d) %d rows are deleted during %3.3f sec",
            $self->{host}, $self->{port}, $deleted_row, $end - $start);
 
+    ### When error occurs, $deleted_row == 0 obviously. Then handle when error occurs
     if ($self->instance->error)
     {
-      _croakf("Server: (%s:%d) DELETE statement failure by %s",
-              $self->{host}, $self->{port}, $self->instance->error);
+      next;
     }
-
     last if $deleted_row == 0;
 
     ### Original replication mode, $wait_replica_time points Replication Conversion without me.
@@ -159,7 +187,7 @@ sub _bulk_delete_low
     if ($self->{disable_sql_log_bin})
     {
       my $ret= $self->instance->show_slave_status;
-      $wait_replica_time= $ret->[0]->{Seconds_Behind_Master} // 0;
+      $wait_replica_time= $ret->[0]->{Seconds_Behind_Master} // 0;   ### TODO: checking only 1st one replication channel
       $self->instance->{_show_slave_status}= undef;   ### Reset cache
     }
     else
@@ -191,16 +219,14 @@ sub _bulk_delete_low
         if (++$smooth_time > $self->{accelerating_throttling})
         {
           ### Bumpup LIMIT Clause.
-          $current_limit= int($current_limit * $self->{delete_row_multiplier});
-          _notef("Server: (%s:%d) It seems well %d times, limit_clause increasing to %d",
+          $current_limit= int($current_limit * $self->{delete_row_multiplier}) + 1;
+          _infof("Server: (%s:%d) It seems well %d times, limit_clause increasing to %d",
                  $self->{host}, $self->{port}, $smooth_time, $current_limit);
           $smooth_time= 0;
         }
       }
     }
   }
-
-  _notef("Finished to cleanup %s", $self->{table});
 }
 
 sub _table_check
@@ -255,6 +281,7 @@ sub _pickup_replica
   {
     if ($self->{disable_sql_log_bin})
     {
+      #O
       ### Not using binlog, generate Ytkit::BulkDelete itself with --without-replica flag.
       push(@{$self->{_replica_execute}}, Ytkit::BulkDelete->new($self->copy_all_param,
                                                                 "--host", $_->{host}, ### Override
@@ -311,6 +338,7 @@ sub wait_replica
   my $end= time();
   return $end - $start;
 }
+
 
 sub _config
 {

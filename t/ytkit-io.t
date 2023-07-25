@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2020, 2022  yoku0825
+# Copyright (C) 2020, 2023  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -29,6 +29,9 @@ require "$Bin/Test.pl";
 
 use Ytkit::IO;
 no warnings "once";
+
+### Fake PID for testing
+$$= 1;
 
 subtest "Output message functions without --force" => sub
 {
@@ -230,14 +233,14 @@ subtest "Output format" => sub
   $ENV{ytkit_force}= 0;
   $ENV{ytkit_verbose}= Ytkit::IO::DEBUG;
 
-  is(_infof("test"), "INFO: test\n", "_infof adds INFO:");
-  is(_infof("test\ntest2"), "INFO: test\nINFO: test2\n", "_infof adds INFO: each line");
-  is(_notef("test"), "NOTE: test\n", "_notef adds NOTE:");
-  is(_notef("test\ntest2"), "NOTE: test\nNOTE: test2\n", "_notef adds NOTE: each line");
-  is(_carpf("test"), "WARNING: test\n", "_carpf adds WARNING:");
-  is(_carpf("test\ntest2"), "WARNING: test\nWARNING: test2\n", "_carpf adds WARNING: each line");
-  is(_debugf("test"), "DEBUG: test\n", "_debugf adds DEBUG:");
-  is(_debugf("test\ntest2"), "DEBUG: test\nDEBUG: test2\n", "_debugf adds DEBUG: each line");
+  is(_infof("test"), "[1] INFO: test\n", "_infof adds INFO:");
+  is(_infof("test\ntest2"), "[1] INFO: test\n[1] INFO: test2\n", "_infof adds INFO: each line");
+  is(_notef("test"), "[1] NOTE: test\n", "_notef adds NOTE:");
+  is(_notef("test\ntest2"), "[1] NOTE: test\n[1] NOTE: test2\n", "_notef adds NOTE: each line");
+  is(_carpf("test"), "[1] WARNING: test\n", "_carpf adds WARNING:");
+  is(_carpf("test\ntest2"), "[1] WARNING: test\n[1] WARNING: test2\n", "_carpf adds WARNING: each line");
+  is(_debugf("test"), "[1] DEBUG: test\n", "_debugf adds DEBUG:");
+  is(_debugf("test\ntest2"), "[1] DEBUG: test\n[1] DEBUG: test2\n", "_debugf adds DEBUG: each line");
 
   eval
   {
@@ -249,7 +252,7 @@ subtest "Output format" => sub
   {
     _croakf("test\ntest2");
   };
-  like($@, qr{ERROR: test\nERROR: test2\n}, "_croakf adds ERROR: each line");
+  like($@, qr{\[1\] ERROR: test\n\[1\] ERROR: test2\n}, "_croakf adds ERROR: each line");
 
 
   done_testing;

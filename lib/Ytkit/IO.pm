@@ -69,7 +69,7 @@ sub _notef ### NORMAL, VERBOSE, DEBUG (Not --silent)
   return undef if $ENV{ytkit_verbose} < NORMAL;
 
   my $msg= _sprintf($format, @argv);
-  $msg= join("\n", map { sprintf("NOTE: %s", $_) } split(/\n/, $msg));
+  $msg= join("\n", map { sprintf("[%d] NOTE: %s", $$, $_) } split(/\n/, $msg));
   $msg= __adjust_trailing_linefeed($msg);
   return __out_stdout($msg);
 }
@@ -81,7 +81,7 @@ sub _infof ### VERBOSE, DEBUG (Only --verbose)
   return undef if $ENV{ytkit_verbose} < VERBOSE;
 
   my $msg= _sprintf($format, @argv);
-  $msg= join("\n", map { sprintf("INFO: %s", $_) } split(/\n/, $msg));
+  $msg= join("\n", map { sprintf("[%d] INFO: %s", $$, $_) } split(/\n/, $msg));
   $msg= __adjust_trailing_linefeed($msg);
   return __out_stdout($msg);
 }
@@ -93,7 +93,7 @@ sub _debugf ### DEBUG (Only --verbose --verbose (twice))
   return undef if $ENV{ytkit_verbose} < DEBUG;
 
   my $msg= _sprintf($format, @argv);
-  $msg= join("\n", map { sprintf("DEBUG: %s", $_) } split(/\n/, $msg));
+  $msg= join("\n", map { sprintf("[%d] DEBUG: %s", $$, $_) } split(/\n/, $msg));
   $msg= __adjust_trailing_linefeed($msg);
 
   return __out_stderr($msg);
@@ -104,7 +104,7 @@ sub _croakf
   my ($format, @argv)= @_;
 
   my $msg= _sprintf($format, @argv);
-  $msg= join("\n", map { sprintf("ERROR: %s", $_) } split(/\n/, $msg));
+  $msg= join("\n", map { sprintf("[%d] ERROR: %s", $$, $_) } split(/\n/, $msg));
   $msg= __adjust_trailing_linefeed($msg);
 
   if ($ENV{ytkit_force})
@@ -126,7 +126,7 @@ sub _carpf ### NORMAL, VERBOSE, DEBUG (Not --silent)
   return undef if $ENV{ytkit_verbose} < NORMAL;
 
   my $msg= _sprintf($format, @argv);
-  $msg= join("\n", map { sprintf("WARNING: %s", $_) } split(/\n/, $msg));
+  $msg= join("\n", map { sprintf("[%d] WARNING: %s", $$, $_) } split(/\n/, $msg));
   $msg= __adjust_trailing_linefeed($msg);
 
   carp($msg);

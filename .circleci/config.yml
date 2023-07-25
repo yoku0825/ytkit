@@ -28,7 +28,7 @@ jobs:
       - restore_cache:
           key: v0.1.14-4
       - run: dnf install -y perl-App-cpanminus gcc mysql-devel make rpm-build perl-DBD-MySQL perl-Time-Piece epel-release perl-JSON
-      - run: dnf install -y perl-Test-MockTime perl-Data-Dumper perl-Parallel-ForkManager
+      - run: dnf install -y perl-Test-MockTime perl-Data-Dumper
       - run: cpanm --installdeps .
       - save_cache:
           key: v0.1.14-4

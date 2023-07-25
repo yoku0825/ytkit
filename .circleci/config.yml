@@ -13,7 +13,7 @@ jobs:
       - run: cpanm App::cpanminus
       - run: /usr/local/bin/cpanm --installdeps .
       - save_cache:
-          key: v0.1.14-4
+          key: v0.5.2-4
           paths: ~/perl5
       - run:
           command: "make test"
@@ -31,7 +31,7 @@ jobs:
       - run: dnf install -y perl-Test-MockTime perl-Data-Dumper
       - run: cpanm --installdeps .
       - save_cache:
-          key: v0.1.14-4
+          key: v0.5.2-4
           paths: ~/perl5
       - run:
           command: "make test"
@@ -44,13 +44,13 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: v0.1.14-4
+          key: v0.5.2-4
       - run: apt update
       - run: apt install -y cpanminus gcc libmysqlclient-dev libdbd-mysql-perl libjson-perl libtest-mocktime-perl libterm-readkey-perl libparallel-forkmanager-perl
       - run: DEBIAN_FRONTEND=noninteractive apt install -y tzdata
       - run: cpanm --installdeps .
       - save_cache:
-          key: v0.1.14-4
+          key: v0.5.2-4
           paths: ~/perl5
       - run:
           command: "make test"

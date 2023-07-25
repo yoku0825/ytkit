@@ -9,7 +9,7 @@ jobs:
       - restore_cache:
           key: v0.1.14-4
       - run: yum install -y perl-App-cpanminus gcc mysql-devel perl-homedir make rpm-build perl-DBD-MySQL perl-Time-Piece epel-release perl-JSON perl-Term-ReadKey
-      - run: yum install -y perl-Test-MockTime perl-Carp-Always perl-Clone perl-Data-Dumper
+      - run: yum install -y perl-Test-MockTime perl-Carp-Always perl-Clone perl-Data-Dumper perl-Parallel-ForkManager
       - run: cpanm App::cpanminus
       - run: /usr/local/bin/cpanm --installdeps .
       - save_cache:
@@ -28,7 +28,7 @@ jobs:
       - restore_cache:
           key: v0.1.14-4
       - run: dnf install -y perl-App-cpanminus gcc mysql-devel make rpm-build perl-DBD-MySQL perl-Time-Piece epel-release perl-JSON
-      - run: dnf install -y perl-Test-MockTime perl-Data-Dumper
+      - run: dnf install -y perl-Test-MockTime perl-Data-Dumper perl-Parallel-ForkManager
       - run: cpanm --installdeps .
       - save_cache:
           key: v0.1.14-4
@@ -46,7 +46,7 @@ jobs:
       - restore_cache:
           key: v0.1.14-4
       - run: apt update
-      - run: apt install -y cpanminus gcc libmysqlclient-dev libdbd-mysql-perl libjson-perl libtest-mocktime-perl libterm-readkey-perl
+      - run: apt install -y cpanminus gcc libmysqlclient-dev libdbd-mysql-perl libjson-perl libtest-mocktime-perl libterm-readkey-perl libparallel-forkmanager-perl
       - run: DEBIAN_FRONTEND=noninteractive apt install -y tzdata
       - run: cpanm --installdeps .
       - save_cache:

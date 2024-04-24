@@ -2,6 +2,59 @@
 
 - This is Yoku-san no Tool KIT scripts.
 
+# tool overview
+
+|         tool         |                        works                        |
+| -------------------- | --------------------------------------------------- |
+| yt-alter-progress    | Observe ALTER TABLE progress                        |
+| yt-binlog-groupby    | Aggregate mysqlbinlog output                        |
+| yt-bulk-delete       | DELETE all rows in the table                        |
+| yt-collect           | Collect SHOW STATUS and more data source            |
+| yt-healthcheck       | Nagios compatible observe script                    |
+| yt-print-information | Dump information for diagnostic                     |
+| yt-repl-topology     | Show replication topology by human-readable or JSON |
+| yt-wait-replication  | Wait until Seconds_Behind_Source < threshold        |
+
+
+## yt-alter-progress
+
+- You need to launch this before starting ALTER TABLE, or a progress is not shown (this maybe performance_schema's limitation)
+- Display progress InnoDB ALTER TABLE (need >= 5.7.6)
+
+|              option_name              |            default             |                                                     text                                                      |
+| ------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| --host=value, -h=value                | "localhost"                    | MySQL host                                                                                                    |
+| --port=value, -P=value                | 3306                           | MySQL port                                                                                                    |
+| --user=value, -u=value                | (as same as OS user)           | MySQL account using for connection and checking (need REPLICATION CLIENT, PROCESSLIST and global SELECT priv) |
+| --password=value, -p=value            | ""                             | Password for the user specified by --user                                                                     |
+| --ask_pass, --ask_password, --askpass | false                          | Ask --password by prompt                                                                                      |
+| --socket=value, -S=value              | (depends on libmysqlclient.so) | Path to mysql.sock (this parameter is used when --host=localhost)                                             |
+| --interval=value, -i=value            | 10                             | Sleeping duration for each SELECT                                                                             |
+| --quiet, --silent, -q, -s             | false                          | No output any messages                                                                                        |
+| --verbose, -v                         | false                          | Verbose output mode                                                                                           |
+| --help, --usage                       | false                          | print help message                                                                                            |
+| --version, -V                         | false                          | Show ytkit version                                                                                            |
+| --timeout=value                       | 1                              | Seconds before timeout (Set into read_timeout, write_timeout, connect_timeout)                                |
+| --debug                               | false                          | Set debug output                                                                                              |
+
+
+### Example
+
+- Values are `percentage of work_completed / work_estimated`, `estimated time calculated by percentage`, `elapsed time from starting ALTER TABLE`, `stage information`, `ALTER TABLE statement` .
+
+```
+$ yt-alter-progress -h127.0.0.1 -uroot -p'password' -i 100
+..
+[ 38.31% ( 1610 sec | 1000 sec) ] stage/innodb/alter table (read PK and internal sort) : OPTIMIZE TABLE t1
+[ 61.58% ( 1248 sec | 2000 sec) ] stage/innodb/alter table (merge sort) : OPTIMIZE TABLE t1
+[ 100.00% ( 0 sec | 2410 sec) ] stage/innodb/alter table (insert) : OPTIMIZE TABLE t1
+[ 100.00% ( 0 sec | 2420 sec) ] stage/innodb/alter table (flush) : OPTIMIZE TABLE t1
+[ 100.00% ( 0 sec | 2440 sec) ] stage/innodb/alter table (log apply table) : OPTIMIZE TABLE t1
+[ 100.00% ( 0 sec | 2450 sec) ] stage/innodb/alter table (log apply table) : OPTIMIZE TABLE t1
+[ 100.00% ( 0 sec | 2460 sec) ] stage/innodb/alter table (log apply table) : OPTIMIZE TABLE t1
+[ 100.00% ( 0 sec | 2470 sec) ] stage/innodb/alter table (log apply table) : OPTIMIZE TABLE t1
+```
+
 ## yt-binlog-groupby
 
 - mysqlbinlog summerize tool.
@@ -41,16 +94,6 @@ $ yt-wait-replication -h 172.17.0.1 -u user_name -p'password' -P 3306 --seconds-
 
 ```
 $ yt-collect -h 172.17.0.1 -u user_name -p'password' -P 3306 --iteration=60 --interval=60 --table_size-enable=1 --output=sql
-```
-
-## yt-alter-progress
-
-- Display progress InnoDB ALTER TABLE (need >= 5.7.6)
-
-```
-$ yt-alter-progress -h127.0.0.1 -uroot -p'password'
-..
-(Need Ctrl + C for exit)
 ```
 
 ## yt-repl-topology

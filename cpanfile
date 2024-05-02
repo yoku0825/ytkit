@@ -1,5 +1,5 @@
 requires "DBI";
-requires "DBD::mysql", ">= 4.030, < 5.001"
+requires "DBD::mysql", ">= 4.030, < 5.001";
 requires "Time::Piece";
 requires "Carp";
 requires "Test::More";

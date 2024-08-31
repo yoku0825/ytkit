@@ -45,14 +45,14 @@
 ```
 $ yt-alter-progress -h127.0.0.1 -uroot -p'password' -i 100
 ..
-[ 38.31% ( 1610 sec | 1000 sec) ] stage/innodb/alter table (read PK and internal sort) : OPTIMIZE TABLE t1
-[ 61.58% ( 1248 sec | 2000 sec) ] stage/innodb/alter table (merge sort) : OPTIMIZE TABLE t1
-[ 100.00% ( 0 sec | 2410 sec) ] stage/innodb/alter table (insert) : OPTIMIZE TABLE t1
-[ 100.00% ( 0 sec | 2420 sec) ] stage/innodb/alter table (flush) : OPTIMIZE TABLE t1
-[ 100.00% ( 0 sec | 2440 sec) ] stage/innodb/alter table (log apply table) : OPTIMIZE TABLE t1
-[ 100.00% ( 0 sec | 2450 sec) ] stage/innodb/alter table (log apply table) : OPTIMIZE TABLE t1
-[ 100.00% ( 0 sec | 2460 sec) ] stage/innodb/alter table (log apply table) : OPTIMIZE TABLE t1
-[ 100.00% ( 0 sec | 2470 sec) ] stage/innodb/alter table (log apply table) : OPTIMIZE TABLE t1
+| [ 38.31% ( 1610 sec | 1000 sec) ] stage/innodb/alter table (read PK and internal sort) : OPTIMIZE TABLE t1 |
+| [ 61.58% ( 1248 sec | 2000 sec) ] stage/innodb/alter table (merge sort) : OPTIMIZE TABLE t1                |
+| [ 100.00% ( 0 sec   | 2410 sec) ] stage/innodb/alter table (insert) : OPTIMIZE TABLE t1                    |
+| [ 100.00% ( 0 sec   | 2420 sec) ] stage/innodb/alter table (flush) : OPTIMIZE TABLE t1                     |
+| [ 100.00% ( 0 sec   | 2440 sec) ] stage/innodb/alter table (log apply table) : OPTIMIZE TABLE t1           |
+| [ 100.00% ( 0 sec   | 2450 sec) ] stage/innodb/alter table (log apply table) : OPTIMIZE TABLE t1           |
+| [ 100.00% ( 0 sec   | 2460 sec) ] stage/innodb/alter table (log apply table) : OPTIMIZE TABLE t1           |
+| [ 100.00% ( 0 sec   | 2470 sec) ] stage/innodb/alter table (log apply table) : OPTIMIZE TABLE t1           |
 ```
 
 ## yt-binlog-groupby
@@ -60,14 +60,15 @@ $ yt-alter-progress -h127.0.0.1 -uroot -p'password' -i 100
 - mysqlbinlog summerize tool like a `SELECT COUNT(*) GROUP BY ..`
 - pass `mysqlbinlog -vv` 's output by pipe
 
-|              option_name              |            default             |                                                     text                                                      |
-| ------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------- |
-|--cell, -c | 10m | Time aggregation period when `--group-by` includes "time". Variations are s, second, 1s, 10s, m, minute, 1m, 10m, h, hour, 1h, d, 1d|
-|--group-by, -g| time | How aggregate the `mysqlbinlog -vv` 's output. "time", "table", "statement", "time,table", "time,statement", "table,statement", "all", "time,table,statement" (same as "all"),  "all,exec", "exec,time,table,statement" (same as "all,exec")|
-|--output, -o| tsv | ~How to print aggregated output~ This feature is breaking. See [Issue #54](https://github.com/yoku0825/ytkit/issues/54)
-| --verbose, -v                         | false                          | Verbose output mode                                                                                           |
-| --help, --usage                       | false                          | print help message                                                                                            |
-| --version, -V                         | false                          | Show ytkit version                                                                                            |
+|   option_name   | default |                                                                                                                     text                                                                                                                     |
+| --------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| --cell, -c      | 10m     | Time aggregation period when `--group-by` includes "time". Variations are s, second, 1s, 10s, m, minute, 1m, 10m, h, hour, 1h, d, 1d                                                                                                         |
+| --group-by, -g  | time    | How aggregate the `mysqlbinlog -vv` 's output. "time", "table", "statement", "time,table", "time,statement", "table,statement", "all", "time,table,statement" (same as "all"),  "all,exec", "exec,time,table,statement" (same as "all,exec") |
+| --output, -o    | tsv     | ~How to print aggregated output~ This feature is breaking. See [Issue #54](https://github.com/yoku0825/ytkit/issues/54)                                                                                                                      |
+| --verbose, -v   | false   | Verbose output mode                                                                                                                                                                                                                          |
+| --help, --usage | false   | print help message                                                                                                                                                                                                                           |
+| --version, -V   | false   | Show ytkit version                                                                                                                                                                                                                           |
+| --debug         | false   | Set debug output                                                                                                                                                                                                                             |
 
 
 ### Example

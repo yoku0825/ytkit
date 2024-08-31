@@ -57,20 +57,37 @@ $ yt-alter-progress -h127.0.0.1 -uroot -p'password' -i 100
 
 ## yt-binlog-groupby
 
-- mysqlbinlog summerize tool.
+- mysqlbinlog summerize tool like a `SELECT COUNT(*) GROUP BY ..`
+- pass `mysqlbinlog -vv` 's output by pipe
+
+|              option_name              |            default             |                                                     text                                                      |
+| ------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+|--cell, -c | 10m | Time aggregation period when `--group-by` includes "time". Variations are s, second, 1s, 10s, m, minute, 1m, 10m, h, hour, 1h, d, 1d|
+|--group-by, -g| time | How aggregate the `mysqlbinlog -vv` 's output. "time", "table", "statement", "time,table", "time,statement", "table,statement", "all", "time,table,statement" (same as "all"),  "all,exec", "exec,time,table,statement" (same as "all,exec")|
+|--output, -o| tsv | ~How to print aggregated output~ This feature is breaking. See [Issue #54](https://github.com/yoku0825/ytkit/issues/54)
+| --verbose, -v                         | false                          | Verbose output mode                                                                                           |
+| --help, --usage                       | false                          | print help message                                                                                            |
+| --version, -V                         | false                          | Show ytkit version                                                                                            |
+
+
+### Example
 
 ```
-$ mysqlbinlog -vv /path/to/binlog | yt-binlog-groupby --cell=10m --group-by=time,table
-binlog entries between 170720 15:10 and 170817 17:40
-170720 15:10    d1.t1   2
-170720 15:20    d1.t1   1
-170724 14:20    mysqlslap.t1    644
-170724 14:50    t1      644
-170724 15:40    t1      644
-170724 20:00    d1.t1   2
-170724 20:00    t2      1
-170814 18:20    d1.t1   1
+$ mysqlbinlog -vv bin.000017 | yt-binlog-groupby --cell=10m --group-by=time,table
+240821 15:20    d1.t1   2
+240821 15:20    mysql.user      1
+240822 11:00    d1.t1   1000000
 ```
+
+```
+$ mysqlbinlog -vv bin.000022 | yt-binlog-groupby --cell=10s --group-by=time,table,statement
+240831 22:10:40 mysqlslap.t1    INSERT  110
+240831 22:10:50 mysqlslap.t1    INSERT  220
+240831 22:11:20 mysqlslap.t1    INSERT  110
+240831 22:11:40 mysqlslap.t1    INSERT  99
+240831 22:11:40 mysqlslap.t1    UPDATE  1980
+```
+
 
 ## yt-healthcheck
 

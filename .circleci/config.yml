@@ -8,6 +8,7 @@ jobs:
       - checkout
       - restore_cache:
           key: v0.1.14-4
+      - run: sed -i 's|#baseurl=http://mirror.centos.org/|baseurl=http://vault.centos.org/|' /etc/yum.repos.d/CentOS-*
       - run: yum install -y perl-App-cpanminus gcc mysql-devel perl-homedir make rpm-build perl-DBD-MySQL perl-Time-Piece epel-release perl-JSON perl-Term-ReadKey
       - run: yum install -y perl-Test-MockTime perl-Carp-Always perl-Clone perl-Data-Dumper perl-Parallel-ForkManager
       - run: cpanm App::cpanminus
@@ -27,6 +28,7 @@ jobs:
       - checkout
       - restore_cache:
           key: v0.1.14-4
+      - run: sed -i 's|#baseurl=http://mirror.centos.org/|baseurl=http://vault.centos.org/|' /etc/yum.repos.d/CentOS-*
       - run: dnf install -y perl-App-cpanminus gcc mysql-devel make rpm-build perl-DBD-MySQL perl-Time-Piece epel-release perl-JSON
       - run: dnf install -y perl-Test-MockTime perl-Data-Dumper
       - run: cpanm --installdeps .

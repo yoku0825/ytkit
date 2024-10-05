@@ -39,6 +39,24 @@ jobs:
           command: "make test"
           environment:
             TZ: "UTC-9"
+  test_on_rocky9:
+    docker:
+      - image: rockylinux:9
+    working_directory: ~/ytkit
+    steps:
+      - checkout
+      - restore_cache:
+          key: v0.1.14-4
+      - run: dnf install -y perl-App-cpanminus gcc make rpm-build perl-DBD-MySQL perl-Time-Piece epel-release perl-JSON
+      - run: dnf install -y perl-Test-MockTime perl-Data-Dumper
+      - run: cpanm --installdeps .
+      - save_cache:
+          key: v0.5.2-4
+          paths: ~/perl5
+      - run:
+          command: "make test"
+          environment:
+            TZ: "UTC-9"
   test_on_ubuntu2204:
     docker: 
       - image: ubuntu:22.04

@@ -6,16 +6,11 @@ jobs:
     working_directory: ~/ytkit
     steps:
       - checkout
-      - restore_cache:
-          key: v0.1.14-4
       - run: sed -i 's|#baseurl=http://mirror.centos.org/|baseurl=http://vault.centos.org/|' /etc/yum.repos.d/CentOS-*
       - run: yum install -y perl-App-cpanminus gcc mysql-devel perl-homedir make rpm-build perl-DBD-MySQL perl-Time-Piece epel-release perl-JSON perl-Term-ReadKey
       - run: yum install -y perl-Test-MockTime perl-Carp-Always perl-Clone perl-Data-Dumper perl-Parallel-ForkManager
       - run: cpanm App::cpanminus
       - run: /usr/local/bin/cpanm --installdeps .
-      - save_cache:
-          key: v0.5.2-4
-          paths: ~/perl5
       - run:
           command: "make test"
           environment:
@@ -26,15 +21,10 @@ jobs:
     working_directory: ~/ytkit
     steps:
       - checkout
-      - restore_cache:
-          key: v0.1.14-4
       - run: sed -i 's|#baseurl=http://mirror.centos.org/|baseurl=http://vault.centos.org/|' /etc/yum.repos.d/CentOS-*
       - run: dnf install -y perl-App-cpanminus gcc mysql-devel make rpm-build perl-DBD-MySQL perl-Time-Piece epel-release perl-JSON
       - run: dnf install -y perl-Test-MockTime perl-Data-Dumper
       - run: cpanm --installdeps .
-      - save_cache:
-          key: v0.5.2-4
-          paths: ~/perl5
       - run:
           command: "make test"
           environment:
@@ -45,14 +35,9 @@ jobs:
     working_directory: ~/ytkit
     steps:
       - checkout
-      - restore_cache:
-          key: v0.1.14-4
       - run: dnf install -y perl-App-cpanminus gcc make rpm-build perl-DBD-MySQL perl-Time-Piece epel-release perl-JSON
       - run: dnf install -y perl-Test-MockTime perl-Data-Dumper
       - run: cpanm --installdeps .
-      - save_cache:
-          key: v0.5.2-4
-          paths: ~/perl5
       - run:
           command: "make test"
           environment:
@@ -63,15 +48,10 @@ jobs:
     working_directory: ~/ytkit
     steps:
       - checkout
-      - restore_cache:
-          key: v0.5.2-4
       - run: apt update
       - run: apt install -y cpanminus gcc libmysqlclient-dev libdbd-mysql-perl libjson-perl libtest-mocktime-perl libterm-readkey-perl libparallel-forkmanager-perl
       - run: DEBIAN_FRONTEND=noninteractive apt install -y tzdata
       - run: cpanm --installdeps .
-      - save_cache:
-          key: v0.5.2-4
-          paths: ~/perl5
       - run:
           command: "make test"
           environment:
@@ -82,4 +62,5 @@ workflows:
     jobs:
       - test_on_centos7
       - test_on_centos8
+      - test_on_rocky9
       - test_on_ubuntu2204

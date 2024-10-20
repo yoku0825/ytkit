@@ -55,6 +55,8 @@ $ yt-alter-progress -h127.0.0.1 -uroot -p'password' -i 100
 | [ 100.00% ( 0 sec   | 2470 sec) ] stage/innodb/alter table (log apply table) : OPTIMIZE TABLE t1           |
 ```
 
+- Whole sample logs are [yt\-alter\-progress](https://gist.github.com/yoku0825/f09f7c50bf57a1935368639112761310)
+
 ## yt-binlog-groupby
 
 - mysqlbinlog summerize tool like a `SELECT COUNT(*) GROUP BY ..`
@@ -88,6 +90,42 @@ $ mysqlbinlog -vv bin.000022 | yt-binlog-groupby --cell=10s --group-by=time,tabl
 240831 22:11:40 mysqlslap.t1    INSERT  99
 240831 22:11:40 mysqlslap.t1    UPDATE  1980
 ```
+
+## yt-bulk-delete
+
+- Only one purpose that "deleting all rows in target table" little by little as soon as possible.
+  - Original mode: DELETE at ReplicationSource node, observe all Replica's `Seconds_Behind_Master` amd handling an accell or a break.
+  - Parallel mode: sql_log_bin=OFFed DELETE at Source and All Replicas(replicas has been discovered automatically)
+- To more safety when unnecessay table to drop, empty table seems safety&lightly DROP TABLE.
+
+
+|                        option_name                        |            default             |                                                                                                                                                                 text                                                                                                                                                                 |
+| --------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| --host=value, -h=value                                    | "localhost"                    | MySQL host                                                                                                                                                                                                                                                                                                                           |
+| --port=value, -P=value                                    | 3306                           | MySQL port                                                                                                                                                                                                                                                                                                                           |
+| --user=value, -u=value                                    | (as same as OS user)           | MySQL account using for connection and checking (need REPLICATION CLIENT, PROCESSLIST and global SELECT priv)                                                                                                                                                                                                                        |
+| --password=value, -p=value                                | ""                             | Password for the user specified by --user                                                                                                                                                                                                                                                                                            |
+| --ask_pass, --ask_password, --askpass                     | false                          | Ask --password by prompt                                                                                                                                                                                                                                                                                                             |
+| --socket=value, -S=value                                  | (depends on libmysqlclient.so) | Path to mysql.sock (this parameter is used when --host=localhost)                                                                                                                                                                                                                                                                    |
+| --interval=value, -i=value                                | 10                             | Sleeping duration for each SELECT                                                                                                                                                                                                                                                                                                    |
+| --quiet, --silent, -q, -s                                 | false                          | No output any messages                                                                                                                                                                                                                                                                                                               |
+| --verbose, -v                                             | false                          | Verbose output mode                                                                                                                                                                                                                                                                                                                  |
+| --help, --usage                                           | false                          | print help message                                                                                                                                                                                                                                                                                                                   |
+| --version, -V                                             | false                          | Show ytkit version                                                                                                                                                                                                                                                                                                                   |
+| --timeout=value                                           | 1                              | Seconds before timeout (Set into read_timeout, write_timeout, connect_timeout)                                                                                                                                                                                                                                                       |
+| --debug                                                   | false                          | Set debug output                                                                                                                                                                                                                                                                                                                     |
+| --accelerating_throttling=value           F               | 2                              | How many times DELETE succeed smoothly, before accelerating LIMIT Clause.                                                                                                                                                                                                                                                            |
+| --delete_row_multiplier=value                             | 1.1                            | Change LIMIT Clause dinamically by multiplying this number. When script detects 'Smooth', next LIMIT Caluse is current_limit * delete_row_multiplier. When script detects 'Busy', next LIMIT Clause is current_limit / delete_row_multiplier.If you specify --delete_row_multiplier=1, the script doesn't change LIMIT Clause value. |
+| --delete_row_start=value,  --delete_row_start_count=value | 1000                           | Start value of LIMIT Clause (DELETE FROM `<table>` LIMIT ?)                                                                                                                                                                                                                                                                          |
+| --force, -f                                               | false                          | Force execute even if the table doesn't have Primary Key.                                                                                                                                                                                                                                                                            |
+| --table=value                                             | ""                             | (Mandatory) Target table name. Should be specified `<database>.<table>`                                                                                                                                                                                                                                                              |
+| --timer_wait=value                                        | 1                              | Seconds which allowed each iteration                                                                  - Execution time of DELETE > --timer_wait, start throttling.                                                                                                                                                                   |
+
+- Throttling mechanism
+  - Waiting time of waiting while Seconds_Behind_Master < --timer_wait, start throttling. 
+  - Execution time of DELETE < --timer_wait keeps --accelerating_throttling times, start accelerating.
+  - Seconds_Behind_Master > --timer_wait, script sleeping.
+  - New throttled/accelerated `LIMIT` calculated by --delete_row_multiplier
 
 
 ## yt-healthcheck

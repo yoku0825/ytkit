@@ -1,7 +1,7 @@
 package Ytkit::BinlogGroupby;
 
 ########################################################################
-# Copyright (C) 2014, 2021  yoku0825
+# Copyright (C) 2014, 2025  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -92,6 +92,15 @@ sub parse
     $self->{last_seen}    = $1;
     $self->{exec_time}    = sprintf("exec_time:%d", $2);
   }
+  ### GTID event
+  elsif ($line =~ /$self->{gtid_parse}/)
+  {
+    ### TODO: overwrite or ignore timestamp?
+    $self->{time_string}  = sprintf($self->{print_format}, $1);
+    $self->{first_seen} ||= $1;
+    $self->{last_seen}    = $1;
+    $self->{transaction_length} = $2 || 0;
+  }
   ### USE statement
   elsif ($line =~ /^use\s([^\/]+)/)
   {
@@ -117,7 +126,8 @@ sub parse
     my $event= { time_string => $self->{time_string},
                  table       => $table,
                  statement   => $dml,
-                 exec_time   => $self->{exec_time} };
+                 exec_time   => $self->{exec_time},
+                 transaction_length => $self->{transaction_length}, };
 
     _debugf({ %$event, previous_time => $self->{previous_time} });
 
@@ -160,47 +170,55 @@ sub output
 sub set_parser
 {
   my ($self)= @_;
-  my ($parse, $format);
+  my ($parse, $format, $gtid_parse);
   my $cell= $self->{cell};
 
   if (grep { $cell eq $_ } qw{d day 1d})
   {
     $parse = qr/^#(\d{2}\d{2}\d{2})\s+\d{1,2}:\d{2}:\d{2}.+exec_time=(\d+)/;
     $format= "%s";
+    $gtid_parse = qr/^#(\d{2}\d{2}\d{2})\s+\d{1,2}:\d{2}:\d{2}.+GTID\s+(?:.+transaction_length=(\d+))?/;
   }
   elsif (grep { $cell eq $_ } qw{h hour 1h})
   {
     $parse = qr/^#(\d{2}\d{2}\d{2}\s+\d{1,2}):\d{2}:\d{2}.+exec_time=(\d+)/;
     $format= "%s:00";
+    $gtid_parse = qr/^#(\d{2}\d{2}\d{2}\s+\d{1,2}):\d{2}:\d{2}.+GTID\s+(?:.+transaction_length=(\d+))?/;
   }
   elsif (grep { $cell eq $_ } qw{m minute 1m})
   {
     $parse = qr/^#(\d{2}\d{2}\d{2}\s+\d{1,2}:\d{2}):\d{2}.+exec_time=(\d+)/;
     $format= "%s";
+    $gtid_parse = qr/^#(\d{2}\d{2}\d{2}\s+\d{1,2}:\d{2}):\d{2}.+GTID\s+(?:.+transaction_length=(\d+))?/;
   }
   elsif (grep { $cell eq $_ } qw{10m})
   {
     $parse = qr/^#(\d{2}\d{2}\d{2}\s+\d{1,2}:\d{1})\d{1}:\d{2}.+exec_time=(\d+)/;
     $format= "%s0";
+    $gtid_parse = qr/^#(\d{2}\d{2}\d{2}\s+\d{1,2}:\d{1})\d{1}:\d{2}.+GTID\s+(?:.+transaction_length=(\d+))?/;
   }
   elsif (grep { $cell eq $_ } qw{10s})
   {
     $parse = qr/^#(\d{2}\d{2}\d{2}\s+\d{1,2}:\d{2}:\d{1})\d{1}.+exec_time=(\d+)/;
     $format= "%s0";
+    $gtid_parse = qr/^#(\d{2}\d{2}\d{2}\s+\d{1,2}:\d{2}:\d{1})\d{1}.+GTID\s+(?:.+transaction_length=(\d+))?/;
   }
   elsif (grep { $cell eq $_ } qw{s second 1s})
   {
     $parse = qr/^#(\d{2}\d{2}\d{2}\s+\d{1,2}:\d{2}:\d{2}).+exec_time=(\d+)/;
     $format= "%s";
+    $gtid_parse = qr/^#(\d{2}\d{2}\d{2}\s+\d{1,2}:\d{2}:\d{2}).+GTID\s+(?:.+transaction_length=(\d+))?/;
   }
   else
   {
-    $parse = undef;
-    $format= undef;
+    $parse     = undef;
+    $format    = undef;
+    $gtid_parse= undef;
   }
   _debugf("Parse REGEXP: %s", $parse);
   $self->{header_parser}= $parse;
   $self->{print_format} = $format;
+  $self->{gtid_parse}   = $gtid_parse;
 }
 
 sub _config

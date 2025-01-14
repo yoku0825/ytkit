@@ -1,7 +1,7 @@
 package Ytkit::GroupbyHelper;
 
 ########################################################################
-# Copyright (C) 2014, 2021  yoku0825
+# Copyright (C) 2014, 2025  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -28,6 +28,7 @@ use utf8;
 ###   table => "",
 ###   statement => "",
 ###   exec_time => "",
+###   transaction_length => "",
 ### };
 
 use constant NEED_FULL_SORT    => 1;
@@ -118,7 +119,11 @@ sub _print_n_element
   {
     foreach (sort(keys(%$hash)))
     {
-      push(@ret, sprintf("%s\t%d\n", $_, $hash->{$_}));
+      my $tmp= sprintf("%s\t%d", $_, $hash->{$_}->{counter});
+      $tmp .= sprintf("\ttotal_transaction_size: %d", $hash->{$_}->{transaction_length}) if $hash->{$_}->{transaction_length};
+      $tmp .= "\n";
+
+      push(@ret, $tmp);
     }
   }
   else
@@ -141,7 +146,8 @@ use base "Ytkit::GroupbyHelper::Groupby_Base";
 sub increment
 {
   my ($self, $event)= @_;
-  $self->{$event->{time_string}}++;
+  $self->{$event->{time_string}}->{counter}++;
+  $self->{$event->{time_string}}->{transaction_length} += $event->{transaction_length} // 0;
 }
 
 sub result
@@ -157,7 +163,8 @@ use base "Ytkit::GroupbyHelper::Groupby_Base";
 sub increment
 {
   my ($self, $event)= @_;
-  $self->{$event->{table}}++;
+  $self->{$event->{table}}->{counter}++;
+  $self->{$event->{table}}->{transaction_length} += $event->{transaction_length} // 0;
 }
 
 sub result
@@ -173,7 +180,8 @@ use base "Ytkit::GroupbyHelper::Groupby_Base";
 sub increment
 {
   my ($self, $event)= @_;
-  $self->{$event->{statement}}++;
+  $self->{$event->{statement}}->{counter}++;
+  $self->{$event->{statement}}->{transaction_length} += $event->{transaction_length} // 0;
 }
 
 sub result
@@ -189,7 +197,8 @@ use base "Ytkit::GroupbyHelper::Groupby_Base";
 sub increment
 {
   my ($self, $event)= @_;
-  $self->{$event->{time_string}}->{$event->{statement}}++;
+  $self->{$event->{time_string}}->{$event->{statement}}->{counter}++;
+  $self->{$event->{time_string}}->{$event->{statement}}->{transaction_length} += $event->{transaction_length} // 0;
 }
 
 sub result
@@ -205,7 +214,8 @@ use base "Ytkit::GroupbyHelper::Groupby_Base";
 sub increment
 {
   my ($self, $event)= @_;
-  $self->{$event->{time_string}}->{$event->{table}}++;
+  $self->{$event->{time_string}}->{$event->{table}}->{counter}++;
+  $self->{$event->{time_string}}->{$event->{table}}->{transaction_length} += $event->{transaction_length} // 0;
 }
 
 sub result
@@ -221,7 +231,8 @@ use base "Ytkit::GroupbyHelper::Groupby_Base";
 sub increment
 {
   my ($self, $event)= @_;
-  $self->{$event->{table}}->{$event->{statement}}++;
+  $self->{$event->{table}}->{$event->{statement}}->{counter}++;
+  $self->{$event->{table}}->{$event->{statement}}->{transaction_length} += $event->{transaction_length} // 0;
 }
 
 sub result
@@ -237,7 +248,8 @@ use base "Ytkit::GroupbyHelper::Groupby_Base";
 sub increment
 {
   my ($self, $event)= @_;
-  $self->{$event->{time_string}}->{$event->{table}}->{$event->{statement}}++;
+  $self->{$event->{time_string}}->{$event->{table}}->{$event->{statement}}->{counter}++;
+  $self->{$event->{time_string}}->{$event->{table}}->{$event->{statement}}->{transaction_length} += $event->{transaction_length} // 0;
 }
 
 sub result
@@ -253,7 +265,8 @@ use base "Ytkit::GroupbyHelper::Groupby_Base";
 sub increment
 {
   my ($self, $event)= @_;
-  $self->{$event->{time_string}}->{$event->{table}}->{$event->{statement}}->{$event->{exec_time}}++;
+  $self->{$event->{time_string}}->{$event->{table}}->{$event->{statement}}->{$event->{exec_time}}->{counter}++;
+  $self->{$event->{time_string}}->{$event->{table}}->{$event->{statement}}->{$event->{exec_time}}->{transaction_length} += $event->{transaction_length} // 0;
 }
 
 sub result

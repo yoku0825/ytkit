@@ -1,7 +1,7 @@
 package Ytkit::GroupbyHelper;
 
 ########################################################################
-# Copyright (C) 2014, 2025  yoku0825
+# Copyright (C) 2014, 2026  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -21,6 +21,7 @@ package Ytkit::GroupbyHelper;
 use strict;
 use warnings;
 use utf8;
+use Ytkit::IO;
 
 ### my $event=
 ### {
@@ -120,7 +121,11 @@ sub _print_n_element
     foreach (sort(keys(%$hash)))
     {
       my $tmp= sprintf("%s\t%d", $_, $hash->{$_}->{counter});
-      $tmp .= sprintf("\ttotal_transaction_size: %d", $hash->{$_}->{transaction_length}) if $hash->{$_}->{transaction_length};
+
+      if ($ENV{ytkit_verbose} >= Ytkit::IO::VERBOSE)
+      {
+        $tmp .= sprintf("\tsum_transaction_size: %d", $hash->{$_}->{transaction_length}) if $hash->{$_}->{transaction_length};
+      }
       $tmp .= "\n";
 
       push(@ret, $tmp);

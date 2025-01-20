@@ -68,10 +68,6 @@ sub make_group_by_class
   {
     return (NO_NEED_FULL_SORT, Ytkit::GroupbyHelper::Groupby_TimeTableStatement->new);
   }
-  elsif ($group_by eq "all,exec" || $group_by eq "exec,statement,table,time")
-  {
-    return (NO_NEED_FULL_SORT, Ytkit::GroupbyHelper::Groupby_TimeTableStatementExec->new);
-  }
   else
   {
     return (undef, undef);
@@ -90,6 +86,7 @@ package Ytkit::GroupbyHelper::Groupby_Base;
 use strict;
 use warnings;
 use utf8;
+use List::Util qw{ max };
 
 sub new
 {
@@ -124,7 +121,8 @@ sub _print_n_element
 
       if ($ENV{ytkit_verbose} >= Ytkit::IO::VERBOSE)
       {
-        $tmp .= sprintf("\tsum_transaction_size: %d", $hash->{$_}->{transaction_length}) if $hash->{$_}->{transaction_length};
+        $tmp .= sprintf("\tmax_exec_time: %d", $hash->{$_}->{max_exec_time} ? $hash->{$_}->{max_exec_time} : 0);
+        $tmp .= sprintf("\tsum_transaction_size: %d", $hash->{$_}->{transaction_length} ? $hash->{$_}->{transaction_length} : 0);
       }
       $tmp .= "\n";
 
@@ -152,6 +150,7 @@ sub increment
 {
   my ($self, $event)= @_;
   $self->{$event->{time_string}}->{counter}++;
+  $self->{$event->{time_string}}->{max_exec_time} = List::Util::max($event->{exec_time}, $self->{$event->{time_string}}->{max_exec_time} // 0);
   $self->{$event->{time_string}}->{transaction_length} += $event->{transaction_length} // 0;
 }
 
@@ -169,6 +168,7 @@ sub increment
 {
   my ($self, $event)= @_;
   $self->{$event->{table}}->{counter}++;
+  $self->{$event->{table}}->{max_exec_time} = List::Util::max($event->{exec_time}, $self->{$event->{table}}->{max_exec_time} // 0);
   $self->{$event->{table}}->{transaction_length} += $event->{transaction_length} // 0;
 }
 
@@ -186,6 +186,7 @@ sub increment
 {
   my ($self, $event)= @_;
   $self->{$event->{statement}}->{counter}++;
+  $self->{$event->{statement}}->{max_exec_time} = List::Util::max($event->{exec_time}, $self->{$event->{statement}}->{max_exec_time} // 0);
   $self->{$event->{statement}}->{transaction_length} += $event->{transaction_length} // 0;
 }
 
@@ -203,6 +204,7 @@ sub increment
 {
   my ($self, $event)= @_;
   $self->{$event->{time_string}}->{$event->{statement}}->{counter}++;
+  $self->{$event->{time_string}}->{$event->{statement}}->{max_exec_time} = List::Util::max($event->{exec_time}, $self->{$event->{time_string}}->{$event->{statement}}->{max_exec_time} // 0);
   $self->{$event->{time_string}}->{$event->{statement}}->{transaction_length} += $event->{transaction_length} // 0;
 }
 
@@ -220,6 +222,7 @@ sub increment
 {
   my ($self, $event)= @_;
   $self->{$event->{time_string}}->{$event->{table}}->{counter}++;
+  $self->{$event->{time_string}}->{$event->{table}}->{max_exec_time} = List::Util::max($event->{exec_time}, $self->{$event->{time_string}}->{$event->{table}}->{max_exec_time} // 0);
   $self->{$event->{time_string}}->{$event->{table}}->{transaction_length} += $event->{transaction_length} // 0;
 }
 
@@ -237,6 +240,7 @@ sub increment
 {
   my ($self, $event)= @_;
   $self->{$event->{table}}->{$event->{statement}}->{counter}++;
+  $self->{$event->{table}}->{$event->{statement}}->{max_exec_time} = List::Util::max($event->{exec_time}, $self->{$event->{table}}->{$event->{statement}}->{max_exec_time} // 0);
   $self->{$event->{table}}->{$event->{statement}}->{transaction_length} += $event->{transaction_length} // 0;
 }
 
@@ -254,6 +258,7 @@ sub increment
 {
   my ($self, $event)= @_;
   $self->{$event->{time_string}}->{$event->{table}}->{$event->{statement}}->{counter}++;
+  $self->{$event->{time_string}}->{$event->{table}}->{$event->{statement}}->{max_exec_time} = List::Util::max($event->{exec_time}, $self->{$event->{time_string}}->{$event->{table}}->{$event->{statement}}->{max_exec_time} // 0);
   $self->{$event->{time_string}}->{$event->{table}}->{$event->{statement}}->{transaction_length} += $event->{transaction_length} // 0;
 }
 
@@ -261,23 +266,6 @@ sub result
 {
   my ($self)= @_;
   $self->_print_n_element(3);
-}
- 
-package Ytkit::GroupbyHelper::Groupby_TimeTableStatementExec;
-
-use base "Ytkit::GroupbyHelper::Groupby_Base";
-
-sub increment
-{
-  my ($self, $event)= @_;
-  $self->{$event->{time_string}}->{$event->{table}}->{$event->{statement}}->{$event->{exec_time}}->{counter}++;
-  $self->{$event->{time_string}}->{$event->{table}}->{$event->{statement}}->{$event->{exec_time}}->{transaction_length} += $event->{transaction_length} // 0;
-}
-
-sub result
-{
-  my ($self)= @_;
-  $self->_print_n_element(4);
 }
  
 

@@ -90,7 +90,7 @@ sub parse
     $self->{time_string}  = sprintf($self->{print_format}, $1);
     $self->{first_seen} ||= $1;
     $self->{last_seen}    = $1;
-    $self->{exec_time}    = sprintf("exec_time:%d", $2);
+    $self->{exec_time}    = $2 || 0;
   }
   ### GTID event
   elsif ($line =~ /$self->{gtid_parse}/)
@@ -233,8 +233,7 @@ sub _config
                   default => "time",
                   text  => qq{Part of aggregation.\n} .
                            qq{  "time", "table", "statement", "time,table", "time,statement",\n} .
-                           qq{  "table,statement", "all", "time,table,statement" (same as "all")\n} .
-                           qq{  "all,exec", "exec,time,table,statement" (same as "all,exec")} },
+                           qq{  "table,statement", "all", "time,table,statement" (same as "all")} },
     output   => { alias => ["output", "o"],
                   isa   => ["csv", "tsv"],
                   default => "tsv",

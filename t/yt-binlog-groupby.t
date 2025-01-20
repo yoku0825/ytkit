@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2017, 2021  yoku0825
+# Copyright (C) 2017, 2025  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -39,16 +39,6 @@ subtest "--sort (old-behavior compatibility)" => sub
     run_test("mysqlbinlog_sbr_80.txt", "mysqlbinlog_sbr_80_all_1m_tsv.r", @option);
     done_testing;
   };
-  
-  subtest "--group-by=all,exec --sort" => sub
-  {
-    no warnings "qw";
-    my @option= qw{--group-by=all,exec --cell=1m --output=tsv --sort};
-    run_test("01_parse_sbr_57.txt", "01_parse_sbr_57_all_exec.r", @option);
-    run_test("mysqlbinlog_rbr_80.txt", "mysqlbinlog_rbr_80_allexec_1m_tsv.r", @option);
-    run_test("mysqlbinlog_sbr_80.txt", "mysqlbinlog_sbr_80_allexec_1m_tsv.r", @option);
-    done_testing;
-  };
 };
 
 subtest "without --sort" => sub
@@ -61,16 +51,6 @@ subtest "without --sort" => sub
     run_test("mysqlbinlog_rbr_80.txt", "mysqlbinlog_rbr_80_all_1m_tsv.r", @option);
     run_test("mysqlbinlog_sbr_80.txt", "mysqlbinlog_sbr_80_all_1m_tsv.r", @option);
 
-    done_testing;
-  };
-  
-  subtest "--group-by=all,exec" => sub
-  {
-    no warnings "qw";
-    my @option= qw{ --group-by=all,exec --cell=1m --output=tsv --sort };
-    run_test("01_parse_sbr_57.txt", "01_parse_sbr_57_all_exec.r", @option);
-    run_test("mysqlbinlog_rbr_80.txt", "mysqlbinlog_rbr_80_allexec_1m_tsv.r", @option);
-    run_test("mysqlbinlog_sbr_80.txt", "mysqlbinlog_sbr_80_allexec_1m_tsv.r", @option);
     done_testing;
   };
 };
@@ -134,6 +114,12 @@ subtest "Regression tests" => sub
   done_testing;
 };
 
+subtest "Verbose output" => sub
+{
+  run_test("mysqlbinlog_rbr_80.txt", "mysqlbinlog_rbr_80_all_1m_verbose_tsv.r", "--group-by=all", "--cell=1m", "--verbose");
+  run_test("mysqlbinlog_sbr_80.txt", "mysqlbinlog_sbr_80_all_1m_verbose_tsv.r", "--group-by=all", "--cell=1m", "--verbose");
+  done_testing;
+};
 
 subtest "config description" => sub
 {

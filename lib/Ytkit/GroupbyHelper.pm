@@ -1,7 +1,7 @@
 package Ytkit::GroupbyHelper;
 
 ########################################################################
-# Copyright (C) 2014, 2026  yoku0825
+# Copyright (C) 2014, 2025  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License

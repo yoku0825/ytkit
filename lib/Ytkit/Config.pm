@@ -1,7 +1,7 @@
 package Ytkit::Config;
 
 ########################################################################
-# Copyright (C) 2017, 2021  yoku0825
+# Copyright (C) 2017, 2025  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -63,7 +63,7 @@ our $COMMON_OPTION=
   verbose => { alias => ["verbose", "v"],
                text  => "Verbose output mode",
                noarg => 1,
-               isa   => sub { $ENV{ytkit_verbose}++; } },
+               isa   => sub { $ENV{ytkit_verbose}= Ytkit::IO::VERBOSE; } },
   silent  => { alias => ["silent", "s", "quiet", "q"],
                text  => "No output any messages",
                noarg => 1,

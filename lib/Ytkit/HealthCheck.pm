@@ -839,8 +839,7 @@ sub dump_detail
   printf($fh "# %s\n", localtime->strftime("%Y/%m/%d %H:%M:%S"));
   printf($fh "# %s on %s: %s (%s)\n",
          $self->{status}->{str}, $self->instance->hostname,
-         $self->{output}, $self->{role},
-         localtime->cdate);
+         $self->{output}, $self->{role});
   printf($fh "%s\n", $self->instance->print_information);
 
   return 1;

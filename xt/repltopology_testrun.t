@@ -87,7 +87,7 @@ subtest "Issue #79" => sub
                                      "--socket", $source_mysqld->base_dir . "/tmp/mysql.sock",
                                      "--user=watcher");
   $prog->run;
-  is(join("", $prog->topology), "150-95-141-50:13306 => 150-95-141-50:13307\n", "Successfully using --socket");
+  is(join("", $prog->topology), "yoku0825-conoha:13306 => yoku0825-conoha:13307\n", "Successfully using --socket");
   done_testing;
 };
 

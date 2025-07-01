@@ -1,7 +1,7 @@
 package Ytkit::xTest;
 
 #########################################################################
-# Copyright (C) 2020, 2023  yoku0825
+# Copyright (C) 2020, 2025  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -20,9 +20,9 @@ package Ytkit::xTest;
 
 our $mysql55= "5.5.62";
 our $mysql56= "5.6.51";
-our $mysql57= "5.7.43";
-our $mysql80= "8.0.34";
-our $mysql81= "8.1.0";
+our $mysql57= "5.7.44";
+our $mysql80= "8.0.42";
+our $mysql84= "8.4.5";
 
 our $version=
 {
@@ -30,7 +30,7 @@ our $version=
   $mysql56 => { mysqld => "/usr/mysql/$mysql56/bin/mysqld", mysql_install_db => "/usr/mysql/$mysql56/scripts/mysql_install_db" },
   $mysql57 => { mysqld => "/usr/mysql/$mysql57/bin/mysqld" },
   $mysql80 => { mysqld => "/usr/mysql/$mysql80/bin/mysqld" },
-  $mysql81 => { mysqld => "/usr/mysql/$mysql81/bin/mysqld" },
+  #$mysql84 => { mysqld => "/usr/mysql/$mysql84/bin/mysqld" },
 };
 
 

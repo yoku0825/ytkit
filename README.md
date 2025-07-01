@@ -157,6 +157,10 @@ $ yt-healthcheck -h 172.17.0.1 -u user_name -p'password' -P 3306
 | --connection_count_enable                     | 1 (ON)                         | Enable "connection count checking"                                                                                                            |
 | --connection_count_warning                    | 70                             | Warning threshold for "Threads_connected / max_connections"(percentage)                                                                       |
 | --connection_count_critical                   | 95                             | Critical threshold for "Threads_connected / max_connections"(percentage)                                                                      |
+| --threads_running_enable                      | 1 (ON)                         | Enable "threads_running count checking"                                                                                                            |
+| --threads_running_warning                     | 10                             | Warning threshold for "Threads_running"                                                                      |
+| --threads_running_critical                    | 20                             | Critical threshold for "Threads_running"                                                                      |
+
 | --deadlock_enable                             | 0 (OFF)                        | Enable "deadlock detection checking"                                                                                                          |
 | --deadlock_warning                            | 300                            | Warning threshold for LATEST DETECTED DEADLOCK time (seconds)                                                                                 |
 | --deadlock_critical                           | 1                              | Critical threshold for LATEST DETECTED DEADLOCK time (seconds)                                                                                |

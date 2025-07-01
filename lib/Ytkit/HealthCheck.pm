@@ -1,7 +1,7 @@
 package Ytkit::HealthCheck;
 
 ########################################################################
-# Copyright (C) 2017, 2021  yoku0825
+# Copyright (C) 2017, 2025  yoku0825
 # Copyright (C) 2018        hacchuu0119
 #
 # This program is free software; you can redistribute it and/or
@@ -57,6 +57,7 @@ yt-health-check checks following MySQL status,
   Replication delay.
   Too long query in processlist.
   Connection count.
+  Running thread count.
   AUTO_INCREMENT column usage.
   read_only variable is set or not.
   No "GTID-gap" in gtid_executed.
@@ -110,6 +111,7 @@ sub new
     ### Check too long query, connection count, AUTO_INCREMENT usage, read_only should be OFF.
     $self->check_long_query;
     $self->check_connection_count;
+    $self->check_running_thread_count;
     $self->check_autoinc_usage;
     $self->{read_only}->{should_be}= 0;
     $self->check_read_only;
@@ -123,6 +125,7 @@ sub new
     ### Check too long query, replication threads, replication delay, connection count, read_only should be ON.
     $self->check_long_query;
     $self->check_connection_count;
+    $self->check_running_thread_count;
     $self->check_slave_status;
     $self->{read_only}->{should_be}= 1;
     $self->check_read_only;
@@ -135,6 +138,7 @@ sub new
     ### Intermidiate master in cascaded replication toporogy.
     $self->check_long_query;
     $self->check_connection_count;
+    $self->check_running_thread_count;
     $self->check_autoinc_usage;
     $self->check_slave_status;
     $self->{read_only}->{should_be}= 0;
@@ -194,6 +198,7 @@ sub new
 
     $self->check_long_query;
     $self->check_connection_count;
+    $self->check_running_thread_count;
     $self->check_uptime;
     $self->check_history_list_length;
   }
@@ -362,6 +367,17 @@ sub check_connection_count
   my $status = compare_threshold($ratio, $self->{connection_count});
   $self->update_status($status, sprintf(qq{Caution for too many connections: "%5.2f(%d/%d)"\t},
                                         $ratio, $current, $setting)) if $status;
+  return;
+}
+
+sub check_running_thread_count
+{
+  my ($self)= @_;
+  return 0 unless $self->{threads_running}->{enable};
+
+  my $current= $self->instance->show_status->{Threads_running}->{Value};
+  my $status = compare_threshold($current, $self->{threads_running});
+  $self->update_status($status, sprintf(qq{Too many running threads: %d\t}, $current)) if $status;
   return;
 }
 
@@ -852,6 +868,7 @@ Switching check-item as below,
     - "master", "source", "primary"
       - Long query
       - Connection count
+      - Threads_running count
       - AUTO_INCREMENT usage
       - read_only should be OFF
       - Uptime
@@ -860,11 +877,13 @@ Switching check-item as below,
       - Replication threads
       - Replication delay
       - Connection count
+      - Threads_running count
       - read_only should be ON
       - Uptime
     - "intermidiate", "cascade"
       - Long query
       - Connection count
+      - Threads_running count
       - AUTO_INCREMENT usage
       - Replication threads
       - Replication delay
@@ -883,6 +902,7 @@ Switching check-item as below,
     - "group_replication"
       - Long query
       - Connection count
+      - Threads_running count
       - AUTO_INCREMENT usage (If member_state is PRIMARY)
       - Group Replication status
       - Group Replication delay
@@ -927,6 +947,15 @@ EOS
                     text    => qq{Warning threshold for "Threads_connected / max_connections"(percentage)} },
       critical => { default => 95,
                     text    => qq{Critical threshold for "Threads_connected / max_connections"(percentage)} },
+    },
+    threads_running =>
+    {
+      enable   => { default => 1,
+                    text    => qq{When set to 0, turn off running thread count check.} },
+      warning  => { default => 10,
+                    text    => qq{Warning threshold for "Threads_running"} },
+      critical => { default => 20,
+                    text    => qq{Critical threshold for "Threads_running"} },
     },
     autoinc_usage =>
     {

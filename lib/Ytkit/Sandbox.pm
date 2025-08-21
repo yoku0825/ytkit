@@ -38,8 +38,6 @@ my @dict = qw{ alpha bravo charlie delta echo foxrot golf hotel india juliet
                kirlo lima mike november oscar papa quebec romeo sierra tango
                uniform victor whiskey xray yankee zulu };
 my $docker_options = q{ --restart=on-failure -P -e MYSQL_ALLOW_EMPTY_PASSWORD=1 -e MYSQL_ROOT_PASSWORD="""" -e MYSQL_ROOT_HOST=""%"" };
-my $docker_base_options= q{ --lower-case-table-names --log-bin=binlog --log-slave-updates };
-my $docker_gtid_options= q{ --gtid-mode=ON --enforce-gtid-consistency=ON };
 
 sub new
 {
@@ -129,26 +127,6 @@ sub prepare
   }
   _infof("Using %s for mysqld %s", $self->{container}, $self->{mysqld});
 
-  if ($version_int ge 50600)
-  {
-    if ($version_int ge 80400)
-    {
-      ### s/log_slave_updates/log_replica_updates/
-      my $tmp = $docker_base_options;
-      $tmp =~ s/slave/replica/;
-      $self->{docker_option} = $tmp . $docker_gtid_options;
-    }
-    else
-    {
-      $self->{docker_option}= $docker_base_options . $docker_gtid_options;
-    }
-  }
-  else
-  {
-    ### 5.5 doesn't know gtid options
-    $self->{docker_option}= $docker_base_options;
-  }
-
   for (my $n= 1; $n <= $self->{servers}; $n++)
   {
     my $dir = sprintf("%s/node%d", $self->{top_directory}, $n);
@@ -156,21 +134,24 @@ sub prepare
     my $datadir = sprintf("%s/datadir", $dir);
     mkdir "$datadir";
     my $hostname= sprintf("%s-%d", $self->{basename}, $n);
+    _write_my_cnf(sprintf("%s/my.cnf", $dir), $version_int, $dict_seq * 100 + $n);
 
     my $container_id;
     ### 5.5 and 5.6 must be handled manually
     if ($version_int lt 50700)
     {
-      $container_id= $self->init_for_55_56($datadir, $n, $dict_seq);
+      $container_id= $self->init_for_55_56($dir, $n);
     }
     else
     {
       my $cmd = sprintf("docker run -d --mount type=bind,source=%s/hosts,target=/etc/hosts " .
+                          "--mount type=bind,source=%s/my.cnf,target=/etc/my.cnf " .
                           "--mount type=bind,source=%s,target=/var/lib/mysql " .
-                          "--hostname=%s --name=%s %s %s %s --server-id=%d",
+                          "--hostname=%s --name=%s %s %s",
                         $self->{top_directory},
+                        $dir,
                         $datadir,
-                        $hostname, $hostname, $docker_options, $self->{container}, $self->{docker_option}, $dict_seq * 100 + $n);
+                        $hostname, $hostname, $docker_options, $self->{container});
       _infof("Docker command: %s", $cmd);
       $container_id= `$cmd`;
       chomp($container_id);
@@ -190,13 +171,21 @@ sub prepare
     _write_script(sprintf("%s/restart", $dir), sprintf("docker restart %s", $container_id), 0755);
     _write_script(sprintf("%s/use", $dir), sprintf('docker exec -it %s mysql -uroot "$@"', $container_id), 0755);
     _write_script(sprintf("%s/destroy", $dir), sprintf("docker stop %s\ndocker rm %s\n", $container_id, $container_id), 0644);
+    _write_script(sprintf("%s/reuse", $dir), sprintf("docker run -d --mount type=bind,source=%s/hosts,target=/etc/hosts " .
+                                                       "--mount type=bind,source=%s/my.cnf,target=/etc/my.cnf " .
+                                                       "--mount type=bind,source=%s,target=/var/lib/mysql " .
+                                                       "--hostname=%s --name=%s --ip=%s %s %s\n",
+                                                     $self->{top_directory},
+                                                     $dir,
+                                                     $datadir,
+                                                     $hostname, $hostname, $ipaddr, $docker_options, $self->{container});
     ### I don't add execute permission to destroy script
 
     $self->{_members}->{sprintf("node%d", $n)}= Ytkit::Sandbox::Node->new($ipaddr);
     $self->{_members}->{sprintf("node%d", $n)}->wait_until_mysqld_startup(60);
     printf($hosts "%s\t%s\n", $ipaddr, $hostname);
 
-    if ($self->{topology} eq "replication")
+    if ($self->{topology} eq "replication" || $self->{topology} eq "gr")
     {
       if ($n == 1)
       {
@@ -314,27 +303,58 @@ sub _write_script
   print $fh $file_body;
   close($fh);
   chmod $permission, $file_path;
-  return 1;
+  return 0;
 }
+
+sub _write_my_cnf
+{
+  my ($file_path, $version_int, $server_id) = @_;
+
+  open(my $fh, ">", $file_path);
+  my $terminology= $version_int ge 80400 ? "replica" : "slave";
+  
+  my $always = << "EOF";
+[mysqld]
+user = mysql
+lower_case_table_names
+log_bin = binlog
+log_${terminology}_updates
+server_id = $server_id
+EOF
+
+  print $fh $always;
+  if ($version_int ge 50600)
+  {
+    my $gtid = << "EOF";
+gtid_mode = ON
+enforce_gtid_consistency = ON
+EOF
+    print $fh $gtid;
+  }
+
+  close($fh);
+} 
 
 sub init_for_55_56
 {
   ### 5.5 and 5.6 container couldn't initialize datadir correctly
   ### when option has --log-bin 
-  my ($self, $datadir, $n, $dict_seq)= @_;
+  my ($self, $dir, $n)= @_;
 
-  my $init = sprintf("docker run --rm --mount type=bind,source=%s,target=/var/lib/mysql %s mysql_install_db --force %s",
-                     $datadir, $self->{container}, $docker_base_options);
+  my $init = sprintf("docker run --rm --mount type=bind,source=%s/my.cnf,target=/etc/my.cnf --mount type=bind,source=%s,target=/var/lib/mysql %s mysql_install_db --force",
+                     $dir, $dir . "/datadir", $self->{container});
   _infof("%s", $init);
   `$init`;
 
   my $start= sprintf("docker run -d --mount type=bind,source=%s/hosts,target=/etc/hosts " .
+                     "--mount type=bind,source=%s/my.cnf,target=/etc/my.cnf " .
                      "--mount type=bind,source=%s,target=/var/lib/mysql " .
-                     "--hostname=%s-%d --name=%s-%d %s %s %s --server-id=%d",
+                     "--hostname=%s-%d --name=%s-%d %s %s",
                       $self->{top_directory},
-                      $datadir,
+                      $dir,
+                      $dir . "/datadir",
                       $self->{basename}, $n, $self->{basename}, $n,
-                      $docker_options, $self->{container}, $self->{docker_option}, $dict_seq * 100 + $n);
+                      $docker_options, $self->{container});
   _infof("%s", $start);
   my $container_id= `$start`;
   chomp($container_id);
@@ -404,7 +424,6 @@ sub _config
     "topology" => { alias => ["topology", "type", "t"],
                     default => "single",
                     #TODO: isa => ["single", "replication", "cascade_replication", "group_replication"],
-                    #isa => ["single", "replication"],
                     isa => ["single", "replication", "gr"],
                     text => q{Replication topology.}, },
     "servers" => { alias => ["servers", "count", "server_count", "n"],

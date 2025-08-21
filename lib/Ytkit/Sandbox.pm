@@ -345,7 +345,8 @@ sub init_for_55_56
   my $init = sprintf("docker run --rm --mount type=bind,source=%s/my.cnf,target=/etc/my.cnf --mount type=bind,source=%s,target=/var/lib/mysql %s mysql_install_db --force",
                      $dir, $dir . "/datadir", $self->{container});
   _infof("%s", $init);
-  `$init`;
+  my $ret= `$init`;
+  _debugf("%s", $ret);
 
   my $start= sprintf("docker run -d --mount type=bind,source=%s/hosts,target=/etc/hosts " .
                      "--mount type=bind,source=%s/my.cnf,target=/etc/my.cnf " .
@@ -365,7 +366,8 @@ sub init_for_55_56
   my $update_root= sprintf(q|docker exec %s mysql -e "DELETE FROM mysql.user WHERE user = '' OR host <> 'localhost'; UPDATE mysql.user SET password = '', host = '' WHERE user = 'root'; FLUSH PRIVILEGES"|,
                            $container_id);
   _infof("%s", $update_root);
-  `$update_root`;
+  my $updated= `$update_root`;
+  _debugf("%s", $updated);
 
   return $container_id;
 }

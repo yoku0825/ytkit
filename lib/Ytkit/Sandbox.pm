@@ -171,15 +171,6 @@ sub prepare
     _write_script(sprintf("%s/restart", $dir), sprintf("docker restart %s", $container_id), 0755);
     _write_script(sprintf("%s/use", $dir), sprintf('docker exec -it %s mysql -uroot "$@"', $container_id), 0755);
     _write_script(sprintf("%s/destroy", $dir), sprintf("docker stop %s\ndocker rm %s\n", $container_id, $container_id), 0644);
-    _write_script(sprintf("%s/reuse", $dir),
-                  sprintf("docker run -d --mount type=bind,source=%s/hosts,target=/etc/hosts " .
-                            "--mount type=bind,source=%s/my.cnf,target=/etc/my.cnf " .
-                            "--mount type=bind,source=%s,target=/var/lib/mysql " .
-                            "--hostname=%s --name=%s --ip=%s %s %s\n",
-                            $self->{top_directory},
-                            $dir,
-                            $datadir,
-                            $hostname, $hostname, $ipaddr, $docker_options, $self->{container}), 0644);
     ### I don't add execute permission to destroy script
 
     $self->{_members}->{sprintf("node%d", $n)}= Ytkit::Sandbox::Node->new($ipaddr);

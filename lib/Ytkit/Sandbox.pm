@@ -336,7 +336,7 @@ sub init_for_55_56
   ### when option has --log-bin 
   my ($self, $dir, $n)= @_;
 
-  my $init = sprintf("docker run --rm --mount type=bind,source=%s/my.cnf,target=/etc/my.cnf --mount type=bind,source=%s,target=/var/lib/mysql %s mysql_install_db --force",
+  my $init = sprintf("docker run --rm --mount type=bind,source=%s/my.cnf,target=/etc/my.cnf --mount type=bind,source=%s,target=/var/lib/mysql %s mysql_install_db --force 2>&1",
                      $dir, $dir . "/datadir", $self->{container});
   _infof("%s", $init);
   my $ret= `$init`;
@@ -345,7 +345,7 @@ sub init_for_55_56
   my $start= sprintf("docker run -d --mount type=bind,source=%s/hosts,target=/etc/hosts " .
                      "--mount type=bind,source=%s/my.cnf,target=/etc/my.cnf " .
                      "--mount type=bind,source=%s,target=/var/lib/mysql " .
-                     "--hostname=%s-%d --name=%s-%d %s %s",
+                     "--hostname=%s-%d --name=%s-%d %s %s 2>&1",
                       $self->{top_directory},
                       $dir,
                       $dir . "/datadir",

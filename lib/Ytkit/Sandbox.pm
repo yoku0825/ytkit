@@ -315,6 +315,8 @@ lower_case_table_names
 log_bin = binlog
 log_${terminology}_updates
 server_id = $server_id
+log_error = error.log
+skip_name_resolve
 EOF
 
   print $fh $always;

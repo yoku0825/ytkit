@@ -179,7 +179,7 @@ sub prepare
                             $self->{top_directory},
                             $dir,
                             $datadir,
-                            $hostname, $hostname, $ipaddr, $docker_options, $self->{container}));
+                            $hostname, $hostname, $ipaddr, $docker_options, $self->{container}), 0644);
     ### I don't add execute permission to destroy script
 
     $self->{_members}->{sprintf("node%d", $n)}= Ytkit::Sandbox::Node->new($ipaddr);
@@ -315,6 +315,9 @@ sub _write_my_cnf
   my $terminology= $version_int ge 80400 ? "replica" : "slave";
   
   my $always = << "EOF";
+[mysql]
+skip-auto-rehash
+
 [mysqld]
 user = mysql
 lower_case_table_names

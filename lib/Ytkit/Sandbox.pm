@@ -163,7 +163,7 @@ sub prepare
     _debugf("Docker inspect: %s", $ret);
     my $info= from_json($ret);
     my $ipaddr= $info->[0]->{NetworkSettings}->{IPAddress};
-    _notef("Container Ipaddress: %s", $ipaddr);
+    _notef("Node%d Container Ipaddress: %s", $n, $ipaddr);
 
     ### Write files
     _write_script(sprintf("%s/start", $dir), sprintf("docker start %s", $container_id), 0755);
@@ -232,7 +232,7 @@ sub setup_replication
   ### "replication" or "cascade_replication"
   foreach my $node (sort(keys(%{$self->{_members}})))
   {
-    _notef("Setup %s replication for %s", $self->{topology} eq "replication" ? "" : "group ", $node);
+    _infof("Setup %s replication for %s", $self->{topology} eq "replication" ? "" : "group ", $node);
     my $instance= $self->{_members}->{$node};
     if ($self->{topology} eq "replication" || $self->{topology} eq "cascade_replication")
     {

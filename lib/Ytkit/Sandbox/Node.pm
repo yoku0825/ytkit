@@ -189,6 +189,7 @@ sub follow_replication_source
   }
   _infof("%s", $change_replication);
   $self->{instance}->exec_sql($change_replication);
+  $self->{instance}->exec_sql_with_croak("SET GLOBAL read_only = 1");
   $self->{instance}->exec_sql($start_replica);
 }
 

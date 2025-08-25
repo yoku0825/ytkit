@@ -170,7 +170,7 @@ sub prepare
     _write_script(sprintf("%s/stop", $dir), sprintf("docker stop %s", $container_id), 0755);
     _write_script(sprintf("%s/restart", $dir), sprintf("docker restart %s", $container_id), 0755);
     _write_script(sprintf("%s/use", $dir),
-                          sprintf('if [[ $# == 1 ]] ; then\n docker exec -it %s mysql -uroot -e "$1"\nelse\n  docker exec -it %s mysql -uroot "$@"\nfi',
+                          sprintf(qq|if [[ \$# == 1 ]] ; then\n docker exec -it %s mysql -uroot -e "\$1"\nelse\n  docker exec -it %s mysql -uroot "\$\@"\nfi|,
                                   $container_id, $container_id),
                           0755);
     _write_script(sprintf("%s/destroy", $dir), sprintf("docker stop %s\ndocker rm %s\n", $container_id, $container_id), 0644);

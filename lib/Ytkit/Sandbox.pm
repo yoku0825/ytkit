@@ -169,7 +169,7 @@ sub prepare
     _write_script(sprintf("%s/start", $dir), sprintf("docker start %s", $container_id), 0755);
     _write_script(sprintf("%s/stop", $dir), sprintf("docker stop %s", $container_id), 0755);
     _write_script(sprintf("%s/restart", $dir), sprintf("docker restart %s", $container_id), 0755);
-    _write_script(sprintf("%s/use", $dir), sprintf('docker exec -it %s mysql -uroot "$@"', $container_id), 0755);
+    _write_script(sprintf("%s/use", $dir), sprintf('if [[ $# == 1 ]] ; then\n docker exec -it %s mysql -uroot -e "$1"\nelse\n  docker exec -it %s mysql -uroot "$@"\nfi', $container_id), 0755);
     _write_script(sprintf("%s/destroy", $dir), sprintf("docker stop %s\ndocker rm %s\n", $container_id, $container_id), 0644);
     ### I don't add execute permission to destroy script
 

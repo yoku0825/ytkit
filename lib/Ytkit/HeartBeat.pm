@@ -29,6 +29,8 @@ use Ytkit::MySQLServer;
 use Time::HiRes;
 use Time::Piece;
 
+use constant DELETE_ROW_LIMIT_GUIDE => 3000;
+
 my $synopsis= q{  $ yt-heartbeat --host=mysql_host --port=mysql_port } .
               q{--user=mysql_account --password=mysql_password --interval=1};
 my $script= sprintf("%s - Write heartbeat record into MySQL", $0);
@@ -73,6 +75,11 @@ sub init
 
   $self->check_read_only;
 
+  if ($self->{disable_sql_log_bin})
+  {
+    $self->instance->exec_sql("SET SESSION sql_log_bin = OFF");
+  }
+
   $self->instance->exec_sql_with_croak(sprintf(q|CREATE DATABASE IF NOT EXISTS `%s`|, $self->{schema}));
   my $create_sql= << 'EOS';
 CREATE TABLE IF NOT EXISTS `%s`.`%s` (
@@ -114,10 +121,23 @@ sub run
     $insert_sql= sprintf(q|INSERT INTO `%s`.`%s` (hostname, app_time, server_time, gtid_executed) VALUES (@@hostname, ?, NOW(3), @@global.gtid_executed)|,
                          $self->{schema}, $self->{table});
   }
+  my $delete_sql= sprintf("DELETE FROM `%s`.`%s` WHERE server_time < NOW() - INTERVAL %d DAY",
+                          $self->{schema}, $self->{table}, $self->{retention_period});
 
+  my $count= 0;
   while ()
   {
+    $count++;
+
+    ### read_only could be changed during heartbeating
     $self->check_read_only;
+
+    ### To avoid reset variable by reconnection, execute this statement every time.
+    if ($self->{disable_sql_log_bin})
+    {
+      $self->instance->exec_sql("SET SESSION sql_log_bin = OFF");
+    }
+
     my ($unixtime, $microsec)= Time::HiRes::gettimeofday();
     my $now= sprintf("%s.%3d", Time::Piece->strptime($unixtime, "%s")->strftime("%Y-%m-%d %H:%M:%S"), $microsec);
 
@@ -131,6 +151,13 @@ sub run
     else
     {
       _infof("HeartBeat Succeeded at %s\n", $now);
+    }
+
+    if ($count ge DELETE_ROW_LIMIT_GUIDE)
+    {
+      _infof("Remove old heartbeat records, %d days ago", $self->{retention_period});
+      $self->instance->exec_sql_with_carp($delete_sql);
+      $count= 0;
     }
 
     sleep $self->{interval};
@@ -174,12 +201,20 @@ sub _config
                text => "Table name to store heartbeat records.", },
     truncate => { alias => ["truncate", "truncate-before-insert"],
                   default => 0,
-                  isa => [0, 1],
+                  noarg => 1,
                   text => "TRUNCATE TABLE under init process.", },
     force => { alias => ["force", "f"],
                default => 0,
-               isa => [0, 1],
+               noarg => 1,
                text => "Write heartbeat records forcefully even if read_only = ON (need SUPER priv)", },
+    disable_sql_log_bin => { alias => ["disable_sql_log_bin", "sql_log_bin_off", "disable_log_bin"],
+                             text  => "Write heartbeat records without binary-log (need SUPER priv)",
+                             noarg => 1,
+                             default => 0, },
+    retention_period => { alias => ["retention_period", "retention"],
+                          default => 30,
+                          isa => qr/\d+/,
+                          text => "Remove records after --retention-period days", },
   };
   my $config= Ytkit::Config->new({ %$program_option, 
                                    %$Ytkit::Config::CONNECT_OPTION,

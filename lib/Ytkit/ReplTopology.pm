@@ -1,7 +1,7 @@
 package Ytkit::ReplTopology;
 
 ########################################################################
-# Copyright (C) 2022, 2023  yoku0825
+# Copyright (C) 2022, 2025  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -286,10 +286,22 @@ sub search_candidate_port
 sub _search_candidate_replica_port_by_instance
 {
   my ($instance)= @_;
-  return [] unless $instance->show_slave_hosts;
+
+  my $ret;
+  eval
+  {
+    $ret = $instance->show_slave_hosts;
+  };
+
+  if ($@)
+  {
+    ### Lack of privilege, but maybe it can be salvage via SHOW PROCESSLIST, should not abort.
+    _carpf("SHOW SLAVE STATUS failed. But maybe SHOW PROCESSLIST can catch slaves");
+    return [];
+  }
 
   my @buff;
-  foreach my $row (@{$instance->show_slave_hosts})
+  foreach my $row (@$ret)
   {
     push(@buff, $row->{Port});
   }

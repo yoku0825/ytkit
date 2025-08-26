@@ -74,7 +74,6 @@ sub new
     }
     else
     {
-      ### TODO: cascade_replication 
       _croakf("Unkown topology %s", $self->{topology});
     }
   }
@@ -254,7 +253,6 @@ sub setup_replication
       $instance->setup_group_replication;
       $instance->clear_gtid;
 
-      ### TODO: bootstrap, start group_replication
       $instance->{instance}->exec_sql_with_croak(sprintf("SET PERSIST group_replication_group_seeds = '%s'",
                                                          join(",", map { sprintf("%s:13306", $_->{ipaddr}) } values(%{$self->{_members}}))));
       if ($node eq "node1")
@@ -425,7 +423,6 @@ sub _config
                   text => q{Container tag for create sandbox, taking care about cache.}, },
     "topology" => { alias => ["topology", "type", "t"],
                     default => "single",
-                    #TODO: isa => ["single", "replication", "cascade_replication", "group_replication"],
                     isa => ["single", "replication", "gr"],
                     text => q{Replication topology.}, },
     "servers" => { alias => ["servers", "count", "server_count", "n"],

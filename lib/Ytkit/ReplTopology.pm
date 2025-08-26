@@ -296,7 +296,7 @@ sub _search_candidate_replica_port_by_instance
   if ($@)
   {
     ### Lack of privilege, but maybe it can be salvage via SHOW PROCESSLIST, should not abort.
-    _carpf("SHOW SLAVE STATUS failed. But maybe SHOW PROCESSLIST can catch slaves");
+    _infof("SHOW SLAVE STATUS failed. But maybe SHOW PROCESSLIST can catch slaves");
     return [];
   }
 

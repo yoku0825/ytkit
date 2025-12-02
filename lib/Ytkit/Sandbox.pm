@@ -161,7 +161,12 @@ sub prepare
     my $ret = `docker inspect $container_id`;
     _debugf("Docker inspect: %s", $ret);
     my $info= from_json($ret);
-    my $ipaddr= $info->[0]->{NetworkSettings}->{IPAddress};
+
+    ### There are some varieties to get IPAddress.
+    my $ipaddr= $info->[0]->{NetworkSettings}->{IPAddress} ? $info->[0]->{NetworkSettings}->{IPAddress} : 
+                  $info->[0]->{NetworkSettings}->{Networks}->{bridge}->{IPAddress} ?  $info->[0]->{NetworkSettings}->{Networks}->{bridge}->{IPAddress} :
+                    "";
+    _croakf("Ipaddress cannot get from $ret") if !($ipaddr);
     _notef("Node%d Container Ipaddress: %s", $n, $ipaddr);
 
     ### Write files

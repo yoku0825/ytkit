@@ -313,6 +313,7 @@ Intermidiate:3306 => Cascade_Replica3:3306
 
 |              option_name               |        default        |                                 text                                  |
 | -------------------------------------- | --------------------- | --------------------------------------------------------------------- |
+| --additional-config, --config          | ''                    | Write optional my.cnf entires by JSON format (ex. '{"read_only": "ON"}'|
 | --count, --server-count, --servers, -n | if "single" 1, else 3 | How many mysqlds are deployed                                         |
 | --debug                                | false                 | Set debug output                                                      |
 | --help, --usage                        | false                 | print help message                                                    |

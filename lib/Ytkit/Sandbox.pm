@@ -133,7 +133,10 @@ sub prepare
     my $datadir = sprintf("%s/datadir", $dir);
     mkdir "$datadir";
     my $hostname= sprintf("%s-%d", $self->{basename}, $n);
-    _write_my_cnf(sprintf("%s/my.cnf", $dir), $version_int, $dict_seq * 100 + $n);
+    _write_my_cnf(sprintf("%s/my.cnf", $dir),
+                  $version_int,
+                  $dict_seq * 100 + $n,
+                  $self->{additional_config} // "");
 
     my $container_id;
     ### 5.5 and 5.6 must be handled manually
@@ -306,7 +309,7 @@ sub _write_script
 
 sub _write_my_cnf
 {
-  my ($file_path, $version_int, $server_id) = @_;
+  my ($file_path, $version_int, $server_id, $additional_json) = @_;
 
   open(my $fh, ">", $file_path);
   my $terminology= $version_int ge 80400 ? "replica" : "slave";
@@ -333,6 +336,16 @@ gtid_mode = ON
 enforce_gtid_consistency = ON
 EOF
     print $fh $gtid;
+  }
+
+  if ($additional_json)
+  {
+    my $config= from_json($additional_json);
+
+    while (my ($key, $value) = each(%$config))
+    {
+      printf($fh "%s = %s\n", $key, $value);
+    }
   }
 
   close($fh);
@@ -436,6 +449,9 @@ sub _config
     "sandbox_home" => { alias => ["sandbox_home", "home", "d"],
                         text => q{Base directry for create sandbox datadir and scripts},
                         default => $ENV{HOME} . "/yt-sandbox", },
+    "additional_config" => { alias => ["additional_config", "config"],
+                             default => '',
+                             text => q{ Additional my.cnf option expressed by JSON }, },
   };
 
   my $config= Ytkit::Config->new({ %$program_option, 

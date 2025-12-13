@@ -31,6 +31,10 @@ use Ytkit::IO qw{ _croakf };
 my @target_container= qw{ 5.5.62 5.6.51 5.7.40 8.0.43 8.4.6 9.4.0 };
 
 $ENV{ytkit_verbose}= 2;
+
+## [[Note, 1759, Sending passwords in plain text without SSL/TLS is extremely insecure.],
+## [Note, 1760, Storing MySQL user name or password information in the master info repository is not secure and is therefore not recommended. Please consider using the USER and PASSWORD connection options for START SLAVE; see the 'START SLAVE Syntax' in the MySQL Manual for more information.]]
+$ENV{ytkit_ignore_warning}= "1759,1760";
 use Carp::Always;
 
 subtest "single" => sub

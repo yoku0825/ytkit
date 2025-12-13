@@ -283,6 +283,19 @@ sub setup_replication
   }
 }
 
+sub info
+{
+  my ($self)= @_;
+
+  my @buff;
+  foreach (sort(keys(%{$self->{_members}})))
+  {
+    push(@buff, $self->{_members}->{$_}->{ipaddr});
+  }
+
+  return \@buff;
+}
+
 sub _write_group_script
 {
   my ($self, $file_name, $loop_script, $permission)= @_;

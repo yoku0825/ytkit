@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2021  yoku0825
+# Copyright (C) 2021, 2025  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -27,29 +27,29 @@ use Test::More;
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
 require "$Bin/xTest.pl";
-use Test::mysqld;
 
 use Ytkit::IO;
 use Ytkit::AdminTool;
 use Ytkit::AdminTool::DDL; ### For view counting
+use Ytkit::Sandbox;
 
 ### Make silent without debugging
 $ENV{ytkit_verbose}= $ENV{ytkit_verbose} == Ytkit::IO::NORMAL ? 
                        Ytkit::IO::SILENT : 
                        $ENV{ytkit_verbose};
 
-my $test= $Ytkit::xTest::version;
 
-foreach (sort(keys(%$test)))
+
+foreach (@Ytkit::xTest::sandboxes)
 {
   ### Only test 5.7 and 8.0
-  next if $_ !~ /^(5\.7\.|8\.0\.)/;
+  next if $_ ne "5.7" and $_ ne "8.0";
   subtest "Testing via $_" => sub
   {
-    $ENV{MYSQL_PWD}= "";
-    my $mysqld= Test::mysqld->new($test->{$_});
-    my $initialize= Ytkit::AdminTool->new("--host=localhost",
-                                          "--socket",  $mysqld->base_dir . "/tmp/mysql.sock",
+    my $sandbox= Ytkit::Sandbox->new("--mysqld", $_);
+    $sandbox->prepare;
+    my $ipaddr= $sandbox->info->[0];
+    my $initialize= Ytkit::AdminTool->new("--host", $ipaddr,
                                           "--user=root",
                                           "initialize");
   
@@ -67,7 +67,7 @@ foreach (sort(keys(%$test)))
     my $adminview_count= "SELECT COUNT(*) AS c FROM information_schema.tables WHERE table_schema = 'adminview'";
     is($instance->_real_query_arrayref($adminview_count)->[0]->{c},
        scalar(@{Ytkit::AdminTool::DDL::adminview_schema()}) +
-         ($_ =~ "^8\.0\." ? scalar(@{Ytkit::AdminTool::DDL::adminview_schema_ex()}) : 0),
+         ($_ eq "8.0" ? scalar(@{Ytkit::AdminTool::DDL::adminview_schema_ex()}) : 0),
        "Create adminview tables");
 
     subtest "Checking view definition is correct" => sub
@@ -91,21 +91,20 @@ foreach (sort(keys(%$test)))
     };
  
     ### Create monitor user
-    $instance->exec_sql_with_croak(q{CREATE USER monitor@127.0.0.1 IDENTIFIED WITH mysql_native_password BY 'password'});
-    $instance->exec_sql_with_croak(q{GRANT SELECT, REPLICATION CLIENT, PROCESS ON *.* TO monitor@127.0.0.1});
+    $instance->exec_sql_with_croak(q{CREATE USER monitor IDENTIFIED WITH mysql_native_password BY 'password'});
+    $instance->exec_sql_with_croak(q{GRANT SELECT, REPLICATION CLIENT, PROCESS ON *.* TO monitor});
 
     my $port= $instance->_real_query_arrayref('SELECT @@port AS port')->[0]->{port};
   
     $ENV{MYSQL_PWD}= "";
-    my $register= Ytkit::AdminTool->new("--host=localhost",
-                                        "--socket",  $mysqld->base_dir . "/tmp/mysql.sock",
+    my $register= Ytkit::AdminTool->new("--host", $ipaddr,
                                         "--user=root",
                                         "--monitor-user=monitor",
                                         "--monitor-password=password",
-                                        "register", _sprintf("127.0.0.1:%d", $port));
+                                        "register", _sprintf("%s:%d", $ipaddr, $port));
     $register->run;
     is_deeply($register->_fetch_instance_info,
-              [{ ipaddr => "127.0.0.1", port => $port, healthcheck_role => "auto" }],
+              [{ ipaddr => $ipaddr, port => $port, healthcheck_role => "auto" }],
               "Registered successfully");
     $instance->update_stats_expiry;
     is($instance->_real_query_arrayref("SELECT GROUP_CONCAT(table_name ORDER BY table_name) AS t " .
@@ -118,8 +117,7 @@ foreach (sort(keys(%$test)))
     my $table_rows= $instance->_real_query_arrayref("SELECT COUNT(*) AS c FROM admintool.status_info")->[0]->{c};
 
     $ENV{MYSQL_PWD}= "";
-    my $collect= Ytkit::AdminTool->new("--host=localhost",
-                                       "--socket",  $mysqld->base_dir . "/tmp/mysql.sock",
+    my $collect= Ytkit::AdminTool->new("--host", $ipaddr,
                                        "--user=root",
                                        "--monitor-user=monitor",
                                        "--monitor-password=password",
@@ -130,8 +128,7 @@ foreach (sort(keys(%$test)))
        "status_info collected");
 
     $ENV{MYSQL_PWD}= "";
-    my $purge= Ytkit::AdminTool->new("--host=localhost",
-                                     "--socket",  $mysqld->base_dir . "/tmp/mysql.sock",
+    my $purge= Ytkit::AdminTool->new("--host", $ipaddr,
                                      "--user=root",
                                      "--monitor-user=monitor",
                                      "--monitor-password=password",
@@ -139,6 +136,8 @@ foreach (sort(keys(%$test)))
     $purge->run;
     ok($purge, "purge does not raise error");
 
+    my $destroy_script= sprintf("%s/destroy_all", $sandbox->{top_directory});
+    `bash $destroy_script`;
     done_testing;
   };
 }

@@ -27,24 +27,25 @@ use Test::More;
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
 require "$Bin/xTest.pl";
-use Test::mysqld;
 
 use Ytkit::MySQLServer;
+use Ytkit::Sandbox;
 
-my $test= $Ytkit::xTest::version;
-
-foreach (sort(keys(%${Ytkit::xTest::version})))
+foreach (@Ytkit::xTest::sandboxes)
 {
   subtest "Testing via $_" => sub
   {
-    my $mysqld= Test::mysqld->new($test->{$_});
-    my $server= Ytkit::MySQLServer->new({ host   => "localhost",
-                                          socket => $mysqld->base_dir . "/tmp/mysql.sock",
+    my $sandbox= Ytkit::Sandbox->new("--mysqld", $_);
+    $sandbox->prepare;
+    my $ipaddr= $sandbox->info;
+    my $server= Ytkit::MySQLServer->new({ host   => $ipaddr->[0],
                                           user   => "root", });
     $server->conn;
-    ok(!($server->error), "Connect to mysqld");
+    ok(!($server->error), "Connect to mysqld") or diag($server->error);
     is_deeply($server->fetch_innodb_lock_waits, [], "fetch_innodb_lock_waits returns empty arrayref");
     ok(!($server->error), "Query is succeeded");
+    my $destroy_script= sprintf("%s/destroy_all", $sandbox->{top_directory});
+    `bash $destroy_script`;
   
     done_testing;
   };

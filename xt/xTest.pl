@@ -21,9 +21,11 @@ package Ytkit::xTest;
 our $mysql55= "5.5.62";
 our $mysql56= "5.6.51";
 our $mysql57= "5.7.44";
-our $mysql80= "8.0.43";
-our $mysql84= "8.4.6";
+our $mysql80= "8.0.44";
+our $mysql84= "8.4.7";
 our $mysql94= "9.4.0";
+
+our @sandboxes = qw{ 5.5 5.6 5.7 8.0 8.4 9.5 };
 
 our $version=
 {
@@ -31,7 +33,7 @@ our $version=
   $mysql56 => { mysqld => "/usr/mysql/$mysql56/bin/mysqld", mysql_install_db => "/usr/mysql/$mysql56/scripts/mysql_install_db" },
   $mysql57 => { mysqld => "/usr/mysql/$mysql57/bin/mysqld" },
   $mysql80 => { mysqld => "/usr/mysql/$mysql80/bin/mysqld" },
-  #$mysql84 => { mysqld => "/usr/mysql/$mysql84/bin/mysqld" },
+  $mysql84 => { mysqld => "/usr/mysql/$mysql84/bin/mysqld" },
   #$mysql94 => { mysqld => "/usr/mysql/$mysql94/bin/mysqld" },
 };
 

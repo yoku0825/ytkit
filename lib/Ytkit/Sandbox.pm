@@ -27,7 +27,7 @@ use base "Ytkit";
 use Ytkit::IO qw{ _infof _notef _carpf _croakf _debugf } ;
 use Ytkit::Sandbox::Node;
 
-my $synopsis= q{  $ yt-sandbox --topology=replication --mysqld=8.4.5 };
+my $synopsis= q{  $ yt-sandbox --topology=replication 8.4.5 };
 my $script= sprintf("%s - Run sandbox mysqlds", $0);
 my $description= << "EOS";
 yt-sandbox deploies Sandbox mysqld into \$HOME/yt-sandbox/
@@ -53,6 +53,9 @@ sub new
             };
   bless $self => $class;
   $self->handle_help;
+
+  ### Override --mysqld=? by raw-argument
+  $self->{mysqld}= $config->{left_argv}->[0] if $config->{left_argv}->[0];
 
   if (defined($self->{servers}))
   {
@@ -451,7 +454,7 @@ sub _config
   {
     "mysqld" => { alias => ["mysqld", "tag"],
                   default => "8.4",
-                  text => q{Container tag for create sandbox, taking care about cache.}, },
+                  text => q{Container tag for create sandbox, taking care about cache. \nRaw-argument like "yt-sandbox 9.5.0" have same effect.}, },
     "topology" => { alias => ["topology", "type", "t"],
                     default => "single",
                     isa => ["single", "replication", "gr"],

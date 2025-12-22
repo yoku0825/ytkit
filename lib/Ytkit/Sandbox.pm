@@ -32,7 +32,7 @@ my $script= sprintf("%s - Run sandbox mysqlds", $0);
 my $description= << "EOS";
 yt-sandbox deploies Sandbox mysqld into \$HOME/yt-sandbox/
 EOS
-my $allow_extra_arvg= 1;
+my $allow_extra_argv= 1;
 
 my @dict = qw{ alpha bravo charlie delta echo foxrot golf hotel india juliet
                kirlo lima mike november oscar papa quebec romeo sierra tango
@@ -472,7 +472,7 @@ sub _config
   $config->{_synopsis}= $synopsis;
   $config->{_description}= $description;
   $config->{_script}= $script;
-  $config->{_allow_extra_argv}= $allow_extra_arvg;
+  $config->{_allow_extra_argv}= $allow_extra_argv;
   return $config;
 }
 

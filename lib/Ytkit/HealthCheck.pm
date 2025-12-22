@@ -71,7 +71,7 @@ and returns Nagios compatible result code,
   2 CRITICAL
   3 UNKNOWN
 EOS
-my $allow_extra_arvg= 0;
+my $allow_extra_argv= 0;
 
 
 sub new
@@ -1059,7 +1059,7 @@ EOS
   $config->{_synopsis}= $synopsis;
   $config->{_description}= $description;
   $config->{_script}= $script;
-  $config->{_allow_extra_argv}= $allow_extra_arvg;
+  $config->{_allow_extra_argv}= $allow_extra_argv;
   return $config;
 } 
 

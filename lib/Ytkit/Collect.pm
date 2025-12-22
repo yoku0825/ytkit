@@ -36,7 +36,7 @@ my $script= sprintf("%s - Collect data from performance_schema and information_s
 my $description= << "EOS";
 yt-collect gets some statistics from p_s and prints as tsv/csv/sql/json.
 EOS
-my $allow_extra_arvg= 0;
+my $allow_extra_argv= 0;
 
 
 sub new
@@ -680,7 +680,7 @@ sub _config
   $config->{_synopsis}= $synopsis;
   $config->{_description}= $description;
   $config->{_script}= $script;
-  $config->{_allow_extra_argv}= $allow_extra_arvg;
+  $config->{_allow_extra_argv}= $allow_extra_argv;
   return $config;
 }
 

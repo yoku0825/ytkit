@@ -39,7 +39,7 @@ my $description= << "EOS";
 Bulk delete-rows for specific table by "DELETE FROM table LIMIT ?" before DROP TABLE table.
 Checking Seconds_Behind_Source and automatically changes LIMIT-Clause number.
 EOS
-my $allow_extra_arvg= 0;
+my $allow_extra_argv= 0;
 
 
 sub new
@@ -390,7 +390,7 @@ sub _config
   $config->{_synopsis}= $synopsis;
   $config->{_description}= $description;
   $config->{_script}= $script;
-  $config->{_allow_extra_argv}= $allow_extra_arvg;
+  $config->{_allow_extra_argv}= $allow_extra_argv;
   return $config;
 }
 

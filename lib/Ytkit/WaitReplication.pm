@@ -38,7 +38,7 @@ EOS
 my $synopsis= q{  $ yt-wait-replication --host=your_mysql_host --port=your_mysql_port } .
               q{--user=your_mysql_account --password=your_password } .
               q{--seconds-behind-master=5 --sleep=3 --retry-timeout=180};
-my $allow_extra_arvg= 0;
+my $allow_extra_argv= 0;
 
 
 sub new
@@ -158,7 +158,7 @@ sub _config
   $config->{_synopsis}= $synopsis;
   $config->{_description}= $description;
   $config->{_script}= $script;
-  $config->{_allow_extra_argv}= $allow_extra_arvg;
+  $config->{_allow_extra_argv}= $allow_extra_argv;
   return $config;
 } 
 

@@ -45,7 +45,7 @@ yt-alter-progress will try turn on there parameters(This needs Update_priv for p
 
 Already set these parameters, yt-alter-progress needs only Select_priv for performance_schema.
 EOS
-my $allow_extra_arvg= 0;
+my $allow_extra_argv= 0;
 
 
 sub new
@@ -243,7 +243,7 @@ sub _config
   $config->{_synopsis}= $synopsis;
   $config->{_description}= $description;
   $config->{_script}= $script;
-  $config->{_allow_extra_argv}= $allow_extra_arvg;
+  $config->{_allow_extra_argv}= $allow_extra_argv;
   return $config;
 }
 

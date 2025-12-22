@@ -34,7 +34,7 @@ my $description= << "EOS";
 yt-repl-topology displays replication topology around specified host.
 --user needs Repl_client_priv and Process_priv for each host.
 EOS
-my $allow_extra_arvg= 0;
+my $allow_extra_argv= 0;
 
 
 sub new
@@ -337,7 +337,7 @@ sub _config
   $config->{_synopsis}= $synopsis;
   $config->{_description}= $description;
   $config->{_script}= $script;
-  $config->{_allow_extra_argv}= $allow_extra_arvg;
+  $config->{_allow_extra_argv}= $allow_extra_argv;
   return $config;
 }
 

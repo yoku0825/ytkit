@@ -44,7 +44,7 @@ SUBCOMMAND:
 - purge: DELETE FROM table_status_info/is_innodb_metrics/ps_digest_info/ps_table_info/status_info WHERE last_update < ?.
 EOS
 
-my $allow_extra_arvg= 1;
+my $allow_extra_argv= 1;
 my $config= _config();
 my $subcommand= [qw{ initialize upgrade register collect list full-collect purge }];
 
@@ -457,7 +457,7 @@ sub _config
   $config->{_synopsis}= $synopsis;
   $config->{_description}= $description;
   $config->{_script}= $script;
-  $config->{_allow_extra_argv}= $allow_extra_arvg;
+  $config->{_allow_extra_argv}= $allow_extra_argv;
   return $config;
 }
 

@@ -33,7 +33,7 @@ my $script= sprintf("%s - Launch yt-collect processes following by conf-file", $
 my $description= << "EOS";
 yt-resource-collector launches yt-collect processes following by conf-file
 EOS
-my $allow_extra_arvg= 0;
+my $allow_extra_argv= 0;
 my $sleep_time= 10;
 
 sub new
@@ -145,7 +145,7 @@ sub _config
   $config->{_synopsis}= $synopsis;
   $config->{_description}= $description;
   $config->{_script}= $script;
-  $config->{_allow_extra_argv}= $allow_extra_arvg;
+  $config->{_allow_extra_argv}= $allow_extra_argv;
   return $config;
 }
 

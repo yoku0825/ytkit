@@ -34,7 +34,7 @@ Emulate 'RENMAE DATABASE <from> TO <to>' as RENAME TABLE statements.
 If you have TRIGGERS, ROUTINES, EVENTS, VIEWS and Foreign Keys in from-schema,
 please do NOT use this script because this doesn't care them.
 EOS
-my $allow_extra_arvg= 0;
+my $allow_extra_argv= 0;
 
 
 sub new
@@ -214,7 +214,7 @@ sub _config
   $config->{_synopsis}= $synopsis;
   $config->{_description}= $description;
   $config->{_script}= $script;
-  $config->{_allow_extra_argv}= $allow_extra_arvg;
+  $config->{_allow_extra_argv}= $allow_extra_argv;
   return $config;
 }
 

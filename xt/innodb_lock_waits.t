@@ -44,8 +44,7 @@ foreach (@Ytkit::xTest::sandboxes)
     ok(!($server->error), "Connect to mysqld") or diag($server->error);
     is_deeply($server->fetch_innodb_lock_waits, [], "fetch_innodb_lock_waits returns empty arrayref");
     ok(!($server->error), "Query is succeeded");
-    my $destroy_script= sprintf("%s/destroy_all", $sandbox->{top_directory});
-    `bash $destroy_script`;
+    $sandbox->delete_sandbox;
   
     done_testing;
   };

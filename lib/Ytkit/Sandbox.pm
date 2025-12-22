@@ -299,6 +299,16 @@ sub info
   return \@buff;
 }
 
+sub delete_sandbox
+{
+  my ($self)= @_;
+
+  my $command= sprintf("bash %s/destroy_all", $self->{top_directory});
+  `$command`;
+
+  return 0;
+}
+
 sub _write_group_script
 {
   my ($self, $file_name, $loop_script, $permission)= @_;

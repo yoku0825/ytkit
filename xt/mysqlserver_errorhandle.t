@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2020  yoku0825
+# Copyright (C) 2020, 2025  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -27,9 +27,9 @@ use Test::More;
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
 require "$Bin/xTest.pl";
-use Test::mysqld;
 
 use Ytkit::MySQLServer;
+use Ytkit::Sandbox;
 
 use constant
 {
@@ -38,9 +38,9 @@ use constant
   QUERY_ERROR   => "SELECT Syntax-error",
 };
 
-my $mysqld= Test::mysqld->new(${Ytkit::xTest::version}->{$Ytkit::xTest::mysql80});
-my $server= Ytkit::MySQLServer->new({ host   => "localhost",
-                                      socket => $mysqld->base_dir . "/tmp/mysql.sock",
+my $sandbox= Ytkit::Sandbox->new("--mysqld", "8.0");
+$sandbox->prepare();
+my $server= Ytkit::MySQLServer->new({ host   => $sandbox->info->[0],
                                       user   => "root" });
 $server->conn;
 ok(!($server->error), "Connect to mysqld");
@@ -118,5 +118,6 @@ subtest "Query with error" => sub
   done_testing;
 };
 
+$sandbox->delete_sandbox;
 
 done_testing;

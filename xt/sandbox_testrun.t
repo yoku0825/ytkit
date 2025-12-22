@@ -50,8 +50,7 @@ subtest "single" => sub
       ok($server->{ipaddr}, "${version}-single startup") or _croakf("die to diagnostics");
     }
 
-    my $destroy= sprintf("bash %s/destroy_all", $sandbox->{top_directory});
-    `$destroy`;
+    $sandbox->delete_sandbox;
   }
   done_testing;
 };
@@ -82,8 +81,7 @@ subtest "replication" => sub
       is($repl->{Slave_SQL_Running}, "Yes", "Slave_SQL_Running");
     }
 
-    my $destroy= sprintf("bash %s/destroy_all", $sandbox->{top_directory});
-    `$destroy`;
+    $sandbox->delete_sandbox;
   }
   done_testing;
 };
@@ -105,8 +103,7 @@ subtest "group_replication" => sub
     my $gr_count= scalar(@{$sandbox->{_members}->{node1}->{instance}->replication_group_members});
     is($gr_count, 2, "Group Replication has 2 nodes") or _croakf("die to diagnostics");
 
-    my $destroy= sprintf("bash %s/destroy_all", $sandbox->{top_directory});
-    `$destroy`;
+    $sandbox->delete_sandbox;
   }
   done_testing;
 };

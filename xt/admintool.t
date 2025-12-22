@@ -136,8 +136,7 @@ foreach (@Ytkit::xTest::sandboxes)
     $purge->run;
     ok($purge, "purge does not raise error");
 
-    my $destroy_script= sprintf("%s/destroy_all", $sandbox->{top_directory});
-    `bash $destroy_script`;
+    $sandbox->delete_sandbox;
     done_testing;
   };
 }

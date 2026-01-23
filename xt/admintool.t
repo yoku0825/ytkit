@@ -23,6 +23,7 @@ use warnings;
 no warnings "once";
 use utf8;
 use Test::More;
+use File::Temp qw{ tempdir };
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
@@ -46,7 +47,7 @@ foreach (@Ytkit::xTest::sandboxes)
   next if $_ ne "5.7" and $_ ne "8.0";
   subtest "Testing via $_" => sub
   {
-    my $sandbox= Ytkit::Sandbox->new("--mysqld", $_);
+    my $sandbox= Ytkit::Sandbox->new("--mysqld", $_, "--sandbox_home", tempdir());
     $sandbox->prepare;
     my $ipaddr= $sandbox->info->[0];
     my $initialize= Ytkit::AdminTool->new("--host", $ipaddr,

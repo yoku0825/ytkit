@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2019  yoku0825
+# Copyright (C) 2019, 2026  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -23,16 +23,19 @@ use warnings;
 no warnings "once";
 use utf8;
 use Test::More;
+use File::Temp qw{ tempdir };
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
 require "$Bin/xTest.pl";
-use Test::mysqld;
 
 use Ytkit::MySQLServer;
-my $mysqld= Test::mysqld->new(${Ytkit::xTest::version}->{$Ytkit::xTest::mysql80});
-my $server= Ytkit::MySQLServer->new({ host   => "localhost",
-                                      socket => $mysqld->base_dir . "/tmp/mysql.sock",
+use Ytkit::Sandbox;
+
+my $sandbox= Ytkit::Sandbox->new("--mysqld", "8.0", "--sandbox-home", tempdir());
+$sandbox->prepare;
+my $ipaddr= $sandbox->info;
+my $server= Ytkit::MySQLServer->new({ host   => $ipaddr->[0],
                                       user   => "root" });
 $server->conn;
 ok(!($server->error), "Connect to mysqld");

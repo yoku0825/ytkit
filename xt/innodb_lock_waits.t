@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2019, 2020  yoku0825
+# Copyright (C) 2019, 2025  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -23,6 +23,7 @@ use warnings;
 no warnings "once";
 use utf8;
 use Test::More;
+use File::Temp qw{ tempdir };
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
@@ -35,7 +36,7 @@ foreach (@Ytkit::xTest::sandboxes)
 {
   subtest "Testing via $_" => sub
   {
-    my $sandbox= Ytkit::Sandbox->new("--mysqld", $_);
+    my $sandbox= Ytkit::Sandbox->new("--mysqld", $_, "--sandbox_home", tempdir());
     $sandbox->prepare;
     my $ipaddr= $sandbox->info;
     my $server= Ytkit::MySQLServer->new({ host   => $ipaddr->[0],

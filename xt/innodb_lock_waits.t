@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2019, 2025  yoku0825
+# Copyright (C) 2019, 2026  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -36,8 +36,10 @@ foreach (@Ytkit::xTest::sandboxes)
 {
   subtest "Testing via $_" => sub
   {
-    my $sandbox= Ytkit::Sandbox->new("--mysqld", $_, "--sandbox_home", tempdir());
+    my $sandbox_home= tempdir(DIR => $Ytkit::xTest::sandbox_tmp);
+    my $sandbox= Ytkit::Sandbox->new("--mysqld", $_, "--sandbox_home", $sandbox_home);
     $sandbox->prepare;
+    $sandbox->setup_replication;
     my $ipaddr= $sandbox->info;
     my $server= Ytkit::MySQLServer->new({ host   => $ipaddr->[0],
                                           user   => "root", });

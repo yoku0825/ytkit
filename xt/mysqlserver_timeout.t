@@ -32,8 +32,10 @@ require "$Bin/xTest.pl";
 use Ytkit::MySQLServer;
 use Ytkit::Sandbox;
 
-my $sandbox= Ytkit::Sandbox->new("--mysqld", "8.0", "--sandbox-home", tempdir());
+my $sandbox_home = tempdir(DIR => $Ytkit::xTest::sandbox_tmp);
+my $sandbox= Ytkit::Sandbox->new("--mysqld", "8.0", "--sandbox-home", $sandbox_home);
 $sandbox->prepare;
+$sandbox->setup_replication;
 my $ipaddr= $sandbox->info;
 my $server= Ytkit::MySQLServer->new({ host   => $ipaddr->[0],
                                       user   => "root" });
@@ -73,6 +75,6 @@ subtest "Queries should be time-outed" => sub
 
   done_testing;
 };
-
+$sandbox->delete_sandbox;
 
 done_testing;

@@ -1,7 +1,7 @@
 package Ytkit::xTest;
 
 #########################################################################
-# Copyright (C) 2020, 2025  yoku0825
+# Copyright (C) 2020, 2026  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,6 +25,7 @@ our $mysql80= "8.0.44";
 our $mysql84= "8.4.7";
 our $mysql94= "9.4.0";
 
+our $sandbox_tmp = "/home/yoku0825/git/ytkit/xt/tmp";
 our @sandboxes = qw{ 5.5 5.6 5.7 8.0 8.4 9.5 };
 
 our $version=

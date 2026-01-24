@@ -89,6 +89,7 @@ sub prepare
   my ($self)= @_;
 
   $self->{mysqld} =~ /^(\d+)\.(\d+)(?:\.(\d+))?/;
+  _croakf("Can't determine MySQL version from string %s", $self->{mysqld}) if !(defined($1)) || !(defined($2));
   my $version_int= sprintf("%d%02d%02d", $1, $2, $3 // 99);   ### 99 if patch version is not specified like '8.4'
   $self->{mysqld} = sprintf("%d.%d", $1, $2) if $version_int =~ /\.99$/;
   _infof("version_int: %d from mysqld %s", $version_int, $self->{mysqld});

@@ -1,7 +1,7 @@
 package Ytkit::Sandbox;
 
 ########################################################################
-# Copyright (C) 2025  yoku0825
+# Copyright (C) 2025, 2026  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -308,6 +308,46 @@ sub delete_sandbox
   `$command`;
 
   return 0;
+}
+
+sub wait_replication_conversion
+{
+  my ($self, $timeout)= @_;
+  return 0 if $self->{topology} eq "single";
+
+  _infof("Starting wait_replication_conversion");
+
+  ### Lock source instance
+  my $source_instance= $self->{_members}->{node1}->{instance};
+  $source_instance->exec_sql("SET GLOBAL read_only= 1, super_read_only= 1");
+  my $source_gtid= $source_instance->gtid;
+  _debugf("Source_gtid: %s", $source_gtid);
+
+  $timeout //= 10;
+  foreach my $node (sort(keys(%{$self->{_members}})))
+  {
+    next if $node eq "node1";
+    _debugf("Waiting for %s replication conversion", $node);
+    my $replica_instance= $self->{_members}->{$node}->{instance};
+    my $replica_gtid= "";
+
+    while ($timeout)
+    {
+      ### Clear Ytkit::MySQLServer's cache
+      delete($replica_instance->{_gtid});
+      delete($replica_instance->{_show_master_status});
+      $replica_gtid= $replica_instance->gtid;
+      _debugf("Replica_%s_gtid: %s", $node, $replica_gtid);
+      last if $replica_gtid eq $source_gtid;
+      $timeout--;
+      sleep 1;
+    }
+
+    _croakf("Replication conversion failure, source_gtid: %s, replica_%s_gtid: %s",
+            $source_gtid, $node, $replica_gtid) if $timeout == 0;
+  }
+  $source_instance->exec_sql("SET GLOBAL read_only= 0, super_read_only= 0");
+  return 1;
 }
 
 sub _write_group_script

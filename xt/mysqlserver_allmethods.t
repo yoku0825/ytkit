@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2019, 2020  yoku0825
+# Copyright (C) 2019, 2026  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -23,30 +23,25 @@ use warnings;
 no warnings "once";
 use utf8;
 use Test::More;
+use File::Temp qw{ tempdir };
 
 use FindBin qw{$Bin};
 use lib "$Bin/../lib";
 require "$Bin/xTest.pl";
-use Test::mysqld;
 
 use Ytkit::MySQLServer;
+use Ytkit::Sandbox;
 
-my $test= $Ytkit::xTest::version;
-
-### Put test-binaries into /usr/mysql/X.X.XX 
-foreach my $version (sort(keys(%$test)))
+foreach my $version (@Ytkit::xTest::sandboxes)
 {
   subtest "Testing via $version" => sub
   {
-    $test->{$version}->{my_cnf}=
-    {
-      server_id => 1,
-      log_bin   => "mysql-bin",
-    };
-    my $mysqld= Test::mysqld->new($test->{$version});
+    my $sandbox_home= tempdir(DIR => $Ytkit::xTest::sandbox_tmp);
+    my $sandbox= Ytkit::Sandbox->new("--mysqld", $version, "--sandbox_home", $sandbox_home);
+    $sandbox->prepare;
+    $sandbox->setup_replication;
 
-    my $server= Ytkit::MySQLServer->new({ host   => "localhost",
-                                          socket => $mysqld->base_dir . "/tmp/mysql.sock",
+    my $server= Ytkit::MySQLServer->new({ host   => $sandbox->info->[0],
                                           user   => "root", });
     $server->conn;
     ok(!($server->error), "Connect to mysqld");
@@ -73,6 +68,7 @@ foreach my $version (sort(keys(%$test)))
     
       ok(!($@) && !($server->error), "$func has executed without error.") or diag($server->error);
     }
+    $sandbox->delete_sandbox;
     done_testing;
   };
 }

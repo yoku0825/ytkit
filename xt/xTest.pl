@@ -26,7 +26,7 @@ our $mysql84= "8.4.7";
 our $mysql94= "9.4.0";
 
 our $sandbox_tmp = "/home/yoku0825/git/ytkit/xt/tmp";
-our @sandboxes = qw{ 5.5 5.6 5.7 8.0 8.4 9.6 };
+our @sandboxes = qw{ 5.5 5.6 5.7 8.0 8.4 9.5 };
 
 our $version=
 {

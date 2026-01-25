@@ -262,13 +262,39 @@ sub mysqld_version
 sub show_slave_status
 {
   my ($self)= @_;
-  return $self->query_arrayref("SHOW SLAVE STATUS");
+
+  ### Stop _carp within internal version handling
+  my $saved_ignore= $self->{_ignore_unsupport_version};
+  $self->{_ignore_unsupport_version}= 1;
+
+  ### SHOW REPLICA STATUS was implemented on 8.0.23
+  my $use_new_terminology= $self->support_version(80023);
+
+  ### Restore param
+  $self->{_ignore_unsupport_version}= $saved_ignore;
+ 
+  return $use_new_terminology ?
+    $self->query_arrayref("SHOW REPLICA STATUS") :
+    $self->query_arrayref("SHOW SLAVE STATUS");
 }
 
 sub show_slave_hosts
 {
   my ($self)= @_;
-  return $self->query_arrayref("SHOW SLAVE HOSTS");
+
+  ### Stop _carp within internal version handling
+  my $saved_ignore= $self->{_ignore_unsupport_version};
+  $self->{_ignore_unsupport_version}= 1;
+
+  ### SHOW REPLICAUS was implemented on 8.0.23
+  my $use_new_terminology= $self->support_version(80023);
+
+  ### Restore param
+  $self->{_ignore_unsupport_version}= $saved_ignore;
+ 
+  return $use_new_terminology ?
+    $self->query_arrayref("SHOW REPLICAS") :
+    $self->query_arrayref("SHOW SLAVE HOSTS");
 }
 
 sub show_processlist
@@ -319,7 +345,7 @@ EOS
 sub show_master_logs
 {
   my ($self)= @_;
-  return $self->query_arrayref("SHOW MASTER LOGS");
+  return $self->query_arrayref("SHOW BINARY LOGS");
 }
 
 sub describe_table
@@ -715,7 +741,20 @@ sub quote
 sub show_master_status
 {
   my ($self)= @_;
-  return $self->query_arrayref("SHOW MASTER STATUS");
+
+  ### Stop _carp within internal version handling
+  my $saved_ignore= $self->{_ignore_unsupport_version};
+  $self->{_ignore_unsupport_version}= 1;
+
+  ### SHOW BINARY LOG STATUS was implemented on 8.4
+  my $use_new_terminology= $self->support_version(80400);
+
+  ### Restore param
+  $self->{_ignore_unsupport_version}= $saved_ignore;
+ 
+  return $use_new_terminology ?
+    $self->query_arrayref("SHOW BINARY LOG STATUS") :
+    $self->query_arrayref("SHOW MASTER STATUS");
 }
 
 sub gtid

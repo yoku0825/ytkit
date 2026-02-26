@@ -310,6 +310,12 @@ sub delete_sandbox
   return 0;
 }
 
+sub get_first_instance
+{
+  my ($self)= @_;
+  return $self->{_members}->{node1}->{instance};
+}
+
 sub wait_replication_conversion
 {
   my ($self, $timeout)= @_;
@@ -318,7 +324,7 @@ sub wait_replication_conversion
   _infof("Starting wait_replication_conversion");
 
   ### Lock source instance
-  my $source_instance= $self->{_members}->{node1}->{instance};
+  my $source_instance= $self->get_first_instance;
   $source_instance->exec_sql("SET GLOBAL read_only= 1, super_read_only= 1");
   my $source_gtid= $source_instance->gtid;
   _debugf("Source_gtid: %s", $source_gtid);

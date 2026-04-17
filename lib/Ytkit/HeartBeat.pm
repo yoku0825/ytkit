@@ -139,7 +139,7 @@ sub run
     }
 
     my ($unixtime, $microsec)= Time::HiRes::gettimeofday();
-    my $now= sprintf("%s.%3d", Time::Piece->strptime($unixtime, "%s")->strftime("%Y-%m-%d %H:%M:%S"), $microsec);
+    my $now= sprintf("%s.%03d", Time::Piece->strptime($unixtime, "%s")->strftime("%Y-%m-%d %H:%M:%S"), $microsec);
 
     $self->instance->exec_sql_with_carp($insert_sql, undef, $now);
 

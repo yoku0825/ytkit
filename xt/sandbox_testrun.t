@@ -48,6 +48,7 @@ subtest "single" => sub
     my $sandbox= Ytkit::Sandbox->new("--topology", "single",
                                      "--servers", 1,
                                      "--mysqld", $version,
+                                     "--no-persist",
                                      "--sandbox_home", $sandbox_home);
     $sandbox->prepare;
     $sandbox->setup_replication;
@@ -70,6 +71,7 @@ subtest "replication" => sub
     my $sandbox= Ytkit::Sandbox->new("--topology", "replication",
                                      "--servers", 2,
                                      "--mysqld", $version,
+                                     "--no-persist",
                                      "--sandbox_home", $sandbox_home);
     $sandbox->prepare;
     $sandbox->setup_replication;
@@ -106,6 +108,7 @@ subtest "group_replication" => sub
     my $sandbox= Ytkit::Sandbox->new("--topology", "gr",
                                      "--servers", 2,
                                      "--mysqld", $version,
+                                     "--no-persist",
                                      "--sandbox_home", $sandbox_home);
     $sandbox->prepare;
     $sandbox->setup_replication;

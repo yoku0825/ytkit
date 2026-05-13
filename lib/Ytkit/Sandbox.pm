@@ -140,6 +140,7 @@ sub prepare
     _write_my_cnf(sprintf("%s/my.cnf", $dir),
                   $version_int,
                   $dict_seq * 100 + $n,
+                  $hostname,
                   $self->{additional_config} // "");
 
     my $container_id;
@@ -150,14 +151,10 @@ sub prepare
     }
     else
     {
-      my $cmd = sprintf("docker run -d --mount type=bind,source=%s/hosts,target=/etc/hosts " .
-                          "--mount type=bind,source=%s/my.cnf,target=/etc/my.cnf " .
-                          "--mount type=bind,source=%s,target=/var/lib/mysql " .
-                          "--hostname=%s --name=%s %s %s",
-                        $self->{top_directory},
-                        $dir,
-                        $datadir,
-                        $hostname, $hostname, $docker_options, $self->{container});
+      my $cmd = sprintf("docker run -d --mount type=bind,source=%s/hosts,target=/etc/hosts ", $self->{top_directory}) .
+                sprintf("--mount type=bind,source=%s/my.cnf,target=/etc/my.cnf ", $dir) .
+                ($self->{no_persist} ? "" : sprintf("--mount type=bind,source=%s,target=/var/lib/mysql ", $datadir)) .
+                sprintf("--hostname=%s --name=%s %s %s", $hostname, $hostname, $docker_options, $self->{container});
       _infof("Docker command: %s", $cmd);
       $container_id= `$cmd`;
       chomp($container_id);
@@ -382,7 +379,7 @@ sub _write_script
 
 sub _write_my_cnf
 {
-  my ($file_path, $version_int, $server_id, $additional_json) = @_;
+  my ($file_path, $version_int, $server_id, $hostname, $additional_json) = @_;
 
   open(my $fh, ">", $file_path);
   my $terminology= $version_int ge 80400 ? "replica" : "slave";
@@ -390,6 +387,7 @@ sub _write_my_cnf
   my $always = << "EOF";
 [mysql]
 skip-auto-rehash
+prompt= '$hostname> '
 
 [mysqld]
 user = mysql
@@ -516,7 +514,7 @@ sub _config
                     default => "single",
                     isa => ["single", "replication", "gr"],
                     text => q{Replication topology.}, },
-    "servers" => { alias => ["servers", "count", "server_count", "n"],
+    "servers" => { alias => ["servers", "count", "server_count", "n", "c"],
                    isa => qr{\d+},
                    text => q{How many servers are deployed}, },
     "sandbox_home" => { alias => ["sandbox_home", "home", "d"],
@@ -525,6 +523,10 @@ sub _config
     "additional_config" => { alias => ["additional_config", "config"],
                              default => '',
                              text => q{ Additional my.cnf option expressed by JSON }, },
+    "no_persist" => { alias => ["no_persist"],
+                      text => q{Do not create datadir in sandbox_home},
+                      noarg => 1,
+                      default => 0, },
   };
 
   my $config= Ytkit::Config->new({ %$program_option, 

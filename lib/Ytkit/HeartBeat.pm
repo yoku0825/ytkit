@@ -146,7 +146,8 @@ sub run
     if ($self->instance->error)
     {
       _notef("HeartBeat Failed at %s : %s", $now, $self->instance->error);
-      $self->instance->reconnect;
+      delete($self->{_instance});
+      $self->instance->conn;
     }
     else
     {
@@ -157,6 +158,14 @@ sub run
     {
       _infof("Remove old heartbeat records, %d days ago", $self->{retention_period});
       $self->instance->exec_sql_with_carp($delete_sql);
+
+      if ($self->instance->error)
+      {
+        _notef("DELETE records failed at %s : %s", $now, $self->instance->error);
+        delete($self->{_instance});
+        $self->instance->conn;
+      }
+
       $count= 0;
     }
 

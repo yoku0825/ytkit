@@ -1,7 +1,7 @@
 package Ytkit::Config;
 
 ########################################################################
-# Copyright (C) 2017, 2025  yoku0825
+# Copyright (C) 2017, 2026  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,7 +25,7 @@ use utf8;
 use Ytkit::IO;
 use Ytkit::Config::Option;
 
-my $_version= "0.5.2";
+my $_version= "0.5.3";
 
 our $CONNECT_OPTION=
 {

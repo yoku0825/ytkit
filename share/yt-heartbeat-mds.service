@@ -14,7 +14,7 @@ Type=simple
 
 TimeoutSec=0
 #ExecStartPre=
-ExecStart=/usr/local/bin/yt-heartbeat -h "$host" -u "$user" --heartbeat_schema="$heartbeat_schema" --heartbeat_table="$heartbeat_table"
+ExecStart=/usr/local/bin/yt-heartbeat -h "$host" -u "$user" --heartbeat_schema="${heartbeat_schema}" --heartbeat_table="${heartbeat_table}"
 EnvironmentFile=-/etc/sysconfig/ytkit
 
 Restart=on-failure

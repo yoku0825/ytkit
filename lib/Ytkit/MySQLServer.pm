@@ -1,7 +1,7 @@
 package Ytkit::MySQLServer;
 
 ########################################################################
-# Copyright (C) 2018, 2021  yoku0825
+# Copyright (C) 2018, 2026  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -273,9 +273,29 @@ sub show_slave_status
   ### Restore param
   $self->{_ignore_unsupport_version}= $saved_ignore;
  
-  return $use_new_terminology ?
-    $self->query_arrayref("SHOW REPLICA STATUS") :
-    $self->query_arrayref("SHOW SLAVE STATUS");
+  if ($use_new_terminology)
+  {
+    ### Change keywords for compatibility
+    my @tmp;
+    foreach my $replication_channel (@{$self->query_arrayref("SHOW REPLICA STATUS")})
+    {
+      my $buff;
+      foreach my $column (keys(%$replication_channel))
+      {
+        my $new_column_name= $column;
+        $new_column_name =~ s/Source_/Master_/;
+        $new_column_name =~ s/Replica_/Slave_/;
+
+        $buff->{$new_column_name}= $replication_channel->{$column};
+      }
+      push(@tmp, $buff);
+    }
+    return \@tmp;
+  }
+  else
+  {
+    return $self->query_arrayref("SHOW SLAVE STATUS");
+  }
 }
 
 sub show_slave_hosts

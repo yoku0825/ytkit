@@ -37,7 +37,7 @@ foreach my $version (@Ytkit::xTest::sandboxes)
   subtest "Testing via $version" => sub
   {
     my $sandbox_home= tempdir(DIR => $Ytkit::xTest::sandbox_tmp);
-    my $sandbox= Ytkit::Sandbox->new("--mysqld", $version, "--sandbox_home", $sandbox_home);
+    my $sandbox= Ytkit::Sandbox->new("--mysqld", $version, "--sandbox_home", $sandbox_home, "--no_persist");
     $sandbox->prepare;
     $sandbox->setup_replication;
 

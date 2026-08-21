@@ -37,13 +37,14 @@ subtest "Issue #80" => sub
 {
   my $sandbox_home= tempdir(DIR => "/home/yoku0825/git/ytkit/xt/tmp");
   my $sandbox= Ytkit::Sandbox->new("--mysqld", "8.0", "--sandbox_home", $sandbox_home,
-                                   "--additional_config", '{"default_authentication_plugin":"mysql_native_password"}');
+                                   "--additional_config", '{"default_authentication_plugin":"mysql_native_password"}',
+                                   "--no_persist");
   $sandbox->prepare;
   my $ipaddr= $sandbox->info->[0];
 
   ### Not super user.
-  $sandbox->{_members}->{node1}->{instance}->exec_sql("CREATE USER watcher");
-  $sandbox->{_members}->{node1}->{instance}->exec_sql("GRANT SELECT, REPLICATION CLIENT, REPLICATION SLAVE, PROCESS ON *.* TO watcher");
+  $sandbox->get_first_instance->exec_sql("CREATE USER watcher");
+  $sandbox->get_first_instance->exec_sql("GRANT SELECT, REPLICATION CLIENT, REPLICATION SLAVE, PROCESS ON *.* TO watcher");
   my $warn_count= 0;
   local $SIG{__WARN__}= sub
   {
@@ -64,14 +65,14 @@ subtest "Issue #79" => sub
   my $sandbox= Ytkit::Sandbox->new("--mysqld", "8.0", "--sandbox_home", $sandbox_home,
                                    "--topology", "replication",
                                    "--servers", "2",
-                                   "--additional_config", '{"default_authentication_plugin":"mysql_native_password"}');
+                                   "--additional_config", '{"default_authentication_plugin":"mysql_native_password"}');  ### Need to test with "--socket", can't use --no_persist.
   $sandbox->prepare;
   $sandbox->setup_replication;
   my $source_ip= $sandbox->info->[0];
 
   ### Not super user.
-  $sandbox->{_members}->{node1}->{instance}->exec_sql("CREATE USER watcher");
-  $sandbox->{_members}->{node1}->{instance}->exec_sql("GRANT SELECT, REPLICATION CLIENT, REPLICATION SLAVE, PROCESS ON *.* TO watcher");
+  $sandbox->get_first_instance->exec_sql("CREATE USER watcher");
+  $sandbox->get_first_instance->exec_sql("GRANT SELECT, REPLICATION CLIENT, REPLICATION SLAVE, PROCESS ON *.* TO watcher");
   $sandbox->wait_replication_conversion(30);
   my $prog= Ytkit::ReplTopology->new("--socket", sprintf("%s/alpha/node1/datadir/mysql.sock", $sandbox_home),
                                      "--user=watcher");

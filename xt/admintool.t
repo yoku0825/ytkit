@@ -46,7 +46,7 @@ foreach (@Ytkit::xTest::sandboxes)
   subtest "Testing via $_" => sub
   {
     my $sandbox_home= tempdir(DIR => $Ytkit::xTest::sandbox_tmp);
-    my $sandbox= Ytkit::Sandbox->new("--mysqld", $_, "--sandbox_home", $sandbox_home);
+    my $sandbox= Ytkit::Sandbox->new("--mysqld", $_, "--sandbox_home", $sandbox_home, "--no_persist");
     $sandbox->prepare;
     $sandbox->setup_replication;
 

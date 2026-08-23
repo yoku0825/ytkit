@@ -40,7 +40,7 @@ use constant
 };
 
 my $sandbox_home = tempdir(DIR => $Ytkit::xTest::sandbox_tmp);
-my $sandbox= Ytkit::Sandbox->new("--mysqld", "8.0", "--sandbox_home", $sandbox_home);
+my $sandbox= Ytkit::Sandbox->new("--mysqld", "8.0", "--sandbox_home", $sandbox_home, "--no_persist");
 $sandbox->prepare();
 $sandbox->setup_replication;
 my $server= Ytkit::MySQLServer->new({ host   => $sandbox->info->[0],

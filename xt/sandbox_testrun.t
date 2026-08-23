@@ -80,19 +80,22 @@ subtest "replication" => sub
     {
       ok($server->{ipaddr}, "${version}-replication-${node} startup");
     }
-      
-    if ($sandbox->{_version_int} >= 80400)
+
+    my $success_replication= 0;
+    for (my $n= 1; $n <= 5; $n++)
     {
-      my $repl= $sandbox->{_members}->{node2}->{instance}->query_arrayref("SHOW REPLICA STATUS")->[0];
-      is($repl->{Replica_IO_Running}, "Yes", "Replica_IO_Running");
-      is($repl->{Replica_SQL_Running}, "Yes", "Replica_SQL_Running");
+      my $check_instance= $sandbox->{_members}->{node2}->{instance};
+      my $repl= $check_instance->show_slave_status->[0];
+
+      if ($repl->{Slave_IO_Running} eq "Yes" && $repl->{Slave_SQL_Running} eq "Yes")
+      {
+        $success_replication= 1;
+        last;
+      }
+      sleep 1;
     }
-    else
-    {
-      my $repl= $sandbox->{_members}->{node2}->{instance}->query_arrayref("SHOW SLAVE STATUS")->[0];
-      is($repl->{Slave_IO_Running}, "Yes", "Slave_IO_Running");
-      is($repl->{Slave_SQL_Running}, "Yes", "Slave_SQL_Running");
-    }
+
+    is($success_replication, 1, "IO_Running: Yes and SQL_Running: Yes");
 
     $sandbox->delete_sandbox;
   }

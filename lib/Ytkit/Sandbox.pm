@@ -145,7 +145,7 @@ sub prepare
 
     my $container_id;
     ### 5.5 and 5.6 must be handled manually
-    if ($version_int lt 50700)
+    if ($version_int < 50700)
     {
       $container_id= $self->init_for_55_56($dir, $n);
     }
@@ -253,7 +253,7 @@ sub setup_replication
       }
       else
       {
-        my $gtid_mode = $self->{_version_int} ge 50600 ? 1 : 0;   ### 5.6 and later, 1
+        my $gtid_mode = $self->{_version_int} >= 50600 ? 1 : 0;   ### 5.6 and later, 1
         $instance->follow_replication_source($self->{_members}->{"node1"}->{ipaddr}, $gtid_mode);
       }
     }
@@ -261,9 +261,10 @@ sub setup_replication
     {
       $instance->setup_group_replication;
       $instance->clear_gtid;
+      my $communication_port= $instance->{instance}->mysqld_version >= 260700 ? 3306 : 13306;
 
       $instance->{instance}->exec_sql_with_croak(sprintf("SET PERSIST group_replication_group_seeds = '%s'",
-                                                         join(",", map { sprintf("%s:13306", $_->{ipaddr}) } values(%{$self->{_members}}))));
+                                                         join(",", map { sprintf("%s:%d", $_->{ipaddr}, $communication_port) } values(%{$self->{_members}}))));
       if ($node eq "node1")
       {
         ### Primary
@@ -382,7 +383,7 @@ sub _write_my_cnf
   my ($file_path, $version_int, $server_id, $hostname, $additional_json) = @_;
 
   open(my $fh, ">", $file_path);
-  my $terminology= $version_int ge 80400 ? "replica" : "slave";
+  my $terminology= $version_int >= 80400 ? "replica" : "slave";
   
   my $always = << "EOF";
 [mysql]
@@ -400,7 +401,7 @@ skip_name_resolve
 EOF
 
   print $fh $always;
-  if ($version_int ge 50600)
+  if ($version_int >= 50600)
   {
     my $gtid = << "EOF";
 gtid_mode = ON

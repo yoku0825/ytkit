@@ -19,6 +19,6 @@ package Ytkit::xTest;
 ########################################################################
 
 our $sandbox_tmp = "/home/yoku0825/git/ytkit/xt/tmp";
-our @sandboxes = qw{ 5.5 5.6 5.7 8.0 8.4 9.7 };
+our @sandboxes = qw{ 5.5 5.6 5.7 8.0 8.4 9.7 26.7 };
 
 return 1;

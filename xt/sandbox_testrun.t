@@ -81,7 +81,7 @@ subtest "replication" => sub
       ok($server->{ipaddr}, "${version}-replication-${node} startup");
     }
       
-    if ($sandbox->{_version_int} ge 80400)
+    if ($sandbox->{_version_int} >= 80400)
     {
       my $repl= $sandbox->{_members}->{node2}->{instance}->query_arrayref("SHOW REPLICA STATUS")->[0];
       is($repl->{Replica_IO_Running}, "Yes", "Replica_IO_Running");

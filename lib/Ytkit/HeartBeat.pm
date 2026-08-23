@@ -91,8 +91,8 @@ CREATE TABLE IF NOT EXISTS `%s`.`%s` (
 EOS
   $self->instance->exec_sql_with_croak(sprintf($create_sql,
                                                $self->{schema}, $self->{table},
-                                               $self->instance->mysqld_version lt 50600 ? "" : "(3)",
-                                               $self->instance->mysqld_version lt 50600 ? "" : "(3)"));
+                                               $self->instance->mysqld_version < 50600 ? "" : "(3)",
+                                               $self->instance->mysqld_version < 50600 ? "" : "(3)"));
   $self->instance->exec_sql_with_croak(sprintf(q|TRUNCATE `%s`.`%s`|, $self->{schema}, $self->{table})) if $self->{truncate};
   return 0;
 }
@@ -110,7 +110,7 @@ sub run
   alarm($self->{timeout});
   my $insert_sql;
 
-  if ($self->instance->mysqld_version lt 50600)
+  if ($self->instance->mysqld_version < 50600)
   {
     ### 5.5 and earlier doesn't have gtid_executed and fractional second
     $insert_sql= sprintf(q|INSERT INTO `%s`.`%s` (hostname, app_time, server_time, gtid_executed) VALUES (@@hostname, ?, NOW(), '')|,
@@ -154,7 +154,7 @@ sub run
       _infof("HeartBeat Succeeded at %s\n", $now);
     }
 
-    if ($count ge DELETE_ROW_LIMIT_GUIDE)
+    if ($count >= DELETE_ROW_LIMIT_GUIDE)
     {
       _infof("Remove old heartbeat records, %d days ago", $self->{retention_period});
       $self->instance->exec_sql_with_carp($delete_sql);

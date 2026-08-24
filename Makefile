@@ -22,7 +22,7 @@ install:
 
 .PHONY: test
 test:
-	prove
+	TZ=UTC-9 prove
 
 .PHONY: fatpack
 fatpack: setup yt-alter-progress yt-binlog-groupby yt-collect yt-data-dumper yt-healthcheck yt-innostat yt-querystat yt-resource-collector yt-wait-replication yt-print-information yt-extract yt-rename-database yt-config yt-repl-topology

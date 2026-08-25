@@ -138,64 +138,64 @@ $ mysqlbinlog -vv bin.000022 | yt-binlog-groupby --cell=10s --group-by=time,tabl
 $ yt-healthcheck -h 172.17.0.1 -u user_name -p'password' -P 3306
 ```
 
-|              option_name              |            default             |                                                                     text                                                                      |
-| ------------------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| --host=value, -h=value                | "localhost"                    | MySQL host                                                                                                                                    |
-| --port=value, -P=value                | 3306                           | MySQL port                                                                                                                                    |
-| --user=value, -u=value                | (as same as OS user)           | MySQL account using for connection and checking (need REPLICATION CLIENT, PROCESSLIST and global SELECT priv)                                 |
-| --password=value, -p=value            | ""                             | Password for the user specified by --user                                                                                                     |
-| --ask_pass, --ask_password, --askpass | false                          | Ask --password by prompt                                                                                                                      |
-| --socket=value, -S=value              | (depends on libmysqlclient.so) | Path to mysql.sock (this parameter is used when --host=localhost)                                                                             |
-| --quiet, --silent, -q, -s             | false                          | No output any messages                                                                                                                        |
-| --verbose, -v                         | false                          | Verbose output mode                                                                                                                           |
-| --help, --usage                       | false                          | print help message                                                                                                                            |
-| --version, -V                         | false                          | Show ytkit version                                                                                                                            |
-| --timeout=value                       | 1                              | Seconds before timeout (Set into read_timeout, write_timeout, connect_timeout)                                                                |
-| --debug                               | false                          | Set debug output                                                                                                                              |
-| --dump_detail                         | "" (OFF when empty)            | When result is NOT NAGIOS_OK,  output results of "SHOW PROCESSLIST", "SHOW SLAVE STATUS" and "SHOW ENGINE INNODB STATUS"" into specified file |
-| --autoinc_usage_enable                | 1 (ON)                         | Enable "auto_increment checking"                                                                                                              |
-| --autoinc_usage_warning               | 50                             | Warning threshold for "current_auto_increment_value / datatype_max"(percentage)                                                               |
-| --autoinc_usage_critical              | 90                             | Critical threshold for "current_auto_increment_value / datatype_max"(percentage)                                                              |
-| --connection_count_enable             | 1 (ON)                         | Enable "connection count checking"                                                                                                            |
-| --connection_count_warning            | 70                             | Warning threshold for "Threads_connected / max_connections"(percentage)                                                                       |
-| --connection_count_critical           | 95                             | Critical threshold for "Threads_connected / max_connections"(percentage)                                                                      |
-| --threads_running_enable              | 1 (ON)                         | Enable "threads_running count checking"                                                                                                       |
-| --threads_running_warning             | 10                             | Warning threshold for "Threads_running"                                                                                                       |
-| --threads_running_critical            | 20                             | Critical threshold for "Threads_running"                                                                                                      |
-| --deadlock_enable                             | 0 (OFF)    | Enable "deadlock detection checking"                                                                                                        |
-| --deadlock_warning                            | 300        | Warning threshold for LATEST DETECTED DEADLOCK time (seconds)                                                                               |
-| --deadlock_critical                           | 1          | Critical threshold for LATEST DETECTED DEADLOCK time (seconds)                                                                              |
-| --fabric_faulty                               | ignore     | (mikasafabric will be removed future release) Reporting level when mikasafabric has faulty-state managed server                             |
-| --fabric_fd_enable                            | 1 (ON)     | (mikasafabric will be removed future release) Enable "open fds checking"                                                                    |
-| --fabric_fd_warning                           | 50         | (mikasafabric will be removed future release)  Warning threshold for "current_fd / max_fd"(percentage)                                      |
-| --fabric_fd_critical                          | 70         | (mikasafabric will be removed future release) Critical threshold for "current_fd / max_fd"(percentage)                                      |
-| --fabric_no_candidate                         | critical   | (mikasafabric will be removed future release) Reporting level when managed group has no Candidate-Slave server                              |
-| --group_replication_lag_enable                | 1 (ON)     | Enable "Group Replication lag checking" (both "Seconds" and "Transactions")                                                                 |
-| --group_replication_lag_seconds_warning       | 5          | Warning threshold for Group Replication Lag (seconds)                                                                                       |
-| --group_replication_lag_seconds_critical      | 30         | Critical threshold for Group Replication Lag (seconds)                                                                                      |
-|                                               |            |                                                                                                                                             |
-| --group_replication_lag_transactions_warning  | 100        | Warning threshold for Group Replication Lag (queued transactions)                                                                           |
-| --group_replication_lag_transactions_critical | 10000      | Critical threshold for Group Replication Lag (queued transactions)                                                                          |
-| --gtid_hole_enable                            | 0 (OFF)    | Enable "GTID hole checking"                                                                                                                 |
-| --history_list_enable                         | 0 (OFF)    | Enable "History List Length checking"                                                                                                       |
-| --history_list_warning                        | 100000     | Warning threshold for trx_rseg_history_len                                                                                                  |
-| --history_list_critical                       | 500000     | Critical threshold for trx_rseg_history_len                                                                                                 |
-| --long_query_enable                           | 1 (ON)     | Enable "long-query" checking                                                                                                                |
-| --long_query_warning                          | 5          | Warning threshold for "SHOW PROCESSLIST"'s "Time"(seconds)                                                                                  |
-| --long_query_critical                         | 100        | Critical threshold for "SHOW PROCESSLIST"'s "Time"(seconds)                                                                                 |
-| --long_query_exclude_host                     | "" (Empty) | Specify to ignore values for "SHOW PROCESSLIST"'s "Host". When first-match them, doesn't raise WARNING or CRITICAL(always OK)               |
-| --long_query_exclude_user                     | "" (Empty) | Specify to ignore values for "SHOW PROCESSLIST"'s "User". When first-match them, doesn't raise WARNING or CRITICAL(always OK)               |
-| --long_query_exclude_query                    | "" (Empty) | Specify to ignore values for "SHOW PROCESSLIST"'s "Info"(SQL statement) When first-match them, doesn't raise WARNING or CRITICAL(always OK) |
-| --long_query_min_warning_thread               | 1          | Don't return NAGIOS_WARNING when threads which is over long-query-warning                                                                   |
-| are less than long-query-min-warning-thread   |            |                                                                                                                                             |
-| --long_query_min_critical_thread              | 1          | Don't return NAGIOS_WARNING when threads which is over long-query-warning are less than long-query-min-warning-thread                       |
-| --role                                        | auto       | Specify the combination of What "checkings" have to be checked                                                                              |
-| --slave_status_enable                         | 1 (ON)     | Enable "SHOW SLAVE STATUS checking"                                                                                                         |
-| --slave_status_warning                        | 5          | Warning threshold for "Seconds_Behind_Master"(seconds)                                                                                      |
-| --slave_status_critical                       | 30         | Critical threshold for "Seconds_Behind_Master"(seconds)                                                                                     |
-| --uptime_enable                               | 1 (ON)     | Enable "uptime checking"                                                                                                                    |
-| --uptime_warning                              | 300        | Warning threshold for Uptime(seconds)                                                                                                       |
-| --uptime_critical                             | 300        | Critical threshold for Uptime(seconds)                                                                                                      |
+|                  option_name                  |            default             |                                                                     text                                                                      |
+| --------------------------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| --host=value, -h=value                        | "localhost"                    | MySQL host                                                                                                                                    |
+| --port=value, -P=value                        | 3306                           | MySQL port                                                                                                                                    |
+| --user=value, -u=value                        | (as same as OS user)           | MySQL account using for connection and checking (need REPLICATION CLIENT, PROCESSLIST and global SELECT priv)                                 |
+| --password=value, -p=value                    | ""                             | Password for the user specified by --user                                                                                                     |
+| --ask_pass, --ask_password, --askpass         | false                          | Ask --password by prompt                                                                                                                      |
+| --socket=value, -S=value                      | (depends on libmysqlclient.so) | Path to mysql.sock (this parameter is used when --host=localhost)                                                                             |
+| --quiet, --silent, -q, -s                     | false                          | No output any messages                                                                                                                        |
+| --verbose, -v                                 | false                          | Verbose output mode                                                                                                                           |
+| --help, --usage                               | false                          | print help message                                                                                                                            |
+| --version, -V                                 | false                          | Show ytkit version                                                                                                                            |
+| --timeout=value                               | 1                              | Seconds before timeout (Set into read_timeout, write_timeout, connect_timeout)                                                                |
+| --debug                                       | false                          | Set debug output                                                                                                                              |
+| --dump_detail                                 | "" (OFF when empty)            | When result is NOT NAGIOS_OK,  output results of "SHOW PROCESSLIST", "SHOW SLAVE STATUS" and "SHOW ENGINE INNODB STATUS"" into specified file |
+| --autoinc_usage_enable                        | 1 (ON)                         | Enable "auto_increment checking"                                                                                                              |
+| --autoinc_usage_warning                       | 50                             | Warning threshold for "current_auto_increment_value / datatype_max"(percentage)                                                               |
+| --autoinc_usage_critical                      | 90                             | Critical threshold for "current_auto_increment_value / datatype_max"(percentage)                                                              |
+| --connection_count_enable                     | 1 (ON)                         | Enable "connection count checking"                                                                                                            |
+| --connection_count_warning                    | 70                             | Warning threshold for "Threads_connected / max_connections"(percentage)                                                                       |
+| --connection_count_critical                   | 95                             | Critical threshold for "Threads_connected / max_connections"(percentage)                                                                      |
+| --threads_running_enable                      | 1 (ON)                         | Enable "threads_running count checking"                                                                                                       |
+| --threads_running_warning                     | 10                             | Warning threshold for "Threads_running"                                                                                                       |
+| --threads_running_critical                    | 20                             | Critical threshold for "Threads_running"                                                                                                      |
+| --deadlock_enable                             | 0 (OFF)                        | Enable "deadlock detection checking"                                                                                                          |
+| --deadlock_warning                            | 300                            | Warning threshold for LATEST DETECTED DEADLOCK time (seconds)                                                                                 |
+| --deadlock_critical                           | 1                              | Critical threshold for LATEST DETECTED DEADLOCK time (seconds)                                                                                |
+| --fabric_faulty                               | ignore                         | (mikasafabric will be removed future release) Reporting level when mikasafabric has faulty-state managed server                               |
+| --fabric_fd_enable                            | 1 (ON)                         | (mikasafabric will be removed future release) Enable "open fds checking"                                                                      |
+| --fabric_fd_warning                           | 50                             | (mikasafabric will be removed future release)  Warning threshold for "current_fd / max_fd"(percentage)                                        |
+| --fabric_fd_critical                          | 70                             | (mikasafabric will be removed future release) Critical threshold for "current_fd / max_fd"(percentage)                                        |
+| --fabric_no_candidate                         | critical                       | (mikasafabric will be removed future release) Reporting level when managed group has no Candidate-Slave server                                |
+| --group_replication_lag_enable                | 1 (ON)                         | Enable "Group Replication lag checking" (both "Seconds" and "Transactions")                                                                   |
+| --group_replication_lag_seconds_warning       | 5                              | Warning threshold for Group Replication Lag (seconds)                                                                                         |
+| --group_replication_lag_seconds_critical      | 30                             | Critical threshold for Group Replication Lag (seconds)                                                                                        |
+|                                               |                                |                                                                                                                                               |
+| --group_replication_lag_transactions_warning  | 100                            | Warning threshold for Group Replication Lag (queued transactions)                                                                             |
+| --group_replication_lag_transactions_critical | 10000                          | Critical threshold for Group Replication Lag (queued transactions)                                                                            |
+| --gtid_hole_enable                            | 0 (OFF)                        | Enable "GTID hole checking"                                                                                                                   |
+| --history_list_enable                         | 0 (OFF)                        | Enable "History List Length checking"                                                                                                         |
+| --history_list_warning                        | 100000                         | Warning threshold for trx_rseg_history_len                                                                                                    |
+| --history_list_critical                       | 500000                         | Critical threshold for trx_rseg_history_len                                                                                                   |
+| --long_query_enable                           | 1 (ON)                         | Enable "long-query" checking                                                                                                                  |
+| --long_query_warning                          | 5                              | Warning threshold for "SHOW PROCESSLIST"'s "Time"(seconds)                                                                                    |
+| --long_query_critical                         | 100                            | Critical threshold for "SHOW PROCESSLIST"'s "Time"(seconds)                                                                                   |
+| --long_query_exclude_host                     | "" (Empty)                     | Specify to ignore values for "SHOW PROCESSLIST"'s "Host". When first-match them, doesn't raise WARNING or CRITICAL(always OK)                 |
+| --long_query_exclude_user                     | "" (Empty)                     | Specify to ignore values for "SHOW PROCESSLIST"'s "User". When first-match them, doesn't raise WARNING or CRITICAL(always OK)                 |
+| --long_query_exclude_query                    | "" (Empty)                     | Specify to ignore values for "SHOW PROCESSLIST"'s "Info"(SQL statement) When first-match them, doesn't raise WARNING or CRITICAL(always OK)   |
+| --long_query_min_warning_thread               | 1                              | Don't return NAGIOS_WARNING when threads which is over long-query-warning                                                                     |
+| are less than long-query-min-warning-thread   |                                |                                                                                                                                               |
+| --long_query_min_critical_thread              | 1                              | Don't return NAGIOS_WARNING when threads which is over long-query-warning are less than long-query-min-warning-thread                         |
+| --role                                        | auto                           | Specify the combination of What "checkings" have to be checked                                                                                |
+| --slave_status_enable                         | 1 (ON)                         | Enable "SHOW SLAVE STATUS checking"                                                                                                           |
+| --slave_status_warning                        | 5                              | Warning threshold for "Seconds_Behind_Master"(seconds)                                                                                        |
+| --slave_status_critical                       | 30                             | Critical threshold for "Seconds_Behind_Master"(seconds)                                                                                       |
+| --uptime_enable                               | 1 (ON)                         | Enable "uptime checking"                                                                                                                      |
+| --uptime_warning                              | 300                            | Warning threshold for Uptime(seconds)                                                                                                         |
+| --uptime_critical                             | 300                            | Critical threshold for Uptime(seconds)                                                                                                        |
 
 
 
@@ -311,18 +311,18 @@ Intermidiate:3306 => Cascade_Replica3:3306
 - Supported `Single MySQL`, `Replication` and `Group Replication` topology.
   - Sandboxes replication strongly depends on IPaddress when the very first time started, restart can lead replication broken.
 
-|              option_name               |        default        |                                 text                                  |
-| -------------------------------------- | --------------------- | --------------------------------------------------------------------- |
-| --additional-config, --config          | ''                    | Write optional my.cnf entires by JSON format (ex. '{"read_only": "ON"}'|
-| --count, --server-count, --servers, -n | if "single" 1, else 3 | How many mysqlds are deployed                                         |
-| --debug                                | false                 | Set debug output                                                      |
-| --help, --usage                        | false                 | print help message                                                    |
-| --home, --sandbox_home, -d             | $HOME/yt-sandbox      | Top-directory to store scripts and datadirs                           |
-| --mysqld, --tag                        | 8.4                   | Tag of docker-image. Using like `docker run ${container-path}:${tag}` |
-| --quiet, --silent, -q, -s              | false                 | No output any messages                                                |
-| --topology, --type, -t                 | single                | Choose deployment type from "single", "replication", "gr"             |
-| --verbose, -v                          | false                 | Verbose output mode                                                   |
-| --version, -V                          | false                 | Show ytkit version                                                    |
+|              option_name               |        default        |                                  text                                   |
+| -------------------------------------- | --------------------- | ----------------------------------------------------------------------- |
+| --additional-config, --config          | ''                    | Write optional my.cnf entires by JSON format (ex. '{"read_only": "ON"}' |
+| --count, --server-count, --servers, -n | if "single" 1, else 3 | How many mysqlds are deployed                                           |
+| --debug                                | false                 | Set debug output                                                        |
+| --help, --usage                        | false                 | print help message                                                      |
+| --home, --sandbox_home, -d             | $HOME/yt-sandbox      | Top-directory to store scripts and datadirs                             |
+| --mysqld, --tag                        | 8.4                   | Tag of docker-image. Using like `docker run ${container-path}:${tag}`   |
+| --quiet, --silent, -q, -s              | false                 | No output any messages                                                  |
+| --topology, --type, -t                 | single                | Choose deployment type from "single", "replication", "gr"               |
+| --verbose, -v                          | false                 | Verbose output mode                                                     |
+| --version, -V                          | false                 | Show ytkit version                                                      |
 
 ### Example
 
@@ -567,6 +567,100 @@ $ ./s1 -e "SHOW SLAVE STATUS\G" | grep Running
 | --interval, --sleep, -i                                     | 1                              | Sleep seconds during each heartbeat INSERT.                                                                   |
 | --retention, --retention_period                             | 30                             | Remove records after this days                                                                                |
 | --truncate, --truncate_before_insert                        | false                          | TRUNCATE TABLE under init process.                                                                            |
+
+## yt-mdl-checker
+
+- Search and KILL proceeding query when EXCLUSIVE MetaDataLock waiting has occurred.
+  - Without `--kill` option, only print detected PROCESSLIST_ID and some information.
+  - With `--kill` option, yt-mdl-checker kills detected proceeding query to release MetaDataLock.
+
+
+|              option_name              |            default             |                                                     text                                                      |
+| ------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| --host=value, -h=value                | "localhost"                    | MySQL host                                                                                                    |
+| --port=value, -P=value                | 3306                           | MySQL port                                                                                                    |
+| --user=value, -u=value                | (as same as OS user)           | MySQL account using for connection and checking (need REPLICATION CLIENT, PROCESSLIST and global SELECT priv) |
+| --password=value, -p=value            | ""                             | Password for the user specified by --user                                                                     |
+| --ask_pass, --ask_password, --askpass | false                          | Ask --password by prompt                                                                                      |
+| --socket=value, -S=value              | (depends on libmysqlclient.so) | Path to mysql.sock (this parameter is used when --host=localhost)                                             |
+| --quiet, --silent, -q, -s             | false                          | No output any messages                                                                                        |
+| --verbose, -v                         | false                          | Verbose output mode                                                                                           |
+| --help, --usage                       | false                          | print help message                                                                                            |
+| --version, -V                         | false                          | Show ytkit version                                                                                            |
+| --debug                               | false                          | Set debug output                                                                                              |
+| --timeout=value                       | 1                              | Seconds before timeout (Set into read_timeout, write_timeout, connect_timeout)                                |
+| --interval, -i                        | 10                             | Sleeping duration for each SELECT                                                                             |
+| --kill                                | false                          | KILL Metadata-Locked connection                                                                               |
+
+### Example
+
+- When EXCLUSIVE MetaDataLock waiting has occurred
+
+```
+mysql80 38> SHOW PROCESSLIST;
++----+-----------------+-----------+------+---------+--------+---------------------------------+--------------------------------+
+| Id | User            | Host      | db   | Command | Time   | State                           | Info                           |
++----+-----------------+-----------+------+---------+--------+---------------------------------+--------------------------------+
+|  5 | event_scheduler | localhost | NULL | Daemon  | 100424 | Waiting on empty queue          | NULL                           |
+| 38 | root            | localhost | NULL | Query   |      0 | init                            | SHOW PROCESSLIST               |
+| 39 | root            | localhost | d1   | Query   |     10 | Waiting for table metadata lock | ALTER TABLE t1 Engine = InnoDB |   <----
++----+-----------------+-----------+------+---------+--------+---------------------------------+--------------------------------+
+3 rows in set, 1 warning (0.01 sec)
+```
+
+- yt-mdl-checker detects it by querying `performance_schema.metadata_locks` 
+
+```
+mysql80 40> WITH locked AS (
+    ->   SELECT object_schema, object_name, owner_thread_id
+    ->   FROM performance_schema.metadata_locks
+    ->   WHERE lock_status = 'PENDING' AND lock_type LIKE '%EXCLUSIVE%')
+    -> SELECT
+    ->   object_schema,
+    ->   object_name,
+    ->   lock_status,
+    ->   owner_thread_id AS blocker_thread_id,
+    ->   trx_started,
+    ->   trx_query,
+    ->   trx_rows_locked,
+    ->   trx_rows_modified
+    -> FROM
+    ->   performance_schema.metadata_locks JOIN
+    ->   performance_schema.threads ON owner_thread_id = thread_id JOIN
+    ->   information_schema.innodb_trx ON trx_mysql_thread_id = processlist_id
+    -> WHERE
+    ->   (object_schema, object_name) IN (SELECT object_schema, object_name FROM locked) AND
+    ->   owner_thread_id NOT IN (SELECT owner_thread_id FROM locked) /* Except of blocked query itself */
+    -> ORDER BY
+    ->   object_schema, object_name, lock_status, owner_thread_id;
++---------------+-------------+-------------+-------------------+---------------------+-----------+-----------------+-------------------+
+| object_schema | object_name | lock_status | blocker_thread_id | trx_started         | trx_query | trx_rows_locked | trx_rows_modified |
++---------------+-------------+-------------+-------------------+---------------------+-----------+-----------------+-------------------+
+| d1            | t1          | GRANTED     |                92 | 2026-08-25 09:16:43 | NULL      |               0 |                 0 |   <----
++---------------+-------------+-------------+-------------------+---------------------+-----------+-----------------+-------------------+
+1 row in set (0.00 sec)
+```
+
+- Without `--kill`, only print some information.
+
+```
+$ yt-mdl-checker -uroot -S /usr/mysql/8.0.46/data/mysql.sock -i 1
+Press Ctrl + C for quit from bin/yt-mdl-checker
+[570358] NOTE: Blocking transaction detected: {blocker_thread_id => 92, lock_status => GRANTED, object_name => t1, object_schema => d1, trx_query => , trx_rows_locked => 0, trx_rows_modified => 0, trx_started => 2026-08-25 09:16:43}
+[570358] NOTE: Blocking transaction detected: {blocker_thread_id => 92, lock_status => GRANTED, object_name => t1, object_schema => d1, trx_query => , trx_rows_locked => 0, trx_rows_modified => 0, trx_started => 2026-08-25 09:16:43}
+[570358] NOTE: Blocking transaction detected: {blocker_thread_id => 92, lock_status => GRANTED, object_name => t1, object_schema => d1, trx_query => , trx_rows_locked => 0, trx_rows_modified => 0, trx_started => 2026-08-25 09:16:43}
+..
+```
+
+- With `--kill`, the script actually kills detected query
+
+```
+$ yt-mdl-checker -uroot -S /usr/mysql/8.0.46/data/mysql.sock -i 1 --kill
+Press Ctrl + C for quit from bin/yt-mdl-checker
+[570384] NOTE: Blocking transaction detected: {blocker_thread_id => 92, lock_status => GRANTED, object_name => t1, object_schema => d1, trx_query => , trx_rows_locked => 0, trx_rows_modified => 0, trx_started => 2026-08-25 09:16:43}
+[570384] NOTE: KILL CONNECTION 38
+```
+
 
 # Installation
 

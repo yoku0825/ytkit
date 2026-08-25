@@ -854,6 +854,25 @@ EOS
   return $self->query_arrayref($sql);
 }
 
+sub fetch_p_s_instrument_metadata_locks
+{
+  my ($self)= @_;
+  return [] if !($self->support_version(50706));
+
+  my $sql= << "EOS";
+SELECT
+  name AS name,
+  enabled AS enabled,
+  timed AS timed
+FROM
+  performance_schema.setup_instruments
+WHERE
+  name = 'wait/lock/metadata/sql/mdl'
+EOS
+
+  return $self->query_arrayref($sql);
+}
+
 sub fetch_p_s_events_stages
 {
   my ($self)= @_;
@@ -1119,6 +1138,102 @@ sub _fetch_sys_innodb_lock_waits
 {
   my ($self)= @_;
   return $self->query_arrayref('SELECT * FROM sys.x$innodb_lock_waits');
+}
+
+sub fetch_metadata_locks
+{
+  my ($self)= @_;
+
+  return [] if !($self->support_version(50700));
+
+  if ($self->mysqld_version < 80000)
+  {
+    return $self->_fetch_metadata_locks_for_57;
+  }
+  else
+  {
+    return $self->_fetch_metadata_locks_with_cte;
+  }
+}
+
+sub _fetch_metadata_locks_with_cte
+{
+  my ($self)= @_;
+  my $sql= << 'EOS';
+WITH locked AS (
+  SELECT object_schema, object_name, owner_thread_id
+  FROM performance_schema.metadata_locks
+  WHERE lock_status = 'PENDING' AND lock_type LIKE '%EXCLUSIVE%')
+SELECT
+  object_schema,
+  object_name,
+  lock_status,
+  owner_thread_id AS blocker_thread_id,
+  trx_started,
+  trx_query,
+  trx_rows_locked,
+  trx_rows_modified
+FROM
+  performance_schema.metadata_locks JOIN
+  performance_schema.threads ON owner_thread_id = thread_id JOIN
+  information_schema.innodb_trx ON trx_mysql_thread_id = processlist_id
+WHERE
+  (object_schema, object_name) IN (SELECT object_schema, object_name FROM locked) AND
+  owner_thread_id NOT IN (SELECT owner_thread_id FROM locked) /* Except of blocked query itself */
+ORDER BY
+  object_schema, object_name, lock_status, owner_thread_id
+EOS
+
+  return $self->query_arrayref($sql);
+}
+
+sub _fetch_metadata_locks_for_57
+{
+  my ($self)= @_;
+
+  my $sql= << 'EOS';
+SELECT
+  object_schema,
+  object_name,
+  lock_status,
+  owner_thread_id AS blocker_thread_id,
+  trx_started,
+  trx_query,
+  trx_rows_locked,
+  trx_rows_modified
+FROM
+  performance_schema.metadata_locks JOIN
+  performance_schema.threads ON owner_thread_id = thread_id JOIN
+  information_schema.innodb_trx ON trx_mysql_thread_id = processlist_id
+WHERE
+  (object_schema, object_name) IN (SELECT object_schema, object_name FROM performance_schema.metadata_locks WHERE lock_status = 'PENDING' AND lock_type LIKE '%EXCLUSIVE%') AND
+  owner_thread_id NOT IN (SELECT owner_thread_id FROM performance_schema.metadata_locks WHERE lock_status = 'PENDING' AND lock_type LIKE '%EXCLUSIVE%') /* Except of blocked query itself */
+ORDER BY
+  object_schema, object_name, lock_status, owner_thread_id
+EOS
+
+  return $self->query_arrayref($sql);
+}
+
+sub fetch_processlistid_from_threadid
+{
+  my ($self, $thread_id)= @_;
+
+  ### Always don't cache(if cached, return same result even if $thread_id is different)
+  delete $self->{_fetch_processlistid_from_threadid};
+
+  return [] if !($self->support_version(50600));
+
+  my $sql= << 'EOS';
+SELECT
+  processlist_id
+FROM
+  performance_schema.threads
+WHERE
+  thread_id = ?
+EOS
+
+  return $self->query_arrayref($sql, $thread_id);
 }
 
 sub latest_deadlock

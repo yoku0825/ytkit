@@ -1219,6 +1219,9 @@ sub fetch_processlistid_from_threadid
 {
   my ($self, $thread_id)= @_;
 
+  ### When be called from xt, just ignore.
+  return [] if !($thread_id);
+
   ### Always don't cache(if cached, return same result even if $thread_id is different)
   delete $self->{_fetch_processlistid_from_threadid};
 

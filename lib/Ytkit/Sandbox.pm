@@ -204,6 +204,7 @@ sub prepare
     else
     {
       symlink(sprintf("%s/use", $dir), sprintf("%s/n%d", $self->{top_directory}, $n));
+      symlink(sprintf("%s/use", $dir), sprintf("%s/use", $self->{top_directory}));
     }
   }
 

@@ -1,7 +1,7 @@
 package Ytkit::Collect;
 
 ########################################################################
-# Copyright (C) 2018, 2021  yoku0825
+# Copyright (C) 2018, 2026  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -440,6 +440,36 @@ sub get_show_slave
   return \@ret;
 }
 
+sub print_file_instance
+{
+  my ($self)= @_;
+  my ($ret, $prev);
+
+  ($ret, $prev)= $self->_calc_delta("file_name",
+                                    ["count_read", "count_write", "count_misc"],
+                                    $self->get_file_instance, $self->{_previous}->{file_instance});
+
+  ### Calculate $ret or $prev is not there, override $prev by $current.
+  $self->{_previous}->{file_instance}= $prev;
+
+  return $self->print_low($ret, $self->{file_instance}->{output_name});
+}
+
+sub get_file_instance
+{
+  my ($self)= @_;
+
+  if (!($self->is_satisfied_requirement))
+  {
+    _carpf("--file_instance_enable=1 needs mysql >= 5.6.8 and performance_schema = on, " .
+           "please check requirements are satisfied.");
+    return undef;
+  }
+
+  return $self->instance->fetch_p_s_file_summary;
+}
+
+
 sub print_low
 {
   my ($self, $rs, $table)= @_;
@@ -631,6 +661,14 @@ sub _config
                   text => qq{Querying "SHOW GLOBAL VARIABLES"} },
       output_name => { default => "variable_info",
                        text => $output_name_text }
+    },
+    file_instance =>
+    {
+      enable => { default => 0,
+                  isa => [0, 1],
+                  text => qq{Querying performance_schema.file_summary_by_instance} },
+      output_name => { default => "file_instance",
+                       text => $output_name_text },
     },
     interval       => { alias   => ["interval", "i", "sleep"],
                         default => 10,

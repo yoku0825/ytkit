@@ -1239,6 +1239,27 @@ EOS
   return $self->query_arrayref($sql, $thread_id);
 }
 
+sub fetch_p_s_file_summary
+{
+  my ($self)= @_;
+
+  return [] if !($self->support_version(50600));
+  my $sql= << 'EOS';
+SELECT
+  file_name,
+  count_read,
+  count_write,
+  count_misc,
+  NOW() AS last_update
+FROM
+  performance_schema.file_summary_by_instance
+WHERE
+  count_star > 0
+EOS
+
+  return $self->query_arrayref($sql);
+}
+
 sub latest_deadlock
 {
   my ($self)= @_;

@@ -387,16 +387,7 @@ sub select_ps_digest
   my ($self, $limit)= @_;
   return [] if !($self->support_version(50605));
 
-  ### Compatibility between 0.2.1-7 and 0.2.1-8
-  if ($ENV{ytkit_collect_compat})
-  {
-    ### Old behavior
-    return $self->_select_ps_digest_old_compat($limit);
-  }
-  else
-  {
-    ### New (2 columns added) behavior
-    my $sql= << "EOS";
+  my $sql= << "EOS";
 SELECT
   schema_name,
   digest,
@@ -417,10 +408,9 @@ WHERE
 ORDER BY
   count_star DESC
 EOS
-    $sql .= sprintf(" LIMIT %d", $limit) if $limit;
+  $sql .= sprintf(" LIMIT %d", $limit) if $limit;
  
-    return $self->query_arrayref($sql);
-  }
+  return $self->query_arrayref($sql);
 }
 
 sub _select_ps_digest_old_compat

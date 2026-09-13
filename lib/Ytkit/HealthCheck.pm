@@ -766,6 +766,7 @@ EOS
     long_query =>
     {
       enable        => { default => 1,
+                         isa => [0, 1],
                          text    => qq{When set to 0, turn off SHOW PROCESSLIST's check.} },
       warning       => { default => 5,
                          text    => qq{Warning threshold for "SHOW PROCESSLIST"'s "Time"(seconds)} },
@@ -790,6 +791,7 @@ EOS
     connection_count =>
     {
       enable   => { default => 1,
+                    isa => [0, 1],
                     text    => qq{When set to 0, turn off connection count check.} },
       warning  => { default => 70,
                     text    => qq{Warning threshold for "Threads_connected / max_connections"(percentage)} },
@@ -799,6 +801,7 @@ EOS
     threads_running =>
     {
       enable   => { default => 1,
+                    isa => [0, 1],
                     text    => qq{When set to 0, turn off running thread count check.} },
       warning  => { default => 10,
                     text    => qq{Warning threshold for "Threads_running"} },
@@ -808,6 +811,7 @@ EOS
     autoinc_usage =>
     {
       enable   => { default => 1,
+                    isa => [0, 1],
                     text    => qq{When set to 0, turn off auto_increment usage calculation.} },
       warning  => { default => 50,
                     text    => qq{Warning threshold for "current_auto_increment_value / datatype_max"(percentage)} },
@@ -817,6 +821,7 @@ EOS
     slave_status =>
     {
       enable   => { default => 1,
+                    isa => [0, 1],
                     text    => qq{When set to 0, turn off "SHOW SLAVE STATUS"'s "Seconds_Behind_Master" check.} },
       warning  => { default => 5,
                     text    => qq{Warning threshold for "Seconds_Behind_Master"(seconds)} },
@@ -826,6 +831,7 @@ EOS
     gtid_hole =>
     {
       enable => { default => 0,
+                  isa => [0, 1],
                   text    => qq{When set to 1, check does gtid_hole exist.\n} .
                              qq{  When gtid_executed is like "server_uuid:1-2:4-5", server_uuid:3 is gtid_hole.\n} .
                              qq{  This option default will be 1 in future release.} },
@@ -833,6 +839,7 @@ EOS
     deadlock =>
     {
       enable => { default => 0,
+                  isa => [0, 1],
                   text    => "When set to 1, check LATEST DETECTED DEADLOCK section in SHOW ENGINE INNODB STATUS.", },
       warning => { default => 300,
                    text    => "Warning threshold for LATEST DETECTED DEADLOCK time (seconds)", },
@@ -842,6 +849,7 @@ EOS
     uptime =>
     {
       enable => { default => 1,
+                  isa => [0, 1],
                   text => "When set to 1, check Uptime from SHOW GLOBAL STATUS.", },
       warning => { default => 300,
                    text => "Warning threshold for Uptime(seconds)", },
@@ -851,6 +859,7 @@ EOS
     history_list =>
     {
       enable => { default => 0,
+                  isa => [0, 1],
                   text => "When set to 1, check trx_rseg_history_len from information_schema.innodb_metrics.", },
       warning => { default => 100000,
                    text => "Warning threshold for trx_rseg_history_len", },

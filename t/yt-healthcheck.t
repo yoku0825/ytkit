@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2017, 2021  yoku0825
+# Copyright (C) 2017, 2026  yoku0825
 # Copyright (C) 2018        hacchuu0119
 #
 # This program is free software; you can redistribute it and/or
@@ -476,103 +476,6 @@ subtest "--gtid-hole" => sub
   $prog->clear_cache;
 
   done_testing;
-};
-
-subtest "--role=fabric" => sub
-{
-  subtest "mikasafabric < 0.6.10 compatible check" => sub
-  {
-    $prog->{"_group.lookup_groups"}= $Ytkit::TEST::Lookup_Groups::VAR1;
-    is($prog->query_fabric("group.lookup_groups", "")->[0]->{group_id}, "myfabric", "Parse group.lookup_groups");
-
-    $prog->{"_group.health"}= $Ytkit::TEST::Group_Health::VAR1;
-
-    foreach my $row (@{$prog->query_fabric("group.health", "myfabric")})
-    {
-      my $uuid= grep {$row->{uuid} eq $_} qw{bb48b5d4-f1d9-11e7-b79f-40a8f0226cd8 0604c90e-4b59-11e7-b7fb-525400101084 f9536993-4b55-11e7-8791-525400101085};
-      is($uuid, 1, "Getting fabric-uuid ");
-    }
-    &reset_param;
-    $prog->clear_cache;
-    done_testing;
-  };
-
-  subtest "mikasafabric 0.6.10 and later has dump.health command" => sub
-  {
-    $prog->{"_dump.health"}   = $Ytkit::Test::DUMP_HEALTH::NO_FAULTY;
-    $prog->{"_manage.openfds"}= $Ytkit::Test::MANAGE_OPENFDS::VAR1;
-    $prog->{fabric_faulty}= "critical";
-    $prog->check_fabric;
-    is($prog->{status}->{str}, "OK", "Fabric OK");
-    &reset_param;
-    $prog->clear_cache;
-
-    $prog->{"_dump.health"}   = $Ytkit::Test::DUMP_HEALTH::WITH_FAULTY;
-    $prog->{"_manage.openfds"}= $Ytkit::Test::MANAGE_OPENFDS::VAR1;
-    $prog->{fabric_faulty}= "critical";
-    $prog->check_fabric;
-    is($prog->{status}->{str}, "CRITICAL", "--fabric_faulty=critical and there's faulty_server");
-    &reset_param;
-    $prog->clear_cache;
-
-    $prog->{"_dump.health"}   = $Ytkit::Test::DUMP_HEALTH::WITH_FAULTY;
-    $prog->{"_manage.openfds"}= $Ytkit::Test::MANAGE_OPENFDS::VAR1;
-    $prog->{fabric_faulty}= "warning";
-    $prog->check_fabric;
-    is($prog->{status}->{str}, "WARNING", "--fabric_faulty=warning and there's faulty_server");
-    &reset_param;
-    $prog->clear_cache;
-
-    $prog->{"_dump.health"}   = $Ytkit::Test::DUMP_HEALTH::NO_PRIMARY;
-    $prog->{"_manage.openfds"}= $Ytkit::Test::MANAGE_OPENFDS::VAR1;
-    $prog->{fabric_faulty}= "warning";
-    $prog->check_fabric;
-    is($prog->{status}->{str}, "CRITICAL", "Group has no PRIMARY");
-    &reset_param;
-    $prog->clear_cache;
-
-    $prog->{"_dump.health"}   = $Ytkit::Test::DUMP_HEALTH::NO_SECONDARY;
-    $prog->{"_manage.openfds"}= $Ytkit::Test::MANAGE_OPENFDS::VAR1;
-    $prog->{fabric_faulty}= "warning";
-    $prog->check_fabric;
-    is($prog->{status}->{str}, "CRITICAL", "Group has no SECONDARY");
-    &reset_param;
-    $prog->clear_cache;
-
-    $prog->{"_dump.health"}   = $Ytkit::Test::DUMP_HEALTH::NO_SECONDARY;
-    $prog->{"_manage.openfds"}= $Ytkit::Test::MANAGE_OPENFDS::VAR1;
-    $prog->{fabric_faulty}= "warning";
-    $prog->{fabric_no_candidate}= "warning";
-    $prog->check_fabric;
-    is($prog->{status}->{str}, "WARNING", "Group has no SECONDARY (Fallback to WARNING)");
-    &reset_param;
-    $prog->clear_cache;
-
-
-    ### openfds 65/1024
-    $prog->{"_dump.health"}   = $Ytkit::Test::DUMP_HEALTH::NO_FAULTY;
-    $prog->{"_manage.openfds"}= $Ytkit::Test::MANAGE_OPENFDS::VAR1;
-    $prog->{fabric_faulty}= "critical";
-    $prog->{fabric_fd}->{warning}= 1;  ### percent.
-    $prog->{fabric_fd}->{critical}= 90;  ### percent.
-    $prog->check_fabric;
-    is($prog->{status}->{str}, "WARNING", "OpenFDs between --fabric-fd-waning and --fabric-fd-critical");
-    &reset_param;
-    $prog->clear_cache;
-
-    ### openfds 65/1024
-    $prog->{"_dump.health"}   = $Ytkit::Test::DUMP_HEALTH::NO_FAULTY;
-    $prog->{"_manage.openfds"}= $Ytkit::Test::MANAGE_OPENFDS::VAR1;
-    $prog->{fabric_faulty}= "critical";
-    $prog->{fabric_fd}->{warning}= 1;  ### percent.
-    $prog->{fabric_fd}->{critical}= 2;  ### percent.
-    $prog->check_fabric;
-    is($prog->{status}->{str}, "CRITICAL", "OpenFDs over --fabric-fd-critical");
-    &reset_param;
-    $prog->clear_cache;
-
-    done_testing;
-  };
 };
 
 subtest "checking offline_mode" => sub

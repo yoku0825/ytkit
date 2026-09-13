@@ -1,7 +1,7 @@
 package Ytkit::HealthCheck;
 
 ########################################################################
-# Copyright (C) 2017, 2025  yoku0825
+# Copyright (C) 2017, 2026  yoku0825
 # Copyright (C) 2018        hacchuu0119
 #
 # This program is free software; you can redistribute it and/or
@@ -104,7 +104,7 @@ sub new
   $self->{status}= NAGIOS_OK;
   $self->{output}= "";
 
-  return $self if $self->{role} ne "fabric" && $self->check_offline_mode;
+  return $self if $self->check_offline_mode;
 
   if ($role eq "master" || $role eq "primary" || $role eq "source")
   {
@@ -160,13 +160,6 @@ sub new
   {
     ### Nothing to check (automatically).
     ### Use this role when call Ytkit::HealthCheck as library.
-  }
-  elsif ($role eq "fabric")
-  {
-    ### mikasafabric couldn't return its hostname.
-    $self->instance->{_hostname}= $self->{host};
-    ### mikasafabric for MySQL specific checks.
-    $self->check_fabric;
   }
   elsif ($role eq "group_replication")
   {
@@ -489,107 +482,6 @@ sub check_slave_status
   return;
 }
 
-sub check_fabric
-{
-  my ($self)= @_;
-
-  my $status;
-  my $output= "";
-
-  ### mikasafabric >= 0.6.10 had implemented "dump.health" command.
-  if (my $try= $self->query_fabric("dump.health"))
-  {
-    foreach my $group (@$try)
-    {
-      my $group_id= $group->{group_id};
-
-      if ($group->{primary} < 1)
-      {
-        $status= NAGIOS_CRITICAL;
-        $output= sprintf("group %s does not have Master Server", $group_id);
-        $self->update_status($status, $output);
-      }
-
-      if ($group->{secondary} < 1)
-      {
-        $output= sprintf("group %s does not have Candidate-Slave Server", $group_id);
-        if ($self->{fabric_no_candidate} eq "critical")
-        {
-          $status= NAGIOS_CRITICAL;
-          $self->update_status($status, $output);
-        }
-        elsif ($self->{fabric_no_candidate} eq "warning")
-        {
-          $status= NAGIOS_WARNING;
-          $self->update_status($status, $output);
-        }
-      }
-
-      if ($group->{faulty} > 0)
-      {
-        $output= sprintf("group %s has Faulty state server.", $group_id);
-        if ($self->{fabric_faulty} eq "critical")
-        {
-          $status= NAGIOS_CRITICAL;
-          $self->update_status($status, $output);
-        }
-        elsif ($self->{fabric_faulty} eq "warning")
-        {
-          $status= NAGIOS_WARNING;
-          $self->update_status($status, $output);
-        }
-      }
-    }
-  }
-  else
-  {
-    ### "dump.health" cannot use, using old-way to check.
-
-    ### Healthcheck for each group.
-    foreach my $group (@{$self->query_fabric("group.lookup_groups", "")})
-    {
-      my $group_id= $group->{group_id};
-      my $primary_server= "";
-      my $secondary     = 0;
-  
-      foreach my $server (@{$self->query_fabric("group.health", $group_id)})
-      {
-        $primary_server= $server->{uuid} if $server->{status} eq "PRIMARY";
-        $secondary += 1 if $server->{status} eq "SECONDARY";
-      }
-  
-      if (!($primary_server))
-      {
-        $status= NAGIOS_CRITICAL;
-        $output= sprintf("group %s does not have Master Server", $group_id);
-        $self->update_status($status, $output) if $status;
-      }
-  
-      if (!($secondary))
-      {
-        $status= NAGIOS_CRITICAL;
-        $output= sprintf("group %s does not have Candidate-Slave Server", $group_id);
-        $self->update_status($status, $output) if $status;
-      }
-    }
-  }
-  
-  ### File-Descriptor count.
-  my $openfds= $self->query_fabric("manage.openfds", "");
-
-  my $current_fd= $openfds->[0]->{current};
-  my $max_fd    = $openfds->[0]->{max};
-  my $pct_fd    = ($current_fd / $max_fd) * 100;
-
-  $status= compare_threshold($pct_fd, $self->{fabric_fd});
-
-  ### Information message when $status = NAGIOS_OK
-  $output= sprintf("File-descriptor count %d/%d", $current_fd, $max_fd) if $status;
-  $self->update_status($status, $output) if $status;
-
-  return;
-}
-
 sub update_status
 {
   my ($self, $new_status, $new_output)= @_;
@@ -655,45 +547,6 @@ sub show_slaves_via_processlist
     return 1 if $row->{Command} =~ /^Binlog\sDump/;
   }
   return 0;
-}
-
-sub query_fabric
-{
-  my ($self, $function, $arg)= @_;
-
-  ### Query for mikasafabric doesn't cache but this for unit-test.
-  my $cache_name= sprintf("_%s", $function);
-
-  if (!(defined($self->{$cache_name})))
-  {
-    my $sql = sprintf("CALL %s(%s)", $function, $arg ? "'" . $arg . "'" : "");
-    my $stmt= $self->instance->conn->prepare($sql, {Slice => {}});
-
-    eval
-    {
-      $stmt->execute;
-    };
-
-    if ($self->instance->conn->{mysql_errno} == 1106)
-    {
-      ### Got error 1106, its unknown command. (ex. dump.health in < 0.6.10)
-      return undef;
-    }
-    else
-    {
-      ### Skip, 1st Result set is metadata.
-      $stmt->fetchall_arrayref();
-      $stmt->more_results;        ### Go ahead to next Result set.
-
-      $self->{$cache_name}= $stmt->fetchall_arrayref({});
-    }
-  }
-
-  my $ret= $self->{$cache_name};
-
-  ### Clear buffer each time.
-  delete($self->{$cache_name});
-  return $ret;
 }
 
 sub check_gtid_hole
@@ -835,9 +688,6 @@ sub dump_detail
   ### Don't dump information when status is OK.
   return 0 if $self->{status}->{exit_code} eq NAGIOS_OK->{exit_code};
 
-  ### mikasafabric could not dump information.
-  return 0 if $self->{role} eq "fabric";
-
   my $fh;
   eval
   {
@@ -897,8 +747,6 @@ Switching check-item as below,
         by using SHOW SLAVE STATUS and SHOW SLAVE HOSTS(Result is empty or not)
     - "none"
       - Check only connectivity. For calling as library.
-    - "fabric"
-      - Checking for mikasafabric for MySQL.
     - "group_replication"
       - Long query
       - Connection count
@@ -912,7 +760,7 @@ EOS
   my $yt_healthcheck_option=
   {
     role => { alias => ["role"],
-              isa  => ["auto", "master", "source", "primary", "slave", "replica", "read", "standby", "secondary", "backup", "fabric", "none", "intermidiate", "cascade", "group_replication"],
+              isa  => ["auto", "master", "source", "primary", "slave", "replica", "read", "standby", "secondary", "backup", "none", "intermidiate", "cascade", "group_replication"],
               default => "auto",
               text => $role_text },
     long_query =>
@@ -974,27 +822,6 @@ EOS
                     text    => qq{Warning threshold for "Seconds_Behind_Master"(seconds)} },
       critical => { default => 30,
                     text    => qq{Critical threshold for "Seconds_Behind_Master"(seconds)} },
-    },
-    fabric_fd  =>
-    {
-      enable   => { default => 1,
-                    text    => qq{When set to 0, turn off "CALL manage.openfds()" check.(mikasafabric only)} },
-      warning  => { default => 50,
-                    text    => qq{Warning threshold for "current_fd / max_fd"(percentage)} },
-      critical => { default => 70,
-                    text    => qq{Critical threshold for "current_fd / max_fd"(percentage)} },
-    },
-    fabric_faulty =>
-    {
-      isa     => ["ignore", "warning", "critical"],
-      default => "ignore",
-      text    => q{Reporting level when mikasafabric has faulty-state managed server.}
-    },
-    fabric_no_candidate =>
-    {
-      isa     => ["ignore", "warning", "critical"],
-      default => "critical",
-      text    => q{Reporting level when managed group has no Candidate-Slave server.}
     },
     gtid_hole =>
     {

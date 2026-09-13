@@ -1,0 +1,13 @@
+Source: ytkit
+Section: database
+Priority: optional
+Maintainer: yoku0825 <yoku0825@gmail.com>
+Build-Depends: debhelper (>= 10), perl, libtest-mocktime-perl
+Standards-Version: 4.6.0
+Homepage: https://github.com/yoku0825/ytkit
+
+Package: ytkit
+Architecture: all
+Depends: ${misc:Depends}, ${perl:Depends}, libdbd-mysql-perl, libjson-perl, libterm-readkey-perl, libparallel-forkmanager-perl
+Description: ytkit is Yoku-san no Tool KIT scripts.
+ ytkit is Yoku-san no Tool KIT for MySQL.

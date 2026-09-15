@@ -115,5 +115,18 @@ my $basedir= "$Bin/../";
 my @db_single= `grep -r DB::single --exclude=ytkit.t --exclude-dir=.git $basedir`;
 ok(!(@db_single), "DB::single has been removed.");
 
+subtest "all scripts should be in Makefile" => sub
+{
+  chomp(my $fatpack_line= `grep "^fatpack:" $basedir/Makefile`);
+  foreach (glob("$basedir/bin/*"))
+  {
+    chomp(my $script_name= `basename $_`);
+    my @script_in_makefile= `grep "^${script_name}:" $basedir/Makefile`;
+    ok(@script_in_makefile, "$script_name is in Makefile");
+
+    ok((grep { /$script_name/ } $fatpack_line), "$script_name in fatpack task");
+  }
+  done_testing;
+};
 done_testing;
 

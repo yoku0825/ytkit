@@ -25,7 +25,7 @@ test:
 	TZ=UTC-9 prove
 
 .PHONY: fatpack
-fatpack: setup yt-alter-progress yt-binlog-groupby yt-collect yt-data-dumper yt-healthcheck yt-innostat yt-querystat yt-resource-collector yt-wait-replication yt-print-information yt-extract yt-rename-database yt-config yt-repl-topology
+fatpack: setup yt-alter-progress yt-binlog-groupby yt-collect yt-data-dumper yt-healthcheck yt-innostat yt-querystat yt-resource-collector yt-wait-replication yt-print-information yt-extract yt-rename-database yt-config yt-repl-topology yt-bulk-delete yt-heartbeat yt-mdl-checker yt-sandbox 
 
 fatinstall:
 	cp fatpack/* $(INSTALL)/bin
@@ -86,4 +86,16 @@ yt-config: bin/yt-config lib/Ytkit/Config/CLI.pm $(MANDATORY_PACKAGE)
 	$(fatpack)
 
 yt-repl-topology: bin/yt-repl-topology lib/Ytkit/ReplTopology.pm $(MANDATORY_PACKAGE)
+	$(fatpack)
+
+yt-bulk-delete: bin/yt-bulk-delete lib/Ytkit/BulkDelete.pm $(MANDATORY_PACKAGE)
+	$(fatpack)
+
+yt-heartbeat: bin/yt-heartbeat lib/Ytkit/HeartBeat.pm $(MANDATORY_PACKAGE)
+	$(fatpack)
+
+yt-mdl-checker: bin/yt-mdl-checker lib/Ytkit/MDLChecker.pm $(MANDATORY_PACKAGE)
+	$(fatpack)
+
+yt-sandbox: bin/yt-sandbox lib/Ytkit/Sandbox.pm lib/Ytkit/Sandbox/Node.pm $(MANDATORY_PACKAGE)
 	$(fatpack)

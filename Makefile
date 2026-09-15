@@ -36,20 +36,20 @@ rpmbuild:
 	bash build.sh
 
 define fatpack
-	cpanm --local-lib=~/perl5 local::lib && eval $(perl -I ~/perl5/lib/perl5/ -Mlocal::lib)
+	cpanm --local-lib=~/perl5 local::lib && eval $$(perl -I ~/perl5/lib/perl5/ -Mlocal::lib)
 	rm -rf fatlib
-	mkdir fatlib
-	cp $(filter %.pm,$^) fatlib/
+	mkdir -p fatlib
+	cd lib && cp --parents $(patsubst lib/%,%,$(filter lib/%.pm,$^)) ../fatlib/
 	fatpack-simple bin/$@ -o fatpack/$@ -d fatlib
 	rm -r fatlib
 endef
 
-MANDATORY_PACKAGE=lib/Ytkit/Config.pm lib/Ytkit/MySQLServer.pm lib/Ytkit/Config/File.pm lib/Ytkit/Config/Option.pm lib/Ytkit/IO.pm
+MANDATORY_PACKAGE=lib/Ytkit.pm lib/Ytkit/Config.pm lib/Ytkit/MySQLServer.pm lib/Ytkit/Config/File.pm lib/Ytkit/Config/Option.pm lib/Ytkit/IO.pm
 
 yt-alter-progress: bin/yt-alter-progress lib/Ytkit/AlterProgress.pm $(MANDATORY_PACKAGE)
 	$(fatpack)
 
-yt-binlog-groupby: bin/yt-binlog-groupby lib/Ytkit/BinlogGroupby.pm $(MANDATORY_PACKAGE)
+yt-binlog-groupby: bin/yt-binlog-groupby lib/Ytkit/BinlogGroupby.pm lib/Ytkit/GroupbyHelper.pm $(MANDATORY_PACKAGE)
 	$(fatpack)
 
 yt-collect: bin/yt-collect lib/Ytkit/Collect.pm $(MANDATORY_PACKAGE)

@@ -146,8 +146,17 @@ sub run
     if ($self->instance->error)
     {
       _notef("HeartBeat Failed at %s : %s", $now, $self->instance->error);
-      delete($self->{_instance});
-      $self->instance->conn;
+
+      if ($self->{die_if_failed})
+      {
+        _croakf("Process exits because --die-if-failed");
+      }
+      else
+      {
+        ### Try to reconnect.
+        delete($self->{_instance});
+        $self->instance->conn;
+      }
     }
     else
     {
@@ -162,6 +171,8 @@ sub run
       if ($self->instance->error)
       {
         _notef("DELETE records failed at %s : %s", $now, $self->instance->error);
+
+        ### Ignore die_if_failed here
         delete($self->{_instance});
         $self->instance->conn;
       }
@@ -224,6 +235,10 @@ sub _config
                           default => 30,
                           isa => qr/\d+/,
                           text => "Remove records after --retention-period days", },
+    die_if_failed => { alias => ["abort_always", "no_retry", "die_if_failed"],
+                       noarg => 1,
+                       default => 0,
+                       text => "Process exits when it faces something error even if it can be recovered by reconnect", },
   };
   my $config= Ytkit::Config->new({ %$program_option, 
                                    %$Ytkit::Config::CONNECT_OPTION,

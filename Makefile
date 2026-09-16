@@ -25,7 +25,7 @@ test:
 	TZ=UTC-9 prove
 
 .PHONY: fatpack
-fatpack: setup yt-alter-progress yt-binlog-groupby yt-collect yt-data-dumper yt-healthcheck yt-innostat yt-querystat yt-resource-collector yt-wait-replication yt-print-information yt-extract yt-rename-database yt-config yt-repl-topology yt-bulk-delete yt-heartbeat yt-mdl-checker yt-sandbox 
+fatpack: setup yt-alter-progress yt-binlog-groupby yt-collect yt-data-dumper yt-healthcheck yt-innostat yt-querystat yt-resource-collector yt-wait-replication yt-print-information yt-extract yt-rename-database yt-config yt-repl-topology yt-bulk-delete yt-heartbeat yt-mdl-checker yt-sandbox yt-admin
 
 fatinstall:
 	cp fatpack/* $(INSTALL)/bin
@@ -36,20 +36,20 @@ rpmbuild:
 	bash build.sh
 
 define fatpack
-	cpanm --local-lib=~/perl5 local::lib && eval $(perl -I ~/perl5/lib/perl5/ -Mlocal::lib)
+	cpanm --local-lib=~/perl5 local::lib && eval $$(perl -I ~/perl5/lib/perl5/ -Mlocal::lib)
 	rm -rf fatlib
-	mkdir fatlib
-	cp $(filter %.pm,$^) fatlib/
+	mkdir -p fatlib
+	cd lib && cp --parents $(patsubst lib/%,%,$(filter lib/%.pm,$^)) ../fatlib/
 	fatpack-simple bin/$@ -o fatpack/$@ -d fatlib
 	rm -r fatlib
 endef
 
-MANDATORY_PACKAGE=lib/Ytkit/Config.pm lib/Ytkit/MySQLServer.pm lib/Ytkit/Config/File.pm lib/Ytkit/Config/Option.pm lib/Ytkit/IO.pm
+MANDATORY_PACKAGE=lib/Ytkit.pm lib/Ytkit/Config.pm lib/Ytkit/MySQLServer.pm lib/Ytkit/Config/File.pm lib/Ytkit/Config/Option.pm lib/Ytkit/IO.pm
 
 yt-alter-progress: bin/yt-alter-progress lib/Ytkit/AlterProgress.pm $(MANDATORY_PACKAGE)
 	$(fatpack)
 
-yt-binlog-groupby: bin/yt-binlog-groupby lib/Ytkit/BinlogGroupby.pm $(MANDATORY_PACKAGE)
+yt-binlog-groupby: bin/yt-binlog-groupby lib/Ytkit/BinlogGroupby.pm lib/Ytkit/GroupbyHelper.pm $(MANDATORY_PACKAGE)
 	$(fatpack)
 
 yt-collect: bin/yt-collect lib/Ytkit/Collect.pm $(MANDATORY_PACKAGE)
@@ -99,3 +99,7 @@ yt-mdl-checker: bin/yt-mdl-checker lib/Ytkit/MDLChecker.pm $(MANDATORY_PACKAGE)
 
 yt-sandbox: bin/yt-sandbox lib/Ytkit/Sandbox.pm lib/Ytkit/Sandbox/Node.pm $(MANDATORY_PACKAGE)
 	$(fatpack)
+
+yt-admin: bin/yt-admin lib/Ytkit/AdminTool.pm lib/Ytkit/AdminTool/DDL.pm $(MANDATORY_PACKAGE)
+	$(fatpack)
+

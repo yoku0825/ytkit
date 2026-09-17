@@ -270,6 +270,8 @@ sub _calc_delta
           ### Is numeric value?
           if ($current_hash{$_}->{$val_name} =~ /^\d+$/)
           {
+            ### Is there previous value?
+            next if !(defined($prev_hash{$_}));
             my $diff= $current_hash{$_}->{$val_name} - $prev_hash{$_}->{$val_name};
             $active= $active || $diff > 0;
             if ($active || $self->{idle_print})

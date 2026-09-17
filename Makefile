@@ -25,7 +25,7 @@ test:
 	TZ=UTC-9 prove
 
 .PHONY: fatpack
-fatpack: setup yt-alter-progress yt-binlog-groupby yt-collect yt-data-dumper yt-healthcheck yt-innostat yt-querystat yt-resource-collector yt-wait-replication yt-print-information yt-extract yt-rename-database yt-config yt-repl-topology yt-bulk-delete yt-heartbeat yt-mdl-checker yt-sandbox yt-admin
+fatpack: setup yt-alter-progress yt-binlog-groupby yt-collect yt-data-dumper yt-healthcheck yt-innostat yt-querytop yt-resource-collector yt-wait-replication yt-print-information yt-extract yt-rename-database yt-config yt-repl-topology yt-bulk-delete yt-heartbeat yt-mdl-checker yt-sandbox yt-admin
 
 fatinstall:
 	cp fatpack/* $(INSTALL)/bin
@@ -64,7 +64,7 @@ yt-healthcheck: bin/yt-healthcheck lib/Ytkit/HealthCheck.pm $(MANDATORY_PACKAGE)
 yt-innostat: bin/yt-innostat lib/Ytkit/Collect.pm $(MANDATORY_PACKAGE)
 	$(fatpack)
 
-yt-querystat: bin/yt-querystat lib/Ytkit/Collect.pm $(MANDATORY_PACKAGE)
+yt-querytop: bin/yt-querytop lib/Ytkit/Collect.pm $(MANDATORY_PACKAGE)
 	$(fatpack)
 
 yt-resource-collector: bin/yt-resource-collector lib/Ytkit/Collect.pm lib/Ytkit/ResourceCollector.pm $(MANDATORY_PACKAGE)

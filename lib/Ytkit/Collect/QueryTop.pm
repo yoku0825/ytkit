@@ -25,6 +25,7 @@ use JSON qw{ from_json };
 use Term::ReadKey;
 use base "Ytkit";
 use Ytkit::Collect;
+use Ytkit::IO qw{ _debugf _notef };
 
 my $synopsis= q{ $ yt-querytop --host=mysql_host --port=mysql_port } .
               q{--user=mysql_account --password=mysql_password } .
@@ -74,8 +75,10 @@ sub one_cycle
 
   ### Get "delta"-ed result as JSON
   my $json= $self->collect->print_query_latency();
-
+  _debugf("JSONed print_query_latency: %s", $json);
   ### The very first time, $json is empty(because can't calc delta)
+
+  my $buff;
   if ($json)
   {
     my $digest_info= from_json($json)->{ps_digest_info};
@@ -98,8 +101,6 @@ sub one_cycle
     ###     'last_update' => '2026-09-17 01:27:22'
     ###   }
     ### ];
-
-    my $buff;
     foreach (@$digest_info)
     {
       ### Trim "xxx/s"
@@ -124,9 +125,10 @@ sub one_cycle
         $buff->{$count_star}= [$hash];
       }
     }
-    $self->collect->clear_cache();
-    return $self->sprint_result($buff);
   }
+
+  $self->collect->clear_cache();
+  return $self->sprint_result($buff);
 }
 
 sub sprint_result

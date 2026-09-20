@@ -28,26 +28,10 @@ use Term::ReadKey;
 
 use FindBin qw/$Bin/;
 use lib "$Bin/../lib";
-use Ytkit::Collect;
+use Ytkit::Collect::QueryTop;
 use Ytkit::IO;
 
-my @default_opt= qw{ --sleep=1 --idle-print=0 };
-my @override_opt= qw{ --iteration=0
-                      --delta=1
-                      --delta-per-second=1
-                      --innodb-metrics-enable=0
-                      --query-latency-enable=1
-                      --table-latency-enable=0
-                      --table-size-enable=0
-                      --show-grants-enable=0
-                      --show-slave-enable=0
-                      --show-status-enable=0
-                      --show-variables-enable=0
-                      --output=json };
-
-my ($width, $height, $width_pixels, $height_pixels) = GetTerminalSize();
-
-if (my $prog= Ytkit::Collect->new(@default_opt, @ARGV, @override_opt))
+if (my $prog= Ytkit::Collect::QueryTop->new(@ARGV))
 {
   $SIG{QUIT} = sub { ReadMode("restore") };
   ReadMode("cbreak");
@@ -56,75 +40,23 @@ if (my $prog= Ytkit::Collect->new(@default_opt, @ARGV, @override_opt))
   {
     my $key= ReadKey(-1);
   
-    if (defined($key) && $key eq "q")
+    if (defined($key) && ($key eq "q" || $key eq "Q"))
     {
       ReadMode("restore");
       last;
     }
 
-    my $json= $prog->print_query_latency();
-
-    ### The very first time, $buff is empty(because can't calc delta)
-    if ($json)
+    if (my $ret= $prog->one_cycle())
     {
-      my $digest_info= from_json($json)->{ps_digest_info};
-      ### $digest_info=
-      ### [
-      ###   {
-      ###     'last_update' => '2026-09-17 01:27:22',
-      ###     'ipaddr' => 'localhost',
-      ###     'port' => 3306,
-      ###     'sum_timer_wait' => '410057000/s',
-      ###     'schema_name.digest_text' => 'xxx',
-      ###     'count_star' => '1/s'
-      ###   },
-      ###   {
-      ###     'count_star' => '2/s',
-      ###     'schema_name.digest_text' => 'NULL.SELECT ?',
-      ###     'sum_timer_wait' => '208349000/s',
-      ###     'port' => 3306,
-      ###     'ipaddr' => 'localhost',
-      ###     'last_update' => '2026-09-17 01:27:22'
-      ###   }
-      ### ];
-
-      my $buff;
-      foreach (@$digest_info)
-      {
-        my ($count_star)= $_->{count_star} =~ /(\d+)/;
-        my ($timer_wait_diff_pico)= $_->{sum_timer_wait} =~ /(\d+)/;
-        my $timer_wait_diff_sec = sprintf("%0.4f", $timer_wait_diff_pico / 1_000_000_000_000);
-        my ($schema, $sql) = $_->{"schema_name.digest_text"} =~ /([^\.]+)\.(.+)/;
-
-        my $hash = { schema => $schema,
-                     sql => $sql,
-                     timer_wait => $timer_wait_diff_sec, };
-        if (defined($buff->{$count_star}))
-        {
-          push(@{$buff->{$count_star}}, $hash);
-        }
-        else
-        {
-          $buff->{$count_star}= [$hash];
-        }
-      }
-
       printf("count/s\ttime_total\ttime/q\tschema\tsql\n");
-      foreach my $count_star (sort { $b <=> $a } (keys(%$buff)))
-      {
-        foreach (@{$buff->{$count_star}})
-        {
-          my $line= sprintf("%d\t%0.4f\t%0.4f\t%s\t%s", $count_star, $_->{timer_wait}, $_->{timer_wait} / ($count_star ? $count_star : 1), $_->{schema}, $_->{sql});
-
-          print substr($line, 0, $line_full_print ? -1 : $width - int($width / 10)), "\n";
-        }
-      }
-
+      print join("\n", @$ret);
     }
-
     sleep $prog->{interval};
-    print Ytkit::IO::TERM_CLEAR_SEQUENCE;
-    $prog->clear_cache();
+
+    if (!($prog->{debug}))
+    {
+      print Ytkit::IO::TERM_CLEAR_SEQUENCE;
+    }
   }
 }
 else

@@ -35,7 +35,6 @@ if (my $prog= Ytkit::Collect::QueryTop->new(@ARGV))
 {
   $SIG{QUIT} = sub { ReadMode("restore") };
   ReadMode("cbreak");
-  my $line_full_print= $prog->{verbose};
   while ()
   {
     my $key= ReadKey(-1);

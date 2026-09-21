@@ -9,7 +9,7 @@ URL:		https://github.com/yoku0825/ytkit/archive/%{version}.tar.gz#/%{name}-%{ver
 Source0:	%{name}-%{version}.tar.gz
 
 Requires:	perl 
-Requires:       perl(DBD::mysql) perl(Time::Piece) perl(Carp) perl(JSON) perl(Term::ReadKey) perl(Data::Dumper) perl(Time::HiRes) perl(Parallel::ForkManager)
+Requires:       perl(DBD::mysql) perl(Time::Piece) perl(Carp) perl(JSON) perl(Term::ReadKey) perl(Data::Dumper) perl(Time::HiRes) perl(Parallel::ForkManager) perl(Term::ANSIColor)
 AutoReq:        no
 BuildArch:      noarch
 BuildRequires:  make perl

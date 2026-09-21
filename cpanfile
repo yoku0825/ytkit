@@ -8,3 +8,4 @@ requires "JSON";
 requires "Term::ReadKey";
 requires "Data::Dumper";
 requires "Parallel::ForkManager";
+requires "Term::ANSIColor";

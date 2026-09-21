@@ -708,6 +708,12 @@ sub _config
                     default => 1,
                     isa     => [0, 1],
                     text    => "Print even diff-ed value is zero." },
+    batch => { alias => ["batch", "b"],
+               default => 0,
+               noarg => 1,
+               text => "Flag for batched print", },
+    order_by => { alias => ["order_by", "orderby"],
+                  text => "Flag for specifying sort order", },
   };
   my $config= Ytkit::Config->new({ %$yt_collect_option, 
                                    %$Ytkit::Config::CONNECT_OPTION,

@@ -25,7 +25,8 @@ use JSON qw{ from_json };
 use Term::ReadKey;
 use base "Ytkit";
 use Ytkit::Collect;
-use Ytkit::IO qw{ _debugf _notef };
+use Ytkit::IO qw{ _debugf };
+use Ytkit::TopHelper;
 
 my $synopsis= q{ $ yt-querytop --host=mysql_host --port=mysql_port } .
               q{--user=mysql_account --password=mysql_password } .
@@ -35,7 +36,6 @@ my $description= << "EOS";
 yt-querytop shows top-like display from performance_schema.events_statements_summary_by_digest
 EOS
 my $allow_extra_argv= 0;
-
 
 my @collect_opt= qw{ --iteration=0 --delta=1 --delta-per-second=1 --innodb-metrics-enable=0
                      --query-latency-enable=1 --table-latency-enable=0 --table-size-enable=0
@@ -58,7 +58,10 @@ sub new
   $self->handle_help;
 
   ### If there's not --help, create Ytkit::Collect instance.
-  $self->{_collect}= Ytkit::Collect->new(@collect_opt, @orig_argv);
+  ### Default value of --idle_print and --query_latency_limit are difference between Ytkit::Collect and Ytkit::Collect::QueryTop, need to overwrite
+  $self->{_collect}= Ytkit::Collect->new(@collect_opt, @orig_argv,
+                                         sprintf("--idle_print=%d", $self->{idle_print}),
+                                         sprintf("--query_latency_limit=%d", $self->{query_latency_limit}));
 
   return $self;
 }
@@ -78,7 +81,7 @@ sub one_cycle
   _debugf("JSONed print_query_latency: %s", $json);
   ### The very first time, $json is empty(because can't calc delta)
 
-  my $buff;
+  my @buff;
   if ($json)
   {
     my $digest_info= from_json($json)->{ps_digest_info};
@@ -101,34 +104,30 @@ sub one_cycle
     ###     'last_update' => '2026-09-17 01:27:22'
     ###   }
     ### ];
+
     foreach (@$digest_info)
     {
       ### Trim "xxx/s"
-      my ($count_star)= $_->{count_star} =~ /(\d+)/;
-      my ($timer_wait_diff_pico)= $_->{sum_timer_wait} =~ /(\d+)/;
+      my $row= Ytkit::TopHelper::trim_per_sec($_, ["count_star", "sum_timer_wait"]);
 
       ### Translate picosecond to second
-      my $timer_wait_diff_sec = sprintf("%0.4f", $timer_wait_diff_pico / 1_000_000_000_000);
+      my $timer_wait_diff_sec = sprintf("%0.4f", $row->{sum_timer_wait} / 1_000_000_000_000);
 
       ### Separate schema and digest_text from "ddd.sql_digest" 
-      my ($schema, $sql) = $_->{"schema_name.digest_text"} =~ /([^\.]+)\.(.+)/;
+      my ($schema, $sql) = $_->{"schema_name.digest_text"} =~ /^([^\.]+)\.(.+)/;
 
       my $hash = { schema => $schema,
                    sql => $sql,
-                   timer_wait => $timer_wait_diff_sec, };
-      if (defined($buff->{$count_star}))
-      {
-        push(@{$buff->{$count_star}}, $hash);
-      }
-      else
-      {
-        $buff->{$count_star}= [$hash];
-      }
+                   count_star => $row->{count_star},
+                   timer_wait => $timer_wait_diff_sec,
+                   timer_wait_avg => $timer_wait_diff_sec / ($row->{count_star} ? $row->{count_star} : 1)};  ### Time per query
+      _debugf("One_line: %s", $hash);
+      push(@buff, $hash);
     }
   }
 
   $self->collect->clear_cache();
-  return $self->sprint_result($buff);
+  return $self->sprint_result(Ytkit::TopHelper::sort_result_by(\@buff, $self->{order_by}));
 }
 
 sub sprint_result
@@ -137,14 +136,14 @@ sub sprint_result
 
   my @ret;
   ### ORDER BY count_star DESC
-  foreach my $count_star (sort { $b <=> $a } (keys(%$buff)))
+  foreach my $sort_by (sort { $b <=> $a } (keys(%$buff)))
   {
-    foreach (@{$buff->{$count_star}})
+    foreach (@{$buff->{$sort_by}})
     {
       my $line= sprintf("%d\t%0.4f\t%0.4f\t%s\t%s",
-                        $count_star,
+                        $_->{count_star},
                         $_->{timer_wait},
-                        $_->{timer_wait} / ($count_star ? $count_star : 1),   ### Second/Query
+                        $_->{timer_wait_avg},
                         $_->{schema},
                         $_->{sql});
       ### Trim if not --verbose
@@ -162,13 +161,21 @@ sub _config
                         default => 1,
                         text => "Sleep seconds during each collecting iterations." },
     idle_print => { alias => ["idle_print", "idle", "H"],
-                    default => 1,
-                    isa     => [0, 1],
+                    default => 0,
+                    noarg   => 1,
                     text    => "Print even diff-ed value is zero." },
     batch => { alias => ["b", "batch"],
                default => 0,
                noarg => 1,
                text => "Don't clear terminal" },
+    query_latency_limit => { alias => ["query_latency_limit"],
+                             default => 10,
+                             text => qq{Using "ORDER BY count_star DESC LIMIT .."} .
+                                     qq{for collecting latency.} },
+    order_by => { alias => ["order_by", "orderby"],
+                  default => "count_star",
+                  isa => ["count_star", "timer_wait", "timer_wait_avg"],
+                  text => "Sort records by (DESC)", },
   };
   my $config= Ytkit::Config->new({ %$program_option, 
                                    %$Ytkit::Config::CONNECT_OPTION,

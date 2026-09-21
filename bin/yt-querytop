@@ -34,7 +34,12 @@ use Ytkit::IO;
 if (my $prog= Ytkit::Collect::QueryTop->new(@ARGV))
 {
   $SIG{QUIT} = sub { ReadMode("restore") };
-  ReadMode("cbreak");
+
+  if (!($prog->{debug}) && !($prog->{batch}))
+  {
+    ReadMode("cbreak");
+  }
+
   while ()
   {
     my $key= ReadKey(-1);
@@ -47,12 +52,12 @@ if (my $prog= Ytkit::Collect::QueryTop->new(@ARGV))
 
     if (my $ret= $prog->one_cycle())
     {
-      printf("count/s\ttime_total\ttime/q\tschema\tsql\n");
+      printf("count/s\ttime_sum\ttime/q\tschema\tsql\n");
       print join("\n", @$ret);
     }
     sleep $prog->{interval};
 
-    if (!($prog->{debug}))
+    if (!($prog->{debug}) && !($prog->{batch}))
     {
       print Ytkit::IO::TERM_CLEAR_SEQUENCE;
     }

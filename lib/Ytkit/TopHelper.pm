@@ -22,6 +22,13 @@ use strict;
 use warnings;
 use utf8;
 
+use base "Exporter";
+our @EXPORT= qw{ trim_per_sec sort_result_by trim_for_terminal_size };
+
+use Ytkit::IO;
+use Term::ReadKey;
+
+my ($width, $height, $width_pixels, $height_pixels) = GetTerminalSize();
 
 sub trim_per_sec
 {
@@ -76,10 +83,18 @@ sub sort_result_by
     }
     else
     {
-      $ret->{$_->{order_by}}= [$_];
+      $ret->{$_->{$order_by}}= [$_];
     }
   }
   return $ret; 
+}
+
+sub trim_for_terminal_size
+{
+  my ($string)= @_;
+
+  ### Trim if not --verbose
+  return substr($string, 0, $ENV{ytkit_verbose} >= Ytkit::IO::VERBOSE ? length($string) : $width - int($width / 10));
 }
 
 

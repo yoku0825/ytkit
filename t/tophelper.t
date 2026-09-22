@@ -28,4 +28,17 @@ use lib "$Bin/../lib";
 no warnings "once";
 use_ok("Ytkit::TopHelper");
 
+my $example=
+[
+  { a => 1, b => 2, c => 3 },
+  { a => 2, b => 1, c => 4 },
+];
+
+is_deeply(sort_result_by($example, "a"),
+          { 1 => [ { a => 1, b => 2, c => 3 } ], 2 => [ { a => 2, b => 1, c => 4 } ] },
+          "sort_result_by a");
+is_deeply(sort_result_by($example, "b"),
+          { 1 => [ { a => 2, b => 1, c => 4 } ], 2 => [ { a => 1, b => 2, c => 3 } ] },
+          "sort_result_by b");
+
 done_testing;

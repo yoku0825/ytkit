@@ -22,11 +22,10 @@ use strict;
 use warnings;
 use utf8;
 use JSON qw{ from_json };
-use Term::ReadKey;
 use base "Ytkit";
 use Ytkit::Collect;
 use Ytkit::IO qw{ _debugf };
-use Ytkit::TopHelper;
+use Ytkit::TopHelper qw{ trim_per_sec sort_result_by trim_for_terminal_size };
 
 my $synopsis= q{ $ yt-querytop --host=mysql_host --port=mysql_port } .
               q{--user=mysql_account --password=mysql_password } .
@@ -42,7 +41,6 @@ my @collect_opt= qw{ --iteration=0 --delta=1 --delta-per-second=1 --innodb-metri
                      --show-grants-enable=0 --show-slave-enable=0 --show-status-enable=0
                      --show-variables-enable=0 --output=json };
 
-my ($width, $height, $width_pixels, $height_pixels) = GetTerminalSize();
 
 sub new
 {
@@ -108,7 +106,7 @@ sub one_cycle
     foreach (@$digest_info)
     {
       ### Trim "xxx/s"
-      my $row= Ytkit::TopHelper::trim_per_sec($_, ["count_star", "sum_timer_wait"]);
+      my $row= trim_per_sec($_, ["count_star", "sum_timer_wait"]);
 
       ### Translate picosecond to second
       my $timer_wait_diff_sec = sprintf("%0.4f", $row->{sum_timer_wait} / 1_000_000_000_000);
@@ -127,7 +125,7 @@ sub one_cycle
   }
 
   $self->collect->clear_cache();
-  return $self->sprint_result(Ytkit::TopHelper::sort_result_by(\@buff, $self->{order_by}));
+  return $self->sprint_result(sort_result_by(\@buff, $self->{order_by}));
 }
 
 sub sprint_result
@@ -147,7 +145,7 @@ sub sprint_result
                         $_->{schema},
                         $_->{sql});
       ### Trim if not --verbose
-      push(@ret, substr($line, 0, $self->{verbose} ? -1 : $width - int($width / 10)));
+      push(@ret, trim_for_terminal_size($line));
     }
   }
   return \@ret;

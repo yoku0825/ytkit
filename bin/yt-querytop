@@ -25,6 +25,7 @@ binmode STDOUT, ":utf8";
 
 use JSON qw{ from_json };
 use Term::ReadKey;
+use Term::ANSIColor qw{ :constants };
 
 use FindBin qw/$Bin/;
 use lib "$Bin/../lib";
@@ -52,8 +53,9 @@ if (my $prog= Ytkit::Collect::QueryTop->new(@ARGV))
 
     if (my $ret= $prog->one_cycle())
     {
-      printf("count/s\ttime_sum\ttime/q\tschema\tsql\n");
-      print join("\n", @$ret);
+      next if !(@$ret);
+      printf("%s%scount/s\ttime_sum\ttime/q\tschema\tsql%s\n", BLACK, ON_YELLOW, RESET);
+      print join("\n", @$ret), "\n";
     }
     sleep $prog->{interval};
 

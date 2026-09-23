@@ -23,8 +23,9 @@ use warnings;
 use utf8;
 
 use base "Exporter";
-our @EXPORT= qw{ trim_per_sec sort_result_by trim_for_terminal_size };
+our @EXPORT= qw{ trim_per_sec sort_result_by trim_for_terminal_size repeat_term_size sprint_top_header };
 
+use JSON qw{ from_json };
 use Ytkit::IO;
 use Term::ReadKey;
 
@@ -97,5 +98,40 @@ sub trim_for_terminal_size
   return substr($string, 0, $ENV{ytkit_verbose} >= Ytkit::IO::VERBOSE ? length($string) : $width - int($width / 10));
 }
 
+sub repeat_term_size
+{
+  my ($char)= @_;
+
+  return join("", map { $_ } $char x $width);
+}
+
+sub sprint_top_header
+{
+  my ($collect)= @_;
+
+  my $status_json= $collect->print_show_status;
+  if (!($status_json))
+  {
+    ### $status_json is Empty means there's no delta
+    delete $collect->instance->{_show_status};   ### Remove cache
+    $status_json= $collect->print_show_status;
+  }
+  my $qps = 0;
+  foreach (@{from_json($status_json)->{status_info}})
+  {
+    if ($_->{variable_name} eq "Queries")
+    {
+      $qps = $_->{value};
+      last;
+    }
+  }
+
+  return sprintf("%s (%s)\t%d / %d connections\tQPS %s\t%d Threads_running",
+                 $collect->instance->hostname, $collect->instance->valueof("read_only") eq "ON" ? "READ-ONLY" : "READ-WRITE", 
+                 $collect->instance->valueof("Threads_connected"), $collect->instance->valueof("max_connections"),
+                 $qps,
+                 $collect->instance->valueof("Threads_running"));
+  
+}
 
 return 1;

@@ -30,6 +30,7 @@ use Term::ANSIColor qw{ :constants };
 use FindBin qw/$Bin/;
 use lib "$Bin/../lib";
 use Ytkit::Collect::QueryTop;
+use Ytkit::TopHelper qw{ repeat_term_size sprint_top_header };
 use Ytkit::IO;
 
 if (my $prog= Ytkit::Collect::QueryTop->new(@ARGV))
@@ -54,7 +55,9 @@ if (my $prog= Ytkit::Collect::QueryTop->new(@ARGV))
     if (my $ret= $prog->one_cycle())
     {
       next if !(@$ret);
+      printf("%s\n", sprint_top_header($prog->collect));
       printf("%s%scount/s\ttime_sum\ttime/q\tschema\tsql%s\n", BLACK, ON_YELLOW, RESET);
+      printf("%s\n", repeat_term_size("-"));
       print join("\n", @$ret), "\n";
     }
     sleep $prog->{interval};

@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 #########################################################################
-# Copyright (C) 2018, 2021  yoku0825
+# Copyright (C) 2018, 2026  yoku0825
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -329,6 +329,17 @@ subtest "i_am_group_replication_primary" => sub
   is($server->i_am_group_replication_primary, undef, "I'm not in Group Replication");
   server_reset($server);
 
+  done_testing;
+};
+
+subtest "valueof" => sub
+{
+  $server->{_show_variables}= $Ytkit::Test::SHOW_VARIABLES::mysql80;
+  $server->{_show_status}   = $Ytkit::Test::SHOW_STATUS::VAR1;
+
+  is($server->valueof("max_connections"), 151, "Value in SHOW VARIBLES");
+  is($server->valueof("Com_select"), 36993, "Value in SHOW STATUS");
+  is($server->valueof("dummy"), "", "There's no value in both SHOW VARIABLES AND SHOW STATUS");
   done_testing;
 };
 

@@ -41,7 +41,6 @@ my @collect_opt= qw{ --iteration=0 --delta=1 --delta-per-second=1 --innodb-metri
                      --show-grants-enable=0 --show-slave-enable=0 --show-status-enable=0
                      --show-variables-enable=0 --output=json };
 
-
 sub new
 {
   my ($class, @orig_argv)= @_;

@@ -815,11 +815,22 @@ sub valueof
 {
   my ($self, $variable_name)= @_;
 
-  if (my $variables= $self->show_variables)
+  my $variables = $self->show_variables;
+  my $status    = $self->show_status;
+  if ($variables)
   {
     if ($variables->{$variable_name})
     {
       return $variables->{$variable_name}->{Value};
+    }
+  }
+
+  ### Value doesn't in SHOW VARIABLES, search SHOW STATUS
+  if ($status)
+  {
+    if ($status->{$variable_name})
+    {
+      return $status->{$variable_name}->{Value};
     }
   }
   return "";

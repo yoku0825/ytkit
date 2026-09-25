@@ -494,7 +494,7 @@ workdir=$(readlink -f $(dirname $0))
 
 cd $workdir
 
-for f in ./n[1-9] ; do
+for f in ./m ./s[1-9] ; do
   echo "### Node $f"
   $f -sse "SELECT /* yt-sandbox ./check_group_replication */ CONCAT(member_host, IF(member_host = @@hostname, ' (this node)', '')) AS host, member_state, member_role, transactions_committed_all_members FROM performance_schema.replication_group_members JOIN performance_schema.replication_group_member_stats USING(member_id, channel_name) ORDER BY member_host"
 done

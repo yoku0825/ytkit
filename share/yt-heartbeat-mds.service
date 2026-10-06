@@ -18,5 +18,6 @@ ExecStart=/usr/local/bin/yt-heartbeat -h "$host" -u "$user" --heartbeat_schema="
 EnvironmentFile=-/etc/sysconfig/ytkit
 
 Restart=on-failure
+RestartSec=1m
 RestartPreventExitStatus=1
 #PrivateTmp=false

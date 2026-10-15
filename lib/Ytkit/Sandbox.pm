@@ -158,6 +158,7 @@ sub prepare
       _infof("Docker command: %s", $cmd);
       $container_id= `$cmd`;
       chomp($container_id);
+      _write_script(sprintf("%s/create-again", $dir), sprintf("%s\necho 'please run: sed -i s/%s/__new_container_id/ start stop use restart'", $cmd, $container_id), 0644);
     }
     _croakf("container id get failed") if !($container_id);
     _infof("Docker container ID: %s", $container_id);

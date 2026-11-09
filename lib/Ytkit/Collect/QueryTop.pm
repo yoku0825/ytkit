@@ -25,7 +25,7 @@ use JSON qw{ from_json };
 use base "Ytkit";
 use Ytkit::Collect;
 use Ytkit::IO qw{ _debugf };
-use Ytkit::TopHelper qw{ trim_per_sec sort_result_by trim_for_terminal_size };
+use Ytkit::TopHelper qw{ trim_per_sec sort_result_by trim_for_terminal_size sprint_result_line_by_column_def };
 
 my $synopsis= q{ $ yt-querytop --host=mysql_host --port=mysql_port } .
               q{--user=mysql_account --password=mysql_password } .
@@ -40,6 +40,17 @@ my @collect_opt= qw{ --iteration=0 --delta=1 --delta-per-second=1 --innodb-metri
                      --query-latency-enable=1 --table-latency-enable=0 --table-size-enable=0
                      --show-grants-enable=0 --show-slave-enable=0 --show-status-enable=0
                      --show-variables-enable=0 --output=json };
+
+### Store column-name and padding-length
+our $columns= 
+[
+  [ "count/s", 7 ],
+  [ "total_sec", 9 ],
+  [ "sec/query", 9 ],
+  [ "schema", 16 ],
+  [ "sql", undef ],    ### undef means infinity
+];
+
 
 sub new
 {
@@ -137,16 +148,26 @@ sub sprint_result
   {
     foreach (@{$buff->{$sort_by}})
     {
-      my $line= sprintf("%d\t%0.4f\t%0.4f\t%s\t%s",
-                        $_->{count_star},
-                        $_->{timer_wait},
-                        $_->{timer_wait_avg},
-                        $_->{schema},
-                        $_->{sql});
+      ### our $columns= 
+      ### [
+      ###   [ "count/s", 7 ],
+      ###   [ "total_sec", 9 ],
+      ###   [ "sec/query", 9 ],
+      ###   [ "schema", 16 ],
+      ###   [ "sql", undef ],    ### undef means infinity
+      ### ];
+
+      my $line= sprint_result_line_by_column_def([
+                  $_->{count_star},
+                  $_->{timer_wait},
+                  $_->{timer_wait_avg},
+                  $_->{schema},
+                  $_->{sql}], $columns);
       ### Trim if not --verbose
       push(@ret, trim_for_terminal_size($line));
     }
   }
+  _debugf(\@ret);
   return \@ret;
 }
 

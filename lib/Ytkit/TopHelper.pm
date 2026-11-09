@@ -23,11 +23,14 @@ use warnings;
 use utf8;
 
 use base "Exporter";
-our @EXPORT= qw{ trim_per_sec sort_result_by trim_for_terminal_size repeat_term_size sprint_top_header };
+our @EXPORT= qw{ trim_per_sec sort_result_by trim_for_terminal_size repeat_term_size
+                 sprint_top_header sprint_result_header_by_column_def 
+                 sprint_result_line_by_column_def };
 
 use JSON qw{ from_json };
 use Ytkit::IO;
 use Term::ReadKey;
+use Term::ANSIColor qw{ :constants };
 
 my ($width, $height, $width_pixels, $height_pixels) = GetTerminalSize();
 
@@ -132,6 +135,77 @@ sub sprint_top_header
                  $qps,
                  $collect->instance->valueof("Threads_running"));
   
+}
+
+sub sprint_result_header_by_column_def
+{
+  my ($column_def)= @_;
+
+  ### $column_def=
+  ### [
+  ###   [ "col1", 2 ],
+  ###   [ "col2", undef ], ### undef means not-cut
+  ### ]
+  my @ret;
+  foreach (@$column_def)
+  {
+    my ($column_name, $column_length)= @$_;
+    if ($column_length && length($column_name) < $column_length)
+    {
+      ### Padding left space
+      $column_name= " " x ($column_length - length($column_name)) . $column_name;
+    }
+    push(@ret, BLACK, ON_YELLOW);
+
+    if ($column_length)
+    {
+      ### Like a `pack("A10", schema)`
+      push(@ret, pack("A" . $column_length, $column_name));
+    }
+    else
+    {
+      ### Value's undef means "not padding"
+      push(@ret, $column_name);
+    }
+    push(@ret, RESET);
+  }
+  return join(" ", @ret);
+}
+
+sub sprint_result_line_by_column_def
+{
+  my ($line, $column_def)= @_;
+
+  ### $column_def=
+  ### [
+  ###   [ "col1", 2 ],
+  ###   [ "col2", undef ], ### undef means not-cut
+  ### ]
+  my @ret;
+  for (my $n= 0;; $n++)
+  {
+    last if !(defined($line->[$n]));
+    my $data= " " x 3 . $line->[$n];
+    my $column_length= $column_def->[$n]->[1] ? $column_def->[$n]->[1] + 3 : undef;
+
+    if ($column_length)
+    {
+      ### Padding left space
+      if (length($data) < $column_length)
+      {
+        $data= " " x ($column_length - length($data)) . $data;
+      }
+      
+      ### Like a `pack("A10", schema)`
+      push(@ret, pack("A" . $column_length, $data));
+    }
+    else
+    {
+      ### Value's undef means "not padding"
+      push(@ret, $data);
+    }
+  }
+  return join("|", @ret);
 }
 
 return 1;
